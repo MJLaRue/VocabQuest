@@ -18,17 +18,27 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Session configuration
+const sessionConnectionString = process.env.DATABASE_URL || 
+  `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`;
+
+// Check if using local database (don't use secure cookies over HTTP)
+const isLocalDatabase = sessionConnectionString.includes('localhost') || 
+                        sessionConnectionString.includes('127.0.0.1') ||
+                        sessionConnectionString.includes('@db:');
+
 app.use(session({
   store: new pgSession({
-    conString: `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`,
-    tableName: 'session'
+    conString: sessionConnectionString,
+    tableName: 'session',
+    createTableIfMissing: true
   }),
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
+    secure: !isLocalDatabase, // Only secure over HTTPS/remote databases
     httpOnly: true,
+    sameSite: 'lax',
     maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
   }
 }));

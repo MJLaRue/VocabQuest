@@ -7,7 +7,10 @@
     "start": "node server/index.js",
     "dev": "nodemon server/index.js",
     "init-db": "node server/scripts/initDb.js",
-    "create-admin": "node server/scripts/createAdmin.js"
+    "create-admin": "node server/scripts/createAdmin.js",
+    "migrate": "node server/scripts/initDb.js",
+    "seed": "node server/scripts/importVocab.js && node server/scripts/createAdmin.js",
+    "build": "echo 'No build step required for this app'"
   },
   "keywords": ["vocabulary", "flashcards", "education", "gamification"],
   "author": "",

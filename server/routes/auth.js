@@ -112,16 +112,24 @@ router.post('/login', async (req, res) => {
     req.session.userId = user.id;
     req.session.role = user.role;
     
-    res.json({ 
-      success: true,
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        level: user.gamification?.level || 1,
-        totalXp: user.gamification?.totalXp || 0,
-        dailyStreak: user.gamification?.dailyStreak || 0
+    // Save session before responding
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save error:', err);
+        return res.status(500).json({ error: 'Session creation failed' });
       }
+      
+      res.json({ 
+        success: true,
+        user: {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+          level: user.gamification?.level || 1,
+          totalXp: user.gamification?.totalXp || 0,
+          dailyStreak: user.gamification?.dailyStreak || 0
+        }
+      });
     });
     
   } catch (error) {
