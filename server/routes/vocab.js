@@ -10,7 +10,7 @@ router.get('/', requireAuth, async (req, res) => {
       order: [['word', 'ASC']]
     });
     
-    res.json({ vocab });
+    res.json({ vocabulary: vocab });
   } catch (error) {
     console.error('Get vocab error:', error);
     res.status(500).json({ error: 'Failed to get vocabulary' });

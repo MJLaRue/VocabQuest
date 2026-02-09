@@ -159,7 +159,7 @@ router.get('/vocab', async (req, res) => {
       order: [['word', 'ASC']]
     });
     
-    res.json({ vocab });
+    res.json({ vocabulary: vocab });
   } catch (error) {
     console.error('Get vocab error:', error);
     res.status(500).json({ error: 'Failed to get vocabulary' });
@@ -318,7 +318,7 @@ router.get('/stats', async (req, res) => {
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     const activeUsers7d = await User.count({
       where: {
-        lastLogin: { [Op.gte]: sevenDaysAgo }
+        last_login: { [Op.gte]: sevenDaysAgo }
       }
     });
     
@@ -326,7 +326,7 @@ router.get('/stats', async (req, res) => {
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     const newUsers30d = await User.count({
       where: {
-        createdAt: { [Op.gte]: thirtyDaysAgo }
+        created_at: { [Op.gte]: thirtyDaysAgo }
       }
     });
     

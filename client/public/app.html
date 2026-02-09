@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HSPT Vocabulary Flashcards</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <div class="loading-overlay" id="loading-overlay" style="display: none;">
+    <div class="spinner"></div>
+  </div>
+
+  <div class="page">
+    <header>
+      <div class="title-block">
+        <div class="badge">A+</div>
+        <div>
+          <h1>HSPT Vocabulary Flashcards</h1>
+          <p class="subtitle">Tween-friendly practice • Shuffle • Quiz • Type-to-answer</p>
+        </div>
+      </div>
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <div class="pill" id="progress-pill">Deck: 0 / 0 • Known: 0</div>
+        <button id="logout-btn" class="ghost logout-btn">Log Out</button>
+      </div>
+    </header>
+
+    <div class="gamification-bar">
+      <div class="level-badge" id="level-badge">
+        <div class="level-icon">⭐</div>
+        <div class="level-text">
+          <div class="level-label">Level <span id="level-number">1</span></div>
+          <div class="xp-text"><span id="xp-current">0</span>/<span id="xp-next">100</span> XP</div>
+        </div>
+      </div>
+      <div class="xp-bar-container">
+        <div class="xp-bar" id="xp-bar"></div>
+      </div>
+      <div class="streak-badge" id="streak-badge">
+        <div class="streak-flame">🔥</div>
+        <div class="streak-number" id="streak-number">0</div>
+        <div class="streak-label">day streak</div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <label for="search-input">Search (word or definition)</label>
+        <input id="search-input" type="text" placeholder="type to filter..." />
+      </div>
+      <div class="card">
+        <label>Modes</label>
+        <div class="mode-row">
+          <button class="mode-btn active" data-mode="practice">Practice</button>
+          <button class="mode-btn" data-mode="quiz">Quiz</button>
+          <button class="mode-btn" data-mode="typing">Typing</button>
+        </div>
+        <div class="button-row" style="margin-top:10px;">
+          <label class="toggle"><input id="shuffle-toggle" type="checkbox" checked /> Shuffle deck</label>
+          <button id="reset-btn" class="ghost">Reset deck</button>
+        </div>
+      </div>
+      <div class="card">
+        <label>Part of Speech</label>
+        <div id="pos-filters" class="pos-filters"></div>
+        <div class="button-row" style="margin-top:8px;">
+          <button id="pos-all" class="ghost">All</button>
+          <button id="pos-none" class="ghost">None</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="flashcard" id="flashcard">
+      <div class="flashcard-inner">
+        <div id="flashcard-front" class="face front"></div>
+        <div id="flashcard-back" class="face back"></div>
+      </div>
+      <div class="quiz-area" id="quiz-area">
+        <div id="quiz-prompt"></div>
+        <div class="choice-list" id="choice-list"></div>
+      </div>
+      <div class="typing-area" id="typing-area">
+        <div class="hint" id="typing-prompt"></div>
+        <div class="input-row" style="margin-top:8px;">
+          <input id="typing-input" type="text" placeholder="type the word" />
+          <button id="typing-submit" class="primary">Check</button>
+        </div>
+        <div class="hint" id="typing-feedback" style="margin-top:6px;"></div>
+      </div>
+    </div>
+
+    <div id="answer-feedback" class="answer-feedback"></div>
+
+    <div class="button-row">
+      <button id="prev-btn" class="ghost">◀ Prev</button>
+      <button id="next-btn" class="ghost">Next ▶</button>
+      <button id="know-btn" class="primary">I know it</button>
+      <button id="notyet-btn" class="danger">Not yet</button>
+      <button id="achievements-btn" class="ghost">🏆 Achievements</button>
+    </div>
+
+    <div class="meta-row">
+      <div id="counter" class="counter">0 / 0</div>
+      <div class="hint" id="streak">Session: <span id="session-correct">0</span> correct • <span id="session-xp">0</span> XP earned</div>
+    </div>
+    <div class="progress"><div id="progress-bar" class="progress-bar"></div></div>
+  </div>
+
+  <!-- Achievements Modal -->
+  <div class="modal" id="achievements-modal">
+    <div class="modal-content">
+      <button class="modal-close" id="modal-close">✕</button>
+      <h2 class="modal-title">🎉 Your Progress!</h2>
+      <div class="session-stats" id="session-stats">
+        <div class="stat-card">
+          <div class="stat-value" id="modal-xp">0</div>
+          <div class="stat-label">XP Earned</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="modal-correct">0</div>
+          <div class="stat-label">Correct Answers</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="modal-streak">0</div>
+          <div class="stat-label">Current Streak</div>
+        </div>
+      </div>
+      <div class="achievements-grid" id="achievements-grid"></div>
+      <button class="primary" id="continue-btn" style="width: 100%; margin-top: 20px;">Continue Learning</button>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>

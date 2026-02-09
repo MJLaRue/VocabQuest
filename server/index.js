@@ -48,13 +48,9 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Serve frontend pages
+// Root redirect to login
 app.get('/', (req, res) => {
-  if (req.session.userId) {
-    res.redirect('/app.html');
-  } else {
-    res.sendFile(path.join(__dirname, '../client/public/index.html'));
-  }
+  res.redirect('/index.html');
 });
 
 // 404 handler
