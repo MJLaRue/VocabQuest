@@ -1,0 +1,731 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HSPT Vocabulary Flashcards</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #06121f;
+      --bg2: #0c233a;
+      --card: #0c1f35;
+      --card-2: #123250;
+      --text: #f5fbff;
+      --muted: #c7d4ea;
+      --accent: #ffb703;
+      --accent-2: #19e5c0;
+      --accent-3: #ff6f61;
+      --border: rgba(255, 255, 255, 0.12);
+      --shadow: 0 22px 46px rgba(0, 10, 26, 0.65);
+      --glow: 0 0 0 10px rgba(25, 229, 192, 0.05), 0 28px 72px rgba(0, 0, 0, 0.45);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 18% 20%, rgba(255, 183, 3, 0.10), transparent 36%),
+        radial-gradient(circle at 82% 18%, rgba(25, 229, 192, 0.10), transparent 32%),
+        linear-gradient(135deg, var(--bg), var(--bg2));
+      color: var(--text);
+      min-height: 100vh;
+      padding: 32px 18px 56px;
+    }
+
+    .page {
+      max-width: 1160px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    header {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: space-between;
+    }
+
+    .title-block {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .badge {
+      width: 54px;
+      height: 54px;
+      border-radius: 16px;
+      background: conic-gradient(from 120deg, var(--accent), var(--accent-2), #6be6ff, var(--accent));
+      display: grid;
+      place-items: center;
+      font-family: "Fredoka", sans-serif;
+      font-weight: 700;
+      color: #0b132b;
+      box-shadow: var(--shadow);
+    }
+
+    h1 {
+      margin: 0;
+      font-family: "Fredoka", sans-serif;
+      font-size: 26px;
+      letter-spacing: 0.01em;
+    }
+
+    .subtitle { margin: 0; color: var(--muted); font-size: 14px; }
+
+    .pill {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 999px;
+      padding: 9px 14px;
+      font-size: 13px;
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      box-shadow: var(--glow);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 12px;
+    }
+
+    .card {
+      background: linear-gradient(145deg, var(--card), var(--card-2));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px 16px;
+      box-shadow: var(--shadow);
+    }
+
+    label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; letter-spacing: 0.01em; }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 11px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      outline: none;
+      font-size: 15px;
+    }
+
+    .pos-filters { display: flex; flex-wrap: wrap; gap: 8px; }
+    .pos-chip {
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      padding: 6px 11px;
+      border-radius: 999px;
+      font-weight: 800;
+      cursor: pointer;
+      font-size: 13px;
+      transition: transform 120ms ease, background 120ms ease, box-shadow 120ms ease;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.18);
+    }
+    .pos-chip.active { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #0b132b; transform: translateY(-1px); box-shadow: 0 10px 20px rgba(0,0,0,0.35); }
+
+    .toggle { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+    .toggle input { accent-color: var(--accent); width: 18px; height: 18px; }
+
+    .button-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    button {
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.03));
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-weight: 800;
+      font-size: 14px;
+      letter-spacing: 0.01em;
+      transition: transform 120ms ease, box-shadow 120ms ease;
+    }
+    button:hover { transform: translateY(-1px); box-shadow: 0 10px 18px rgba(0,0,0,0.3); }
+    button:active { transform: translateY(0); }
+    .primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #0b132b; border: none; }
+    .danger { background: linear-gradient(135deg, var(--accent-3), #ff927b); color: #0b132b; border: none; }
+
+    .mode-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .mode-btn { border-color: var(--border); }
+    .mode-btn.active { background: var(--accent-2); color: #0b132b; border: none; box-shadow: 0 12px 22px rgba(0,0,0,0.32); }
+
+    .flashcard {
+      margin-top: 8px;
+      background: linear-gradient(155deg, #0f2744, #0a1b31);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 36px;
+      min-height: 380px;
+      position: relative;
+      box-shadow: var(--glow);
+      overflow: hidden;
+      perspective: 1400px;
+      cursor: pointer;
+      isolation: isolate;
+    }
+
+    .flashcard::after {
+      content: "";
+      position: absolute;
+      inset: 8% 10%;
+      background: radial-gradient(circle at 26% 32%, rgba(255, 183, 3, 0.14), transparent 42%),
+                  radial-gradient(circle at 78% 68%, rgba(25, 229, 192, 0.14), transparent 38%),
+                  linear-gradient(145deg, rgba(255,255,255,0.04), rgba(255,255,255,0));
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .flashcard-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      transition: transform 320ms ease, opacity 160ms ease;
+      z-index: 1;
+      display: grid;
+      place-items: center;
+    }
+
+    .flashcard.show-back .flashcard-inner { transform: rotateY(180deg); }
+
+    .face {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      display: grid;
+      place-items: center;
+      align-content: center;
+      gap: 14px;
+      line-height: 1.2;
+      padding: 0 22px;
+      text-align: center;
+    }
+
+    .front { font-size: 18px; font-weight: 800; }
+    .back { transform: rotateY(180deg); color: var(--accent); font-size: 18px; font-weight: 700; }
+
+    .term-row { display: inline-flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center; }
+    .term { font-size: 40px; line-height: 1.04; }
+    .definition { font-size: 22px; line-height: 1.34; }
+
+    .pos-pill { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 999px; font-size: 13px; font-weight: 800; background: rgba(255,255,255,0.08); border: 1px solid var(--border); width: fit-content; margin: 0; }
+
+    .meta-row { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; color: var(--muted); font-size: 14px; }
+
+    .progress {
+      margin-top: 6px;
+      height: 10px;
+      width: 100%;
+      background: rgba(255,255,255,0.06);
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .progress-bar { height: 100%; background: linear-gradient(135deg, var(--accent), var(--accent-2)); width: 0%; transition: width 200ms ease; }
+
+    .quiz-area, .typing-area {
+      margin-top: 12px;
+      display: none;
+      position: relative;
+      z-index: 2;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 12px;
+      box-shadow: 0 14px 24px rgba(0,0,0,0.25);
+      flex-direction: column;
+      gap: 10px;
+    }
+    .choice-list { display: grid; gap: 8px; }
+    .choice { text-align: left; border-radius: 12px; }
+    .input-row { display: flex; gap: 8px; }
+
+    .hint { color: var(--muted); font-size: 13px; }
+
+    .flashcard[data-mode="quiz"] .flashcard-inner,
+    .flashcard[data-mode="typing"] .flashcard-inner {
+      opacity: 0;
+      pointer-events: none;
+      visibility: hidden;
+    }
+    .flashcard[data-mode="quiz"] .quiz-area { display: block; }
+    .flashcard[data-mode="typing"] .typing-area { display: block; }
+    .flashcard[data-mode="quiz"],
+    .flashcard[data-mode="typing"] { cursor: default; }
+
+    .answer-feedback {
+      margin-top: 12px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+      font-weight: 800;
+      letter-spacing: 0.01em;
+      box-shadow: 0 14px 26px rgba(0,0,0,0.28);
+      min-height: 20px;
+      transform: translateY(0);
+      opacity: 0;
+      transition: opacity 160ms ease, transform 220ms ease;
+    }
+    .answer-feedback.show { opacity: 1; transform: translateY(0); }
+    .feedback-success { background: linear-gradient(135deg, rgba(25,229,192,0.2), rgba(25,229,192,0.08)); border-color: rgba(25,229,192,0.45); box-shadow: 0 16px 28px rgba(25,229,192,0.22); }
+    .feedback-error { background: linear-gradient(135deg, rgba(255,111,97,0.22), rgba(255,111,97,0.10)); border-color: rgba(255,111,97,0.45); box-shadow: 0 16px 28px rgba(255,111,97,0.26); }
+    .feedback-text { display: block; }
+    .feedback-sub { display: block; font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+    @keyframes popIn {
+      0% { transform: translateY(8px) scale(0.97); opacity: 0; }
+      100% { transform: translateY(0) scale(1); opacity: 1; }
+    }
+
+    @media (max-width: 640px) {
+      .front, .back { font-size: 24px; }
+      .flashcard { padding: 22px; min-height: 280px; }
+      .badge { width: 48px; height: 48px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="title-block">
+        <div class="badge">A+</div>
+        <div>
+          <h1>HSPT Vocabulary Flashcards</h1>
+          <p class="subtitle">Tween-friendly practice • Shuffle • Quiz • Type-to-answer</p>
+        </div>
+      </div>
+      <div class="pill" id="progress-pill">Deck: 0 / 0 • Known: 0</div>
+    </header>
+
+    <div class="grid">
+      <div class="card">
+        <label for="search-input">Search (word or definition)</label>
+        <input id="search-input" type="text" placeholder="type to filter..." />
+      </div>
+      <div class="card">
+        <label>Modes</label>
+        <div class="mode-row">
+          <button class="mode-btn active" data-mode="practice">Practice</button>
+          <button class="mode-btn" data-mode="quiz">Quiz</button>
+          <button class="mode-btn" data-mode="typing">Typing</button>
+        </div>
+        <div class="button-row" style="margin-top:10px;">
+          <label class="toggle"><input id="shuffle-toggle" type="checkbox" checked /> Shuffle deck</label>
+          <button id="reset-btn" class="ghost">Reset deck</button>
+        </div>
+      </div>
+      <div class="card">
+        <label>Part of Speech</label>
+        <div id="pos-filters" class="pos-filters"></div>
+        <div class="button-row" style="margin-top:8px;">
+          <button id="pos-all" class="ghost">All</button>
+          <button id="pos-none" class="ghost">None</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="flashcard" id="flashcard">
+      <div class="flashcard-inner">
+        <div id="flashcard-front" class="face front"></div>
+        <div id="flashcard-back" class="face back"></div>
+      </div>
+      <div class="quiz-area" id="quiz-area">
+        <div id="quiz-prompt"></div>
+        <div class="choice-list" id="choice-list"></div>
+      </div>
+      <div class="typing-area" id="typing-area">
+        <div class="hint" id="typing-prompt"></div>
+        <div class="input-row" style="margin-top:8px;">
+          <input id="typing-input" type="text" placeholder="type the word" />
+          <button id="typing-submit" class="primary">Check</button>
+        </div>
+        <div class="hint" id="typing-feedback" style="margin-top:6px;"></div>
+      </div>
+    </div>
+
+    <div id="answer-feedback" class="answer-feedback"></div>
+
+    <div class="button-row">
+      <button id="prev-btn" class="ghost">◀ Prev</button>
+      <button id="next-btn" class="ghost">Next ▶</button>
+      <button id="know-btn" class="primary">I know it</button>
+      <button id="notyet-btn" class="danger">Not yet</button>
+      <button id="print-btn" class="ghost">Print view</button>
+    </div>
+
+    <div class="meta-row">
+      <div id="counter" class="counter">0 / 0</div>
+      <div class="hint" id="streak">Streak: 0 • Correct: 0</div>
+    </div>
+    <div class="progress"><div id="progress-bar" class="progress-bar"></div></div>
+  </div>
+
+  <script>
+    // Global state
+    let cards = [];
+    let filteredCards = [];
+    let currentIndex = 0;
+    let showDefinition = false;
+    let searchTerm = "";
+    let selectedPosFilters = new Set();
+    let shuffleEnabled = true;
+    let mode = "practice"; // practice | quiz | typing
+    let known = new Set();
+    let correctCount = 0;
+    let streak = 0;
+
+    const flashcardEl = document.getElementById("flashcard");
+    const frontEl = document.getElementById("flashcard-front");
+    const backEl = document.getElementById("flashcard-back");
+    const counterEl = document.getElementById("counter");
+    const searchInput = document.getElementById("search-input");
+    const posFilterContainer = document.getElementById("pos-filters");
+    const shuffleToggle = document.getElementById("shuffle-toggle");
+    const prevBtn = document.getElementById("prev-btn");
+    const nextBtn = document.getElementById("next-btn");
+    const printBtn = document.getElementById("print-btn");
+    const knowBtn = document.getElementById("know-btn");
+    const notYetBtn = document.getElementById("notyet-btn");
+    const posAllBtn = document.getElementById("pos-all");
+    const posNoneBtn = document.getElementById("pos-none");
+    const progressBar = document.getElementById("progress-bar");
+    const progressPill = document.getElementById("progress-pill");
+    const streakEl = document.getElementById("streak");
+    const modeBtns = Array.from(document.querySelectorAll(".mode-btn"));
+    const quizArea = document.getElementById("quiz-area");
+    const quizPrompt = document.getElementById("quiz-prompt");
+    const choiceList = document.getElementById("choice-list");
+    const typingArea = document.getElementById("typing-area");
+    const typingPrompt = document.getElementById("typing-prompt");
+    const typingInput = document.getElementById("typing-input");
+    const typingSubmit = document.getElementById("typing-submit");
+    const typingFeedback = document.getElementById("typing-feedback");
+    const resetBtn = document.getElementById("reset-btn");
+    const answerFeedback = document.getElementById("answer-feedback");
+
+    function cardKey(c) { return `${c.word}__${c.partOfSpeech}`; }
+
+    // --- CSV LOADING ---
+    async function loadVocabFromCSV() {
+      const res = await fetch("vocabulary.csv");
+      const text = await res.text();
+
+      const lines = text.trim().split("\n");
+      const header = lines.shift().split(",");
+
+      const wordIdx = header.indexOf("word");
+      const posIdx = header.indexOf("part_of_speech");
+      const defIdx = header.indexOf("definition");
+
+      const rows = lines.map(line => {
+        const cols = line.split(/,(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)/);
+        const unquote = s => s.replace(/^\"(.*)\"$/, "$1");
+        return {
+          word: unquote(cols[wordIdx]).trim(),
+          partOfSpeech: unquote(cols[posIdx]).trim(),
+          definition: unquote(cols[defIdx]).trim()
+        };
+      });
+
+      return rows;
+    }
+
+    // --- INITIALIZATION ---
+    function shuffleArray(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+    }
+
+    function initPosFilters() {
+      const posSet = new Set(cards.map(c => c.partOfSpeech));
+      posFilterContainer.innerHTML = "";
+      selectedPosFilters = new Set();
+
+      posSet.forEach(pos => {
+        if (!pos) return;
+        const chip = document.createElement("div");
+        chip.className = "pos-chip active";
+        chip.textContent = pos;
+        selectedPosFilters.add(pos);
+        chip.addEventListener("click", () => {
+          if (chip.classList.contains("active")) {
+            chip.classList.remove("active");
+            selectedPosFilters.delete(pos);
+          } else {
+            chip.classList.add("active");
+            selectedPosFilters.add(pos);
+          }
+          applyFilters();
+        });
+        posFilterContainer.appendChild(chip);
+      });
+    }
+
+    function applyFilters() {
+      const term = searchTerm.toLowerCase();
+      filteredCards = cards.filter(card => {
+        if (selectedPosFilters.size && !selectedPosFilters.has(card.partOfSpeech)) return false;
+        if (!term) return true;
+        return card.word.toLowerCase().includes(term) || card.definition.toLowerCase().includes(term);
+      });
+      if (shuffleEnabled) shuffleArray(filteredCards);
+      currentIndex = 0;
+      showDefinition = false;
+      renderCard();
+      updateProgress();
+      resetQuizTypingState();
+      setFeedback("");
+    }
+
+    // --- RENDERING ---
+    function renderCard() {
+      flashcardEl.dataset.mode = mode;
+      if (!filteredCards.length) {
+        frontEl.textContent = "No cards match your filters.";
+        backEl.textContent = "";
+        flashcardEl.classList.remove("show-back");
+        quizArea.style.display = mode === "quiz" ? "block" : "none";
+        typingArea.style.display = mode === "typing" ? "block" : "none";
+        choiceList.innerHTML = "";
+        typingPrompt.textContent = "";
+        typingFeedback.textContent = "";
+        counterEl.textContent = "0 / 0";
+        setFeedback("");
+        return;
+      }
+
+      const card = filteredCards[currentIndex];
+      frontEl.innerHTML = `<div class="term-row"><span class="term">${card.word}</span><span class="pos-pill">${card.partOfSpeech}</span></div>`;
+      backEl.innerHTML = `<div class="definition">${card.definition}</div>`;
+      counterEl.textContent = `${currentIndex + 1} / ${filteredCards.length}`;
+
+      if (mode === "practice") {
+        quizArea.style.display = "none";
+        typingArea.style.display = "none";
+        choiceList.innerHTML = "";
+        typingFeedback.textContent = "";
+        flashcardEl.classList.toggle("show-back", showDefinition);
+      } else if (mode === "quiz") {
+        flashcardEl.classList.remove("show-back");
+        quizArea.style.display = "block";
+        typingArea.style.display = "none";
+        buildQuiz(card);
+      } else if (mode === "typing") {
+        flashcardEl.classList.remove("show-back");
+        quizArea.style.display = "none";
+        typingArea.style.display = "block";
+        buildTyping(card);
+      }
+    }
+
+    function updateProgress() {
+      const total = filteredCards.length;
+      const knownCount = filteredCards.filter(c => known.has(cardKey(c))).length;
+      const pct = total ? Math.round((knownCount / total) * 100) : 0;
+      progressBar.style.width = `${pct}%`;
+      progressPill.textContent = `Deck: ${knownCount} / ${total} known`;
+      streakEl.textContent = `Streak: ${streak} • Correct: ${correctCount}`;
+    }
+
+    // --- QUIZ MODE ---
+    function buildQuiz(card) {
+      quizPrompt.innerHTML = `<div class="term-row"><span class="term">${card.word}</span><span class="pos-pill">${card.partOfSpeech}</span></div><div class="hint">Pick the matching definition.</div>`;
+      const options = new Set([card]);
+      while (options.size < Math.min(4, filteredCards.length)) {
+        const rand = filteredCards[Math.floor(Math.random() * filteredCards.length)];
+        options.add(rand);
+      }
+      const shuffled = Array.from(options);
+      shuffleArray(shuffled);
+      choiceList.innerHTML = "";
+      shuffled.forEach(opt => {
+        const btn = document.createElement("button");
+        btn.className = "choice";
+        btn.textContent = opt.definition;
+        btn.addEventListener("click", () => {
+          const correct = opt.word === card.word && opt.partOfSpeech === card.partOfSpeech;
+          handleAnswer(correct, card);
+        });
+        choiceList.appendChild(btn);
+      });
+    }
+
+    // --- TYPING MODE ---
+    function buildTyping(card) {
+      typingPrompt.textContent = card.definition;
+      typingInput.value = "";
+      typingFeedback.textContent = "";
+      typingInput.focus();
+    }
+
+    function handleTypingSubmit() {
+      if (!filteredCards.length) return;
+      const card = filteredCards[currentIndex];
+      const guess = typingInput.value.trim().toLowerCase();
+      const correct = guess === card.word.toLowerCase();
+      handleAnswer(correct, card, true);
+      typingFeedback.textContent = "";
+      if (correct) typingInput.value = "";
+    }
+
+    // --- ANSWERS / PROGRESS ---
+    function handleAnswer(correct, card, autoAdvance = false) {
+      if (correct) {
+        known.add(cardKey(card));
+        correctCount += 1;
+        streak += 1;
+      } else {
+        streak = 0;
+      }
+      if (mode === "quiz" || mode === "typing") {
+        const main = correct ? "Nice!" : "Try again";
+        const sub = `${card.word} (${card.partOfSpeech}) — ${card.definition}`;
+        setFeedback(main, correct ? "success" : "error", sub);
+      } else {
+        setFeedback("");
+      }
+      updateProgress();
+      if (autoAdvance || mode !== "practice") nextCard();
+    }
+
+    // --- NAVIGATION ---
+    function nextCard() {
+      if (!filteredCards.length) return;
+      currentIndex = (currentIndex + 1) % filteredCards.length;
+      showDefinition = false;
+      renderCard();
+    }
+
+    function prevCard() {
+      if (!filteredCards.length) return;
+      currentIndex = (currentIndex - 1 + filteredCards.length) % filteredCards.length;
+      showDefinition = false;
+      renderCard();
+    }
+
+    function flipCard() {
+      if (mode !== "practice") return;
+      if (!filteredCards.length) return;
+      showDefinition = !showDefinition;
+      renderCard();
+    }
+
+    function resetDeck() {
+      known.clear();
+      streak = 0;
+      correctCount = 0;
+      applyFilters();
+    }
+
+    // --- MODE SWITCHING ---
+    function setMode(newMode) {
+      mode = newMode;
+      showDefinition = false;
+      modeBtns.forEach(btn => btn.classList.toggle("active", btn.dataset.mode === newMode));
+      resetQuizTypingState();
+      renderCard();
+    }
+
+    function resetQuizTypingState() {
+      typingFeedback.textContent = "";
+      if (mode === "quiz") choiceList.innerHTML = "";
+    }
+
+    function setFeedback(message, tone = "", sub = "") {
+      if (!message) {
+        answerFeedback.innerHTML = "";
+        answerFeedback.className = "answer-feedback";
+        answerFeedback.classList.remove("show");
+        return;
+      }
+      const main = `<span class="feedback-text">${message}</span>`;
+      const subline = sub ? `<span class="feedback-sub">${sub}</span>` : "";
+      answerFeedback.innerHTML = `${main}${subline}`;
+      answerFeedback.className = `answer-feedback ${tone === "success" ? "feedback-success" : "feedback-error"} show`;
+      answerFeedback.style.animation = "popIn 0.22s ease";
+    }
+
+    // --- PRINT VIEW ---
+    function openPrintView() {
+      if (!filteredCards.length) return;
+      const rowsHtml = filteredCards
+        .map(c => `<tr><td>${c.word} (${c.partOfSpeech})</td><td>${c.definition}</td></tr>`)
+        .join("");
+      const win = window.open("", "_blank");
+      win.document.write(`
+        <html>
+          <head>
+            <title>HSPT Vocabulary – Printable Flashcards</title>
+            <style>
+              body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+              table { border-collapse: collapse; width: 100%; }
+              td, th { border: 1px solid #333; padding: 6px 8px; font-size: 12px; }
+              th { background:#eee; }
+            </style>
+          </head>
+          <body>
+            <h1>HSPT Vocabulary – Printable Flashcards</h1>
+            <table>
+              <thead><tr><th>Word (POS)</th><th>Definition</th></tr></thead>
+              <tbody>${rowsHtml}</tbody>
+            </table>
+          </body>
+        </html>
+      `);
+      win.document.close();
+      win.focus();
+      win.print();
+    }
+
+    // --- EVENT LISTENERS ---
+    flashcardEl.addEventListener("click", flipCard);
+    nextBtn.addEventListener("click", nextCard);
+    prevBtn.addEventListener("click", prevCard);
+    knowBtn.addEventListener("click", () => { if (filteredCards.length) handleAnswer(true, filteredCards[currentIndex], true); });
+    notYetBtn.addEventListener("click", () => { if (filteredCards.length) handleAnswer(false, filteredCards[currentIndex], true); });
+    shuffleToggle.addEventListener("change", () => { shuffleEnabled = shuffleToggle.checked; applyFilters(); });
+    searchInput.addEventListener("input", e => { searchTerm = e.target.value; applyFilters(); });
+    printBtn.addEventListener("click", openPrintView);
+    typingSubmit.addEventListener("click", handleTypingSubmit);
+    typingInput.addEventListener("keydown", e => { if (e.key === "Enter") handleTypingSubmit(); });
+    posAllBtn.addEventListener("click", () => { posFilterContainer.querySelectorAll(".pos-chip").forEach(c => c.classList.add("active")); selectedPosFilters = new Set(cards.map(c => c.partOfSpeech)); applyFilters(); });
+    posNoneBtn.addEventListener("click", () => { posFilterContainer.querySelectorAll(".pos-chip").forEach(c => c.classList.remove("active")); selectedPosFilters.clear(); applyFilters(); });
+    resetBtn.addEventListener("click", resetDeck);
+
+    modeBtns.forEach(btn => btn.addEventListener("click", () => setMode(btn.dataset.mode)));
+
+    document.addEventListener("keydown", e => {
+      if (e.key === "ArrowRight") nextCard();
+      else if (e.key === "ArrowLeft") prevCard();
+      else if (e.key === " " || e.key === "Enter") {
+        e.preventDefault();
+        if (mode === "practice") flipCard();
+      }
+    });
+
+    // --- BOOTSTRAP ---
+    (async function bootstrap() {
+      cards = await loadVocabFromCSV();
+      filteredCards = [...cards];
+      initPosFilters();
+      applyFilters();
+      renderCard();
+    })();
+  </script>
+</body>
+</html>
