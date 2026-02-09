@@ -268,14 +268,13 @@ function renderUsersTable(users) {
     const row = document.createElement('tr');
     
     const lastLogin = user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never';
-    const gamification = user.UserGamification || {};
     
     row.innerHTML = `
       <td><strong>${user.email}</strong></td>
       <td><span class="pos-pill">${user.role}</span></td>
-      <td>${gamification.level || 1}</td>
-      <td>${gamification.totalXp || 0}</td>
-      <td>${gamification.dailyStreak || 0}🔥</td>
+      <td>${user.level || 1}</td>
+      <td>${user.totalXp || 0}</td>
+      <td>${user.dailyStreak || 0}🔥</td>
       <td>${lastLogin}</td>
       <td>
         <button class="action-btn danger" data-user-id="${user.id}">Delete</button>

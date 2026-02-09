@@ -10,6 +10,7 @@ let showDefinition = false;
 let searchTerm = "";
 let selectedPosFilters = new Set();
 let shuffleEnabled = true;
+let smartModeEnabled = false;
 let mode = "practice"; // practice | quiz | typing
 let known = new Set();
 let correctCount = 0;
@@ -38,6 +39,10 @@ const ACHIEVEMENTS = [
   { id: 'typing_ace', name: 'Typing Ace', desc: 'Complete 25 typing challenges', icon: '⌨️', requirement: () => totalTyping >= 25 },
 ];
 
+// Hint system state
+let currentHintLevel = 0;
+const MAX_HINT_LEVELS = 3;
+
 // DOM Elements
 const flashcardEl = document.getElementById("flashcard");
 const frontEl = document.getElementById("flashcard-front");
@@ -46,6 +51,7 @@ const counterEl = document.getElementById("counter");
 const searchInput = document.getElementById("search-input");
 const posFilterContainer = document.getElementById("pos-filters");
 const shuffleToggle = document.getElementById("shuffle-toggle");
+const smartModeToggle = document.getElementById("smart-mode-toggle");
 const prevBtn = document.getElementById("prev-btn");
 const nextBtn = document.getElementById("next-btn");
 const knowBtn = document.getElementById("know-btn");
@@ -64,6 +70,10 @@ const typingPrompt = document.getElementById("typing-prompt");
 const typingInput = document.getElementById("typing-input");
 const typingSubmit = document.getElementById("typing-submit");
 const typingFeedback = document.getElementById("typing-feedback");
+const quizHintBtn = document.getElementById("quiz-hint-btn");
+const quizHint = document.getElementById("quiz-hint");
+const typingHintBtn = document.getElementById("typing-hint-btn");
+const typingHint = document.getElementById("typing-hint");
 const resetBtn = document.getElementById("reset-btn");
 const answerFeedback = document.getElementById("answer-feedback");
 const logoutBtn = document.getElementById("logout-btn");
@@ -81,6 +91,153 @@ const modalClose = document.getElementById("modal-close");
 const continueBtn = document.getElementById("continue-btn");
 const achievementsGrid = document.getElementById("achievements-grid");
 const loadingOverlay = document.getElementById("loading-overlay");
+
+// === CONFETTI ANIMATIONS ===
+function fireConfetti(type = 'default') {
+  const confettiSettings = {
+    default: {
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 }
+    },
+    levelUp: {
+      particleCount: 150,
+      spread: 100,
+      startVelocity: 45,
+      ticks: 100,
+      origin: { y: 0.5 },
+      colors: ['#9333ea', '#c026d3', '#ec4899', '#f472b6', '#fbbf24']
+    },
+    achievement: {
+      particleCount: 80,
+      angle: 60,
+      spread: 55,
+      origin: { x: 0 },
+      colors: ['#fbbf24', '#f59e0b', '#fb923c']
+    },
+    streak: {
+      particleCount: 50,
+      angle: 90,
+      spread: 45,
+      origin: { y: 0.3 },
+      colors: ['#ef4444', '#f97316', '#facc15'],
+      shapes: ['circle']
+    }
+  };
+
+  const settings = confettiSettings[type] || confettiSettings.default;
+  
+  if (window.confetti) {
+    window.confetti(settings);
+    
+    // For special types, add a second burst
+    if (type === 'levelUp') {
+      setTimeout(() => {
+        window.confetti({
+          ...settings,
+          particleCount: 100,
+          angle: 120,
+          origin: { x: 1 }
+        });
+      }, 250);
+    } else if (type === 'achievement') {
+      setTimeout(() => {
+        window.confetti({
+          ...settings,
+          angle: 120,
+          origin: { x: 1 }
+        });
+      }, 200);
+    }
+  }
+}
+
+// Check if streak reaches milestone and celebrate
+function checkStreakMilestone(newStreak) {
+  const milestones = [3, 7, 10, 15, 30, 50, 100];
+  
+  if (milestones.includes(newStreak)) {
+    fireConfetti('streak');
+    
+    const messages = {
+      3: "🔥 3-Day Streak! You're on fire!",
+      7: "⚡ 7-Day Streak! Outstanding dedication!",
+      10: "🌟 10-Day Streak! You're unstoppable!",
+      15: "💎 15-Day Streak! Incredible consistency!",
+      30: "🏆 30-Day Streak! You're a vocabulary master!",
+      50: "👑 50-Day Streak! Legendary commitment!",
+      100: "🎖️ 100-Day Streak! You're making history!"
+    };
+    
+    setFeedback(messages[newStreak], "success", `Keep this momentum going!`);
+  }
+}
+
+// Generate progressive hints for a word
+function generateHint(word, hintLevel) {
+  const hints = [];
+  
+  // Level 1: Word length and first letter
+  if (hintLevel >= 1) {
+    const blanks = '_ '.repeat(word.length - 1);
+    hints.push(`First letter: <strong>${word[0].toUpperCase()}</strong>`);
+    hints.push(`Word length: ${word.length} letters`);
+    hints.push(`<span style="letter-spacing: 4px; font-family: monospace;">${word[0].toUpperCase()} ${blanks}</span>`);
+  }
+  
+  // Level 2: Show more letters (every other letter)
+  if (hintLevel >= 2) {
+    const revealed = word.split('').map((char, i) => 
+      i % 2 === 0 ? char.toUpperCase() : '_'
+    ).join(' ');
+    hints.push(`More letters: <span style="letter-spacing: 4px; font-family: monospace;">${revealed}</span>`);
+  }
+  
+  // Level 3: Show all but last letter
+  if (hintLevel >= 3) {
+    const almostThere = word.slice(0, -1).toUpperCase() + ' _';
+    hints.push(`Almost there: <span style="letter-spacing: 4px; font-family: monospace;">${almostThere}</span>`);
+  }
+  
+  return hints.join('<br>');
+}
+
+// Show hint for current card
+function showHint(isTypingMode) {
+  if (!filteredCards.length) return;
+  
+  const card = filteredCards[currentIndex];
+  currentHintLevel = Math.min(currentHintLevel + 1, MAX_HINT_LEVELS);
+  
+  const hintText = generateHint(card.word, currentHintLevel);
+  const hintEl = isTypingMode ? typingHint : quizHint;
+  const btnEl = isTypingMode ? typingHintBtn : quizHintBtn;
+  
+  hintEl.innerHTML = hintText;
+  hintEl.style.display = 'block';
+  
+  // Update button text
+  if (currentHintLevel >= MAX_HINT_LEVELS) {
+    btnEl.textContent = '💡 Max hints reached';
+    btnEl.disabled = true;
+  } else {
+    btnEl.textContent = `💡 Hint ${currentHintLevel}/${MAX_HINT_LEVELS} (Next hint?)`;
+  }
+}
+
+// Reset hints for new card
+function resetHints() {
+  currentHintLevel = 0;
+  quizHint.style.display = 'none';
+  typingHint.style.display = 'none';
+  quizHint.innerHTML = '';
+  typingHint.innerHTML = '';
+  quizHintBtn.textContent = '💡 Need a hint?';
+  typingHintBtn.textContent = '💡 Need a hint?';
+  quizHintBtn.disabled = false;
+  typingHintBtn.disabled = false;
+}
+
 
 // === API FUNCTIONS ===
 async function checkAuth() {
@@ -104,13 +261,19 @@ async function checkAuth() {
 }
 
 async function loadVocabulary() {
-  const response = await fetch(`${API_BASE}/api/vocab`, {
+  const endpoint = smartModeEnabled ? '/api/vocab/smart/prioritized' : '/api/vocab';
+  const response = await fetch(`${API_BASE}${endpoint}`, {
     credentials: 'include'
   });
   
   if (!response.ok) throw new Error('Failed to load vocabulary');
   
   const data = await response.json();
+  
+  if (smartModeEnabled && data.dueCount !== undefined) {
+    console.log(`Smart Mode: ${data.dueCount} words due for review`);
+  }
+  
   return data.vocabulary;
 }
 
@@ -143,7 +306,12 @@ async function submitAnswer(vocabId, isCorrect, xpEarned) {
       'Content-Type': 'application/json',
     },
     credentials: 'include',
-    body: JSON.stringify({ vocabId, isCorrect, xpEarned })
+    body: JSON.stringify({ 
+      vocabId, 
+      correct: isCorrect, 
+      mode, 
+      xpEarned 
+    })
   });
   
   if (!response.ok) throw new Error('Failed to submit answer');
@@ -211,8 +379,9 @@ function awardXP(amount) {
     playerLevel++;
     playerXP -= xpNeeded;
     
-    // Level up celebration
-    setFeedback(`🎉 Level Up! You're now Level ${playerLevel}!`, 'success', 'Level up rewards coming soon...');
+    // Level up celebration with confetti
+    fireConfetti('levelUp');
+    setFeedback(`🎉 Level Up! You're now Level ${playerLevel}!`, 'success', 'Keep up the amazing work!');
   }
   
   updateGamificationUI();
@@ -246,7 +415,8 @@ function checkAchievements() {
   });
   
   if (newUnlocks.length > 0) {
-    // Show achievement notification
+    // Show achievement notification with confetti
+    fireConfetti('achievement');
     const names = newUnlocks.map(a => `${a.icon} ${a.name}`).join(', ');
     setFeedback(`🏆 Achievement Unlocked: ${names}`, 'success', 'Check the session summary!');
   }
@@ -443,11 +613,29 @@ async function handleAnswer(correct, card, autoAdvance = false) {
     if (streak >= 10) xpEarned += 10;
     else if (streak >= 5) xpEarned += 5;
     
-    awardXP(xpEarned);
+    // Apply hint penalty (reduce XP by 3 per hint used)
+    const hintPenalty = currentHintLevel * 3;
+    xpEarned = Math.max(1, xpEarned - hintPenalty); // Minimum 1 XP
     
-    // Submit to backend
+    // Submit to backend first to get server-calculated XP
     try {
-      await submitAnswer(card.id, true, xpEarned);
+      const result = await submitAnswer(card.id, true, xpEarned);
+      
+      // Use server-calculated XP (which includes difficulty bonuses)
+      const actualXP = result.xpEarned || xpEarned;
+      awardXP(actualXP);
+      
+      // Check if daily streak was updated
+      if (result.streak !== undefined && result.streak !== dailyStreak) {
+        const oldStreak = dailyStreak;
+        dailyStreak = result.streak;
+        updateGamificationUI();
+        
+        // Check for streak milestones (only when streak increases)
+        if (dailyStreak > oldStreak) {
+          checkStreakMilestone(dailyStreak);
+        }
+      }
     } catch (error) {
       console.error('Failed to submit answer:', error);
     }
@@ -456,7 +644,13 @@ async function handleAnswer(correct, card, autoAdvance = false) {
     
     // Submit to backend
     try {
-      await submitAnswer(card.id, false, 0);
+      const result = await submitAnswer(card.id, false, 0);
+      
+      // Update daily streak if changed
+      if (result.streak !== undefined && result.streak !== dailyStreak) {
+        dailyStreak = result.streak;
+        updateGamificationUI();
+      }
     } catch (error) {
       console.error('Failed to submit answer:', error);
     }
@@ -478,6 +672,7 @@ function nextCard() {
   if (!filteredCards.length) return;
   currentIndex = (currentIndex + 1) % filteredCards.length;
   showDefinition = false;
+  resetHints();
   renderCard();
   
   // Check if deck is complete (all cards known)
@@ -491,6 +686,7 @@ function prevCard() {
   if (!filteredCards.length) return;
   currentIndex = (currentIndex - 1 + filteredCards.length) % filteredCards.length;
   showDefinition = false;
+  resetHints();
   renderCard();
 }
 
@@ -499,12 +695,27 @@ function flipCard() {
   if (!filteredCards.length) return;
   showDefinition = !showDefinition;
   renderCard();
+  
+  // Subtle confetti burst on flip
+  if (showDefinition && window.confetti) {
+    window.confetti({
+      particleCount: 25,
+      spread: 40,
+      startVelocity: 20,
+      ticks: 40,
+      gravity: 1.2,
+      origin: { y: 0.5 },
+      colors: ['#7c3aed', '#10d9b8', '#ffb703'],
+      scalar: 0.7
+    });
+  }
 }
 
 function resetDeck() {
   known.clear();
   streak = 0;
   correctCount = 0;
+  resetHints();
   applyFilters();
 }
 
@@ -514,12 +725,15 @@ function setMode(newMode) {
   showDefinition = false;
   modeBtns.forEach(btn => btn.classList.toggle("active", btn.dataset.mode === newMode));
   resetQuizTypingState();
+  resetHints();
   renderCard();
 }
 
 function resetQuizTypingState() {
   typingFeedback.textContent = "";
+  typingInput.value = "";
   if (mode === "quiz") choiceList.innerHTML = "";
+  resetHints();
 }
 
 function setFeedback(message, tone = "", sub = "") {
@@ -552,12 +766,41 @@ prevBtn.addEventListener("click", prevCard);
 knowBtn.addEventListener("click", () => { if (filteredCards.length) handleAnswer(true, filteredCards[currentIndex], true); });
 notYetBtn.addEventListener("click", () => { if (filteredCards.length) handleAnswer(false, filteredCards[currentIndex], true); });
 shuffleToggle.addEventListener("change", () => { shuffleEnabled = shuffleToggle.checked; applyFilters(); });
+smartModeToggle.addEventListener("change", async () => { 
+  smartModeEnabled = smartModeToggle.checked; 
+  
+  // Disable shuffle when smart mode is on
+  if (smartModeEnabled) {
+    shuffleToggle.checked = false;
+    shuffleToggle.disabled = true;
+    shuffleEnabled = false;
+  } else {
+    shuffleToggle.disabled = false;
+    shuffleToggle.checked = true;
+    shuffleEnabled = true;
+  }
+  
+  // Reload vocabulary with smart sorting
+  try {
+    loadingOverlay.style.display = 'flex';
+    cards = await loadVocabulary();
+    applyFilters();
+    setFeedback(smartModeEnabled ? "🧠 Smart Mode: Words prioritized by review schedule" : "Shuffled mode enabled", "success");
+  } catch (error) {
+    console.error('Failed to reload vocabulary:', error);
+    setFeedback("Failed to switch modes", "error");
+  } finally {
+    loadingOverlay.style.display = 'none';
+  }
+});
 searchInput.addEventListener("input", e => { searchTerm = e.target.value; applyFilters(); });
 typingSubmit.addEventListener("click", handleTypingSubmit);
 typingInput.addEventListener("keydown", e => { if (e.key === "Enter") handleTypingSubmit(); });
 posAllBtn.addEventListener("click", () => { posFilterContainer.querySelectorAll(".pos-chip").forEach(c => c.classList.add("active")); selectedPosFilters = new Set(cards.map(c => c.partOfSpeech)); applyFilters(); });
 posNoneBtn.addEventListener("click", () => { posFilterContainer.querySelectorAll(".pos-chip").forEach(c => c.classList.remove("active")); selectedPosFilters.clear(); applyFilters(); });
 resetBtn.addEventListener("click", resetDeck);
+quizHintBtn.addEventListener("click", () => showHint(false));
+typingHintBtn.addEventListener("click", () => showHint(true));
 logoutBtn.addEventListener("click", handleLogout);
 
 modeBtns.forEach(btn => btn.addEventListener("click", () => setMode(btn.dataset.mode)));
@@ -584,6 +827,12 @@ window.addEventListener('beforeunload', () => {
     // Check auth
     currentUser = await checkAuth();
     if (!currentUser) return;
+    
+    // Show admin link if user is admin
+    if (currentUser.role === 'admin') {
+      const adminLink = document.getElementById('admin-link');
+      if (adminLink) adminLink.style.display = 'block';
+    }
     
     // Load vocabulary
     cards = await loadVocabulary();

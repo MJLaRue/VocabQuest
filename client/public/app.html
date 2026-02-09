@@ -25,6 +25,8 @@
       </div>
       <div style="display: flex; gap: 10px; align-items: center;">
         <div class="pill" id="progress-pill">Deck: 0 / 0 • Known: 0</div>
+        <a href="/stats.html" style="color: var(--teal); text-decoration: none; font-weight: 600; padding: 8px 16px; border-radius: 8px; border: 2px solid var(--teal); transition: all 200ms;">📊 My Stats</a>
+        <a href="/admin.html" id="admin-link" style="display: none; color: var(--purple); text-decoration: none; font-weight: 600; padding: 8px 16px; border-radius: 8px; border: 2px solid var(--purple); transition: all 200ms;">Admin Dashboard</a>
         <button id="logout-btn" class="ghost logout-btn">Log Out</button>
       </div>
     </header>
@@ -60,6 +62,7 @@
           <button class="mode-btn" data-mode="typing">Typing</button>
         </div>
         <div class="button-row" style="margin-top:10px;">
+          <label class="toggle"><input id="smart-mode-toggle" type="checkbox" /> 🧠 Smart Mode</label>
           <label class="toggle"><input id="shuffle-toggle" type="checkbox" checked /> Shuffle deck</label>
           <button id="reset-btn" class="ghost">Reset deck</button>
         </div>
@@ -82,12 +85,20 @@
       <div class="quiz-area" id="quiz-area">
         <div id="quiz-prompt"></div>
         <div class="choice-list" id="choice-list"></div>
+        <div style="margin-top: 12px; text-align: center;">
+          <button id="quiz-hint-btn" class="ghost" style="font-size: 0.9rem;">💡 Need a hint?</button>
+          <div id="quiz-hint" class="hint" style="margin-top: 8px; display: none;"></div>
+        </div>
       </div>
       <div class="typing-area" id="typing-area">
         <div class="hint" id="typing-prompt"></div>
         <div class="input-row" style="margin-top:8px;">
           <input id="typing-input" type="text" placeholder="type the word" />
           <button id="typing-submit" class="primary">Check</button>
+        </div>
+        <div style="text-align: center; margin-top: 8px;">
+          <button id="typing-hint-btn" class="ghost" style="font-size: 0.9rem;">💡 Need a hint?</button>
+          <div id="typing-hint" class="hint" style="margin-top: 8px; display: none;"></div>
         </div>
         <div class="hint" id="typing-feedback" style="margin-top:6px;"></div>
       </div>
@@ -134,6 +145,7 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <script src="/js/app.js"></script>
 </body>
 </html>

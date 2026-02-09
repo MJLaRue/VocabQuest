@@ -50,6 +50,22 @@ const UserProgress = sequelize.define('UserProgress', {
     type: DataTypes.INTEGER,
     defaultValue: 0,
     field: 'incorrect_count'
+  },
+  nextReviewDate: {
+    type: DataTypes.DATE,
+    field: 'next_review_date',
+    defaultValue: DataTypes.NOW
+  },
+  easeFactor: {
+    type: DataTypes.FLOAT,
+    defaultValue: 2.5,
+    field: 'ease_factor'
+  },
+  reviewInterval: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+    field: 'review_interval',
+    comment: 'Days until next review'
   }
 }, {
   tableName: 'user_progress',
