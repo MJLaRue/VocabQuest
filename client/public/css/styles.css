@@ -4,7 +4,7 @@
   --bg-light: #1e2d47;
   --text: #f8fafc;
   --text-secondary: #cbd5e1;
-  --text-muted: #94a3b8;
+  --text-muted: #a1b1c7;
   --purple: #7c3aed;
   --purple-light: #a78bfa;
   --pink: #ec4899;
@@ -12,6 +12,7 @@
   --yellow: #fbbf24;
   --gold: #ffb703;
   --mint: #10d9b8;
+  --teal: #14b8a6;
   --cyan: #06b6d4;
   --coral: #ff6b6b;
   --border: rgba(139, 92, 246, 0.2);
@@ -71,6 +72,27 @@ body::after {
 @keyframes float {
   0%, 100% { transform: translate(0, 0) scale(1); }
   50% { transform: translate(50px, 50px) scale(1.1); }
+}
+
+/* Skip Link for Keyboard Navigation */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--purple);
+  color: white;
+  padding: 8px 16px;
+  text-decoration: none;
+  border-radius: 0 0 4px 0;
+  font-weight: 600;
+  z-index: 100;
+  transition: top 0.2s ease;
+}
+
+.skip-link:focus {
+  top: 0;
+  outline: 3px solid var(--gold);
+  outline-offset: 2px;
 }
 
 .page {
@@ -329,10 +351,16 @@ input[type="text"] {
   transition: all 200ms ease;
 }
 
-input[type="text"]:focus {
+input[type="text"]:focus,
+input[type="text"]:focus-visible {
   border-color: var(--purple);
   box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.15);
   background: var(--bg2);
+  outline: none;
+}
+
+input[type="text"]:focus-visible {
+  box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.25), 0 0 0 7px rgba(255, 183, 3, 0.2);
 }
 
 .pos-filters { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -353,6 +381,11 @@ input[type="text"]:focus {
   box-shadow: var(--shadow-md);
   border-color: var(--purple);
 }
+.pos-chip:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 5px rgba(255, 183, 3, 0.2);
+}
 .pos-chip.active { 
   background: linear-gradient(135deg, var(--purple), var(--pink)); 
   color: white; 
@@ -363,6 +396,10 @@ input[type="text"]:focus {
 
 .toggle { display: flex; align-items: center; gap: 8px; cursor: pointer; }
 .toggle input { accent-color: var(--purple); width: 18px; height: 18px; cursor: pointer; }
+.toggle input:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 2px;
+}
 
 .button-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 button {
@@ -388,6 +425,11 @@ button:active {
   transform: translateY(-1px) scale(0.98);
   transition: all 100ms ease;
 }
+button:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px rgba(255, 183, 3, 0.2), var(--shadow-md);
+}
 .primary { 
   background: linear-gradient(135deg, var(--purple), var(--pink)); 
   color: white; 
@@ -407,6 +449,13 @@ button:active {
 .danger:hover {
   box-shadow: 0 10px 24px rgba(255, 107, 107, 0.45);
   transform: translateY(-3px) scale(1.05);
+}
+
+/* Link focus styles */
+a:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 .mode-row { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -592,6 +641,21 @@ button:active {
 .input-row { display: flex; gap: 8px; }
 
 .hint { color: var(--text-muted); font-size: 13px; font-weight: 600; }
+
+/* Keyboard key styling */
+kbd {
+  display: inline-block;
+  padding: 2px 6px;
+  font-family: "Poppins", monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  margin: 0 2px;
+}
 
 .flashcard[data-mode="quiz"] .flashcard-inner,
 .flashcard[data-mode="typing"] .flashcard-inner {
@@ -846,6 +910,34 @@ button:active {
   line-height: 1.3;
 }
 
+/* Additional Mobile Improvements */
+@media (max-width: 768px) {
+  /* Improve spacing and readability on tablets */
+  body {
+    padding: 20px 12px 40px;
+  }
+  
+  .page {
+    gap: 16px;
+  }
+  
+  /* Better modal on mobile */
+  .modal-content {
+    width: 95%;
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+  
+  /* Stack button rows on smaller screens */
+  .button-row {
+    flex-direction: column;
+  }
+  
+  .button-row button {
+    width: 100%;
+  }
+}
+
 @media (max-width: 640px) {
   .front, .back { font-size: 16px; }
   .term { font-size: 36px; }
@@ -853,11 +945,47 @@ button:active {
   .flashcard { padding: 20px; min-height: 280px; }
   .badge { width: 48px; height: 48px; font-size: 20px; }
   h1 { font-size: 24px; }
-  button { font-size: 15px; padding: 11px 18px; }
+  button { 
+    font-size: 15px; 
+    padding: 11px 18px;
+    min-height: 44px;
+    min-width: 44px;
+  }
   .card { padding: 16px; }
-  .choice { padding: 12px; font-size: 15px; }
+  .choice { 
+    padding: 12px; 
+    font-size: 15px;
+    min-height: 48px;
+  }
   
+  /* Ensure touch targets meet minimum size */
+  .pos-chip {
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+  
+  .mode-btn {
+    min-height: 44px;
+    padding: 12px 18px;
+  }
+  
+  /* Stack navigation on small screens */
+  header nav {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  /* Adjust gamification bar for mobile */
   .gamification-bar {
+    gap: 8px;
+  }
+  
+  .gamification-bar .badge {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+}
 
 /* === AUTH PAGES === */
 .auth-page {

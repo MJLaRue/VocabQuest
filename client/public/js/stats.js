@@ -111,6 +111,13 @@ function renderOverview(stats) {
   const progressPct = Math.round((stats.progress.wordsLearned / stats.progress.totalWords) * 100);
   progressPercent.textContent = `${progressPct}%`;
   progressBar.style.width = `${progressPct}%`;
+  
+  // Update ARIA attributes
+  const progressBarContainer = progressBar.parentElement;
+  if (progressBarContainer) {
+    progressBarContainer.setAttribute('aria-valuenow', progressPct);
+    progressBarContainer.setAttribute('aria-valuetext', `${stats.progress.wordsLearned} out of ${stats.progress.totalWords} words learned, ${progressPct}% complete`);
+  }
 
   // Activity stats
   statSessions.textContent = stats.activity.totalSessions;
@@ -137,7 +144,7 @@ function renderOverview(stats) {
 
 function renderDifficultWords(words) {
   if (words.length === 0) {
-    difficultWordsList.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-secondary);">No difficult words yet! Keep practicing 😊</div>';
+    difficultWordsList.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-secondary);" role="status">No difficult words yet! Keep practicing <span aria-hidden="true">😊</span></div>';
     return;
   }
 
@@ -146,23 +153,23 @@ function renderDifficultWords(words) {
     const errorRate = totalAttempts > 0 ? Math.round((word.incorrectCount / totalAttempts) * 100) : 0;
     
     return `
-      <div style="padding: 16px; background: var(--bg); border-radius: 12px; border: 2px solid var(--border);">
+      <article style="padding: 16px; background: var(--bg); border-radius: 12px; border: 2px solid var(--border);" role="listitem" aria-label="${word.word}, ${word.partOfSpeech}, ${errorRate}% error rate">
         <div style="display: flex; justify-content: space-between; align-items: start;">
           <div>
             <div style="font-size: 1.2rem; font-weight: 700; color: var(--text);">${word.word}</div>
             <div style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 4px;">${word.partOfSpeech} • ${word.definition}</div>
           </div>
           <div style="text-align: right;">
-            <div style="font-size: 1.5rem; font-weight: 700; color: var(--gold);">${errorRate}%</div>
+            <div style="font-size: 1.5rem; font-weight: 700; color: var(--gold);" role="status">${errorRate}%</div>
             <div style="font-size: 0.8rem; color: var(--text-secondary);">error rate</div>
           </div>
         </div>
         <div style="margin-top: 12px; display: flex; gap: 16px; font-size: 0.85rem; color: var(--text-secondary);">
-          <span>✅ ${word.correctCount} correct</span>
-          <span>❌ ${word.incorrectCount} incorrect</span>
-          <span>🔄 ${word.reviewCount} reviews</span>
+          <span><span aria-hidden="true">✅</span> ${word.correctCount} correct</span>
+          <span><span aria-hidden="true">❌</span> ${word.incorrectCount} incorrect</span>
+          <span><span aria-hidden="true">🔄</span> ${word.reviewCount} reviews</span>
         </div>
-      </div>
+      </article>
     `;
   }).join('');
 }
@@ -172,18 +179,19 @@ function renderAchievements(unlockedIds) {
     const unlocked = unlockedIds.includes(achievement.id);
     const opacity = unlocked ? '1' : '0.4';
     const bg = unlocked ? 'var(--bg-light)' : 'var(--bg)';
+    const status = unlocked ? 'unlocked' : 'locked';
     
     return `
-      <div style="padding: 16px; background: ${bg}; border-radius: 12px; border: 2px solid var(--border); opacity: ${opacity};">
+      <article style="padding: 16px; background: ${bg}; border-radius: 12px; border: 2px solid var(--border); opacity: ${opacity};" role="listitem" aria-label="${achievement.name}: ${achievement.desc}, ${status}">
         <div style="display: flex; gap: 16px; align-items: center;">
-          <div style="font-size: 3rem;">${achievement.icon}</div>
+          <div style="font-size: 3rem;" aria-hidden="true">${achievement.icon}</div>
           <div style="flex: 1;">
             <div style="font-size: 1.1rem; font-weight: 700; color: var(--text);">${achievement.name}</div>
             <div style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 4px;">${achievement.desc}</div>
           </div>
-          ${unlocked ? '<div style="font-size: 1.5rem;">✓</div>' : '<div style="font-size: 1.5rem; opacity: 0.3;">🔒</div>'}
+          ${unlocked ? '<div style="font-size: 1.5rem;" aria-hidden="true">✓</div>' : '<div style="font-size: 1.5rem; opacity: 0.3;" aria-hidden="true">🔒</div>'}
         </div>
-      </div>
+      </article>
     `;
   }).join('');
 }
@@ -265,15 +273,15 @@ function renderInsights(stats) {
   }
 
   insightsList.innerHTML = insights.map(insight => `
-    <div style="padding: 16px; background: var(--bg-light); border-radius: 12px; border-left: 4px solid var(--purple);">
+    <article style="padding: 16px; background: var(--bg-light); border-radius: 12px; border-left: 4px solid var(--purple);" role="listitem" aria-label="${insight.title}: ${insight.text}">
       <div style="display: flex; gap: 12px; align-items: start;">
-        <div style="font-size: 2rem;">${insight.icon}</div>
+        <div style="font-size: 2rem;" aria-hidden="true">${insight.icon}</div>
         <div>
           <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;">${insight.title}</div>
           <div style="color: var(--text-secondary); font-size: 0.95rem;">${insight.text}</div>
         </div>
       </div>
-    </div>
+    </article>
   `).join('');
 }
 

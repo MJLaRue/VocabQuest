@@ -398,6 +398,13 @@ function updateGamificationUI() {
   const xpPercent = (playerXP / xpNeeded) * 100;
   xpBarEl.style.width = `${Math.min(100, xpPercent)}%`;
   
+  // Update ARIA attributes for progress bar
+  const xpBarContainer = document.querySelector('.xp-bar-container');
+  if (xpBarContainer) {
+    xpBarContainer.setAttribute('aria-valuenow', Math.round(xpPercent));
+    xpBarContainer.setAttribute('aria-valuetext', `${playerXP} out of ${xpNeeded} XP, ${Math.round(xpPercent)}% complete`);
+  }
+  
   streakNumberEl.textContent = dailyStreak;
   sessionCorrectEl.textContent = sessionCorrect;
   sessionXpEl.textContent = sessionXP;
@@ -434,8 +441,10 @@ function showAchievementsModal() {
     const isUnlocked = unlockedAchievements.has(achievement.id);
     const card = document.createElement('div');
     card.className = `achievement-card ${isUnlocked ? 'unlocked' : 'locked'}`;
+    card.setAttribute('role', 'article');
+    card.setAttribute('aria-label', `${achievement.name}: ${achievement.desc} - ${isUnlocked ? 'Unlocked' : 'Locked'}`);
     card.innerHTML = `
-      <div class="achievement-icon">${achievement.icon}</div>
+      <div class="achievement-icon" aria-hidden="true">${achievement.icon}</div>
       <div class="achievement-name">${achievement.name}</div>
       <div class="achievement-desc">${achievement.desc}</div>
     `;
@@ -443,10 +452,18 @@ function showAchievementsModal() {
   });
   
   achievementsModal.classList.add('show');
+  achievementsModal.setAttribute('aria-hidden', 'false');
+  
+  // Focus trap: focus the close button
+  modalClose.focus();
 }
 
 function hideAchievementsModal() {
   achievementsModal.classList.remove('show');
+  achievementsModal.setAttribute('aria-hidden', 'true');
+  
+  // Return focus to achievements button
+  document.getElementById('achievements-btn').focus();
 }
 
 function cardKey(c) { return c.id; }
@@ -723,7 +740,11 @@ function resetDeck() {
 function setMode(newMode) {
   mode = newMode;
   showDefinition = false;
-  modeBtns.forEach(btn => btn.classList.toggle("active", btn.dataset.mode === newMode));
+  modeBtns.forEach(btn => {
+    const isActive = btn.dataset.mode === newMode;
+    btn.classList.toggle("active", isActive);
+    btn.setAttribute('aria-pressed', isActive.toString());
+  });
   resetQuizTypingState();
   resetHints();
   renderCard();
@@ -806,6 +827,19 @@ logoutBtn.addEventListener("click", handleLogout);
 modeBtns.forEach(btn => btn.addEventListener("click", () => setMode(btn.dataset.mode)));
 
 document.addEventListener("keydown", e => {
+  // Close modal with Escape key
+  if (e.key === "Escape") {
+    const modal = document.getElementById("achievements-modal");
+    if (modal && modal.getAttribute("aria-hidden") === "false") {
+      hideAchievementsModal();
+    }
+    return;
+  }
+  
+  // Navigation shortcuts (only when modal is closed)
+  const modal = document.getElementById("achievements-modal");
+  if (modal && modal.getAttribute("aria-hidden") === "false") return;
+  
   if (e.key === "ArrowRight") nextCard();
   else if (e.key === "ArrowLeft") prevCard();
   else if (e.key === " " || e.key === "Enter") {

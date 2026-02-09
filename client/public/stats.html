@@ -10,12 +10,15 @@
   <link rel="stylesheet" href="/css/styles.css" />
 </head>
 <body>
-  <div class="loading-overlay" id="loading-overlay" style="display: none;">
+  <!-- Skip Links for keyboard navigation -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  
+  <div class="loading-overlay" id="loading-overlay" style="display: none;" role="alert" aria-live="polite" aria-label="Loading statistics">
     <div class="spinner"></div>
   </div>
 
   <div class="page">
-    <header>
+    <header role="banner">
       <div class="title-block">
         <div class="badge">📊</div>
         <div>
@@ -23,39 +26,40 @@
           <p class="subtitle">Track your learning journey</p>
         </div>
       </div>
-      <div style="display: flex; gap: 10px; align-items: center;">
-        <a href="/app.html" style="color: var(--purple); text-decoration: none; font-weight: 600; padding: 8px 16px; border-radius: 8px; border: 2px solid var(--purple);">Back to Flashcards</a>
-        <button id="logout-btn" class="ghost logout-btn">Log Out</button>
-      </div>
+      <nav aria-label="Statistics navigation" style="display: flex; gap: 10px; align-items: center;">
+        <a href="/app.html" aria-label="Return to flashcards" style="color: var(--purple); text-decoration: none; font-weight: 600; padding: 8px 16px; border-radius: 8px; border: 2px solid var(--purple);">Back to Flashcards</a>
+        <button id="logout-btn" class="ghost logout-btn" aria-label="Log out of account">Log Out</button>
+      </nav>
     </header>
 
+    <main id="main-content">
     <!-- Gamification Overview -->
-    <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
-      <div class="card" style="text-align: center;">
-        <div style="font-size: 3rem; margin-bottom: 8px;">⭐</div>
-        <div class="stat-value" id="stat-level">1</div>
+    <section class="grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));" role="region" aria-label="Gamification overview">
+      <article class="card" style="text-align: center;">
+        <div style="font-size: 3rem; margin-bottom: 8px;" aria-hidden="true">⭐</div>
+        <div class="stat-value" id="stat-level" role="status" aria-label="Current level">1</div>
         <div class="stat-label">Current Level</div>
-      </div>
-      <div class="card" style="text-align: center;">
-        <div style="font-size: 3rem; margin-bottom: 8px;">💎</div>
-        <div class="stat-value" id="stat-xp">0</div>
+      </article>
+      <article class="card" style="text-align: center;">
+        <div style="font-size: 3rem; margin-bottom: 8px;" aria-hidden="true">💎</div>
+        <div class="stat-value" id="stat-xp" role="status" aria-label="Total experience points">0</div>
         <div class="stat-label">Total XP</div>
-      </div>
-      <div class="card" style="text-align: center;">
-        <div style="font-size: 3rem; margin-bottom: 8px;">🔥</div>
-        <div class="stat-value" id="stat-streak">0</div>
+      </article>
+      <article class="card" style="text-align: center;">
+        <div style="font-size: 3rem; margin-bottom: 8px;" aria-hidden="true">🔥</div>
+        <div class="stat-value" id="stat-streak" role="status" aria-label="Current daily streak">0</div>
         <div class="stat-label">Day Streak</div>
-      </div>
-      <div class="card" style="text-align: center;">
-        <div style="font-size: 3rem; margin-bottom: 8px;">🏆</div>
-        <div class="stat-value" id="stat-achievements">0</div>
+      </article>
+      <article class="card" style="text-align: center;">
+        <div style="font-size: 3rem; margin-bottom: 8px;" aria-hidden="true">🏆</div>
+        <div class="stat-value" id="stat-achievements" role="status" aria-label="Achievements unlocked">0</div>
         <div class="stat-label">Achievements</div>
-      </div>
-    </div>
+      </article>
+    </section>
 
     <!-- Progress Overview -->
-    <div class="card">
-      <h2>Vocabulary Progress</h2>
+    <section class="card" role="region" aria-labelledby="vocab-progress-heading">
+      <h2 id="vocab-progress-heading">Vocabulary Progress</h2>
       <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-top: 16px;">
         <div>
           <div class="stat-value" id="stat-words-learned">0</div>
@@ -75,16 +79,16 @@
         </div>
       </div>
       <div style="margin-top: 24px;">
-        <div class="hint" style="margin-bottom: 8px;">Progress: <span id="progress-percent">0%</span></div>
-        <div style="background: var(--bg); border-radius: 12px; height: 24px; overflow: hidden;">
+        <div class="hint" style="margin-bottom: 8px;" role="status" aria-live="polite">Progress: <span id="progress-percent">0%</span></div>
+        <div style="background: var(--bg); border-radius: 12px; height: 24px; overflow: hidden;" role="progressbar" aria-label="Vocabulary learning progress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
           <div id="progress-bar" style="height: 100%; background: linear-gradient(90deg, var(--purple), var(--teal)); width: 0%; transition: width 600ms ease;"></div>
         </div>
       </div>
-    </div>
+    </section>
 
     <!-- Study Activity -->
-    <div class="card">
-      <h2>Study Activity</h2>
+    <section class="card" role="region" aria-labelledby="study-activity-heading">
+      <h2 id="study-activity-heading">Study Activity</h2>
       <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-top: 16px;">
         <div>
           <div class="stat-value" id="stat-sessions">0</div>
@@ -103,32 +107,33 @@
           <div class="stat-label">Last Study</div>
         </div>
       </div>
-    </div>
+    </section>
 
     <!-- Most Difficult Words -->
-    <div class="card">
-      <h2>Words to Focus On</h2>
+    <section class="card" role="region" aria-labelledby="difficult-words-heading">
+      <h2 id="difficult-words-heading">Words to Focus On</h2>
       <p class="hint" style="margin-bottom: 16px;">Your most challenging words - spend extra time reviewing these!</p>
-      <div id="difficult-words-list" style="display: flex; flex-direction: column; gap: 12px;">
-        <div style="text-align: center; padding: 20px; color: var(--text-secondary);">Loading...</div>
+      <div id="difficult-words-list" style="display: flex; flex-direction: column; gap: 12px;" role="list" aria-label="Difficult vocabulary words">
+        <div style="text-align: center; padding: 20px; color: var(--text-secondary);" role="status">Loading...</div>
       </div>
-    </div>
+    </section>
 
     <!-- Achievements -->
-    <div class="card">
-      <h2>Achievement Progress</h2>
-      <div id="achievements-list" style="display: flex; flex-direction: column; gap: 12px; margin-top: 16px;">
-        <div style="text-align: center; padding: 20px; color: var(--text-secondary);">Loading...</div>
+    <section class="card" role="region" aria-labelledby="achievements-heading">
+      <h2 id="achievements-heading">Achievement Progress</h2>
+      <div id="achievements-list" style="display: flex; flex-direction: column; gap: 12px; margin-top: 16px;" role="list" aria-label="Achievement list">
+        <div style="text-align: center; padding: 20px; color: var(--text-secondary);" role="status">Loading...</div>
       </div>
-    </div>
+    </section>
 
     <!-- Study Insights -->
-    <div class="card">
-      <h2>Learning Insights</h2>
-      <div id="insights-list" style="display: flex; flex-direction: column; gap: 12px; margin-top: 16px;">
-        <div style="text-align: center; padding: 20px; color: var(--text-secondary);">Loading...</div>
+    <section class="card" role="region" aria-labelledby="insights-heading">
+      <h2 id="insights-heading">Learning Insights</h2>
+      <div id="insights-list" style="display: flex; flex-direction: column; gap: 12px; margin-top: 16px;" role="list" aria-label="Learning insights">
+        <div style="text-align: center; padding: 20px; color: var(--text-secondary);" role="status">Loading...</div>
       </div>
-    </div>
+    </section>
+    </main>
   </div>
 
   <script src="/js/stats.js"></script>
