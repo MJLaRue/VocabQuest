@@ -9,22 +9,26 @@ const { sequelize } = require('./config/db');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust Render proxy (needed for secure cookies over HTTPS)
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
+
 // Middleware
-app.use(cors({
-  origin: process.env.NODE_ENV === 'production' ? false : 'http://localhost:3000',
-  credentials: true
-}));
+// In production, frontend and API are on same domain (no CORS needed)
+// In development, allow localhost for testing
+if (process.env.NODE_ENV !== 'production') {
+  app.use(cors({
+    origin: 'http://localhost:3000',
+    credentials: true
+  }));
+}
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Session configuration
 const sessionConnectionString = process.env.DATABASE_URL || 
   `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`;
-
-// Check if using local database (don't use secure cookies over HTTP)
-const isLocalDatabase = sessionConnectionString.includes('localhost') || 
-                        sessionConnectionString.includes('127.0.0.1') ||
-                        sessionConnectionString.includes('@db:');
 
 app.use(session({
   store: new pgSession({
@@ -36,11 +40,12 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: !isLocalDatabase, // Only secure over HTTPS/remote databases
+    secure: process.env.NODE_ENV === 'production', // Secure cookies in production (HTTPS)
     httpOnly: true,
-    sameSite: 'lax',
+    sameSite: 'lax', // 'lax' works for same-origin (frontend and API on same domain)
     maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
-  }
+  },
+  proxy: process.env.NODE_ENV === 'production' // Trust proxy in production
 }));
 
 // Static files
