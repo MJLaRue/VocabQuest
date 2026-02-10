@@ -8,7 +8,7 @@ services:
     runtime: node
     region: ohio # us-east-2
     plan: free # Free tier: 512 MB RAM, spins down after 15 min inactivity
-    buildCommand: npm install && npm run migrate
+    buildCommand: npm install && npm run migrate && npm run seed
     startCommand: npm start
     envVars:
       - key: NODE_ENV
