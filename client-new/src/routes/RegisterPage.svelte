@@ -4,7 +4,7 @@
   import Button from '$lib/components/ui/Button.svelte';
   import Card from '$lib/components/ui/Card.svelte';
   import Input from '$lib/components/ui/Input.svelte';
-  import { BookOpen } from 'lucide-svelte';
+  import { Sparkles } from 'lucide-svelte';
 
   let email = '';
   let password = '';
@@ -50,13 +50,13 @@
     <div class="p-8 space-y-6">
       <!-- Logo/Header -->
       <div class="text-center">
-        <div class="w-16 h-16 bg-gradient-to-br from-teal-600 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-          <BookOpen class="w-10 h-10 text-white" />
+        <div class="flex items-center justify-center gap-3 mb-4">
+          <Sparkles class="w-10 h-10 text-teal-600 dark:text-teal-400" />
+          <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
+            Create Account
+          </h1>
         </div>
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
-          Create Account
-        </h1>
-        <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">
+        <p class="text-sm text-gray-600 dark:text-gray-400">
           Start your vocabulary journey
         </p>
       </div>
