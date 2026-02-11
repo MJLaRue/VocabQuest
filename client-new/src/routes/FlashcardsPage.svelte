@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { push } from 'svelte-spa-router';
+  import { push, location } from 'svelte-spa-router';
   import { get } from 'svelte/store';
   import { auth, user, gamification } from '$lib/stores/auth';
   import { vocab, currentWord, progress as vocabProgress, hasNext, hasPrev } from '$lib/stores/vocab';
@@ -18,11 +18,21 @@
   import SessionSummaryModal from '$lib/components/flashcard/SessionSummaryModal.svelte';
   import { confetti } from '$lib/utils/confetti';
 
-  let mode: 'practice' | 'quiz' | 'typing' = 'practice';
+  // Determine mode from URL path
+  function getModeFromPath(path: string): 'practice' | 'quiz' | 'typing' {
+    if (path === '/quiz') return 'quiz';
+    if (path === '/typing') return 'typing';
+    return 'practice';
+  }
+
+  let mode: 'practice' | 'quiz' | 'typing' = getModeFromPath($location);
   let randomMode = typeof window !== 'undefined' 
     ? localStorage.getItem('vocabquest-random-mode') === 'true' 
     : false;
   let isLoading = false;
+
+  // Update mode when location changes
+  $: mode = getModeFromPath($location);
 
   onMount(async () => {
     const user = await auth.checkSession();
@@ -42,16 +52,24 @@
     if (!get(hasActiveSession)) {
       await progress.startSession(mode);
     } else {
-      // Restore mode from active session
+      // If session mode differs from URL mode, restart session
       const progressState = get(progress);
-      if (progressState.currentSession.mode) {
-        mode = progressState.currentSession.mode;
+      if (progressState.currentSession.mode && progressState.currentSession.mode !== mode) {
+        await progress.endSession();
+        await progress.startSession(mode);
       }
     }
   });
 
   async function handleModeChange(newMode: 'practice' | 'quiz' | 'typing') {
-    mode = newMode;
+    // Update URL to match mode
+    const pathMap = {
+      practice: '/practice',
+      quiz: '/quiz',
+      typing: '/typing'
+    };
+    push(pathMap[newMode]);
+    
     // Restart session with new mode
     await progress.endSession();
     await progress.startSession(newMode);

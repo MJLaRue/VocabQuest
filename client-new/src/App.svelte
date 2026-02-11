@@ -13,6 +13,9 @@
 
   const routes = {
     '/': FlashcardsPage,
+    '/practice': FlashcardsPage,
+    '/quiz': FlashcardsPage,
+    '/typing': FlashcardsPage,
     '/stats': StatsPage,
     '/admin': AdminPage,
     '/login': LoginPage,
