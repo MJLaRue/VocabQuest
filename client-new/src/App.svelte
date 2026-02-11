@@ -9,6 +9,7 @@
   import RegisterPage from './routes/RegisterPage.svelte';
   import FlashcardsPage from './routes/FlashcardsPage.svelte';
   import StatsPage from './routes/StatsPage.svelte';
+  import UserGuidePage from './routes/UserGuidePage.svelte';
   import AdminPage from './routes/AdminPage.svelte';
 
   const routes = {
@@ -17,6 +18,7 @@
     '/quiz': FlashcardsPage,
     '/typing': FlashcardsPage,
     '/stats': StatsPage,
+    '/guide': UserGuidePage,
     '/admin': AdminPage,
     '/login': LoginPage,
     '/register': RegisterPage,

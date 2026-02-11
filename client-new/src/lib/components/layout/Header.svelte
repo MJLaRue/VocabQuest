@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Sparkles, Moon, Sun, Flame, Trophy, BarChart3 } from 'lucide-svelte';
+  import { Sparkles, Moon, Sun, Flame, Trophy, BarChart3, BookOpen } from 'lucide-svelte';
   import { theme } from '$lib/stores/theme';
   import Badge from '$lib/components/ui/Badge.svelte';
   import { link } from 'svelte-spa-router';
@@ -32,6 +32,10 @@
             <a href="/stats" use:link class="px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-1">
               <BarChart3 class="w-4 h-4" />
               My Stats
+            </a>
+            <a href="/guide" use:link class="px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-1">
+              <BookOpen class="w-4 h-4" />
+              Guide
             </a>
           </nav>
 
