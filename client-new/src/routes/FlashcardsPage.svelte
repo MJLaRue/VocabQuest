@@ -18,7 +18,9 @@
   import { confetti } from '$lib/utils/confetti';
 
   let mode: 'practice' | 'quiz' | 'typing' = 'practice';
-  let randomMode = false;
+  let randomMode = typeof window !== 'undefined' 
+    ? localStorage.getItem('vocabquest-random-mode') === 'true' 
+    : false;
   let isLoading = false;
 
   onMount(async () => {
@@ -31,7 +33,7 @@
     // Load initial data
     await Promise.all([
       vocab.loadDecks(),
-      vocab.loadWords(),
+      randomMode ? vocab.loadRandomWords() : vocab.loadWords(),
       progress.loadProgress(),
     ]);
 
@@ -100,6 +102,9 @@
 
   function handleToggleRandom() {
     randomMode = !randomMode;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('vocabquest-random-mode', String(randomMode));
+    }
     vocab.setMode(randomMode ? 'random' : 'sequential');
   }
 
