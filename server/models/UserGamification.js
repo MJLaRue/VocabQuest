@@ -39,7 +39,12 @@ const UserGamification = sequelize.define('UserGamification', {
   unlockedAchievements: {
     type: DataTypes.JSONB,
     defaultValue: [],
-    field: 'unlocked_achievements'
+    field: 'unlocked_achievements',
+    get() {
+      // Ensure NULL values are treated as empty array
+      const value = this.getDataValue('unlockedAchievements');
+      return value || [];
+    }
   }
 }, {
   tableName: 'user_gamification',
@@ -48,24 +53,16 @@ const UserGamification = sequelize.define('UserGamification', {
   updatedAt: 'updated_at'
 });
 
-// Helper method to calculate XP needed for next level
-UserGamification.getXPForLevel = function(level) {
-  return Math.floor(100 * Math.pow(1.5, level - 1));
-};
-
-// Instance method to add XP and handle level ups
+// Instance method to add XP and handle level ups using quadratic cumulative formula
+// Level = floor(sqrt(totalXp / 100)) + 1
+// This means XP is never subtracted, only accumulated
 UserGamification.prototype.addXP = function(amount) {
+  const oldLevel = Math.floor(Math.sqrt(this.totalXp / 100)) + 1;
   this.totalXp += amount;
+  const newLevel = Math.floor(Math.sqrt(this.totalXp / 100)) + 1;
   
-  let leveledUp = false;
-  let xpNeeded = UserGamification.getXPForLevel(this.level);
-  
-  while (this.totalXp >= xpNeeded) {
-    this.totalXp -= xpNeeded;
-    this.level++;
-    leveledUp = true;
-    xpNeeded = UserGamification.getXPForLevel(this.level);
-  }
+  const leveledUp = newLevel > oldLevel;
+  this.level = newLevel; // Keep level in sync with actual formula
   
   return { leveledUp, newLevel: this.level };
 };

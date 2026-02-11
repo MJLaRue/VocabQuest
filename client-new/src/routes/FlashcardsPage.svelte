@@ -15,7 +15,8 @@
   import FlashcardActions from '$lib/components/flashcard/FlashcardActions.svelte';
   import FlashcardNavigation from '$lib/components/flashcard/FlashcardNavigation.svelte';
   import SessionSummaryModal from '$lib/components/flashcard/SessionSummaryModal.svelte';
-  import { confetti } from '$lib/utils/confetti';
+  import CelebrationOverlay from '$lib/components/flashcard/CelebrationOverlay.svelte';
+  import { confetti, confettiPresets } from '$lib/utils/confetti';
 
   // Determine mode from URL path
   function getModeFromPath(path: string): 'practice' | 'quiz' | 'typing' {
@@ -29,6 +30,52 @@
     ? localStorage.getItem('vocabquest-random-mode') === 'true' 
     : false;
   let isLoading = false;
+  
+  // Celebration queue system
+  type Celebration = {
+    type: 'levelUp' | 'setComplete' | 'achievement';
+    level?: number;
+    xpBonus?: number;
+    achievementName?: string;
+    achievementId?: string;
+  };
+  let celebrationQueue: Celebration[] = [];
+  let currentCelebration: Celebration | null = null;
+  
+  // Achievement XP bonuses
+  const achievementXP: Record<string, number> = {
+    first_correct: 50,
+    streak_7: 100,
+    words_50: 150,
+    perfect_session: 100
+  };
+  
+  const achievementNames: Record<string, string> = {
+    first_correct: 'First Step',
+    streak_7: 'Week Warrior',
+    words_50: 'Vocab Builder',
+    perfect_session: 'Perfectionist'
+  };
+  
+  function queueCelebration(celebration: Celebration) {
+    celebrationQueue = [...celebrationQueue, celebration];
+    if (!currentCelebration) {
+      showNextCelebration();
+    }
+  }
+  
+  function showNextCelebration() {
+    if (celebrationQueue.length === 0) {
+      currentCelebration = null;
+      return;
+    }
+    currentCelebration = celebrationQueue[0];
+    celebrationQueue = celebrationQueue.slice(1);
+  }
+  
+  function handleCloseCelebration() {
+    showNextCelebration();
+  }
 
   // Update mode when location changes
   $: mode = getModeFromPath($location);
@@ -41,11 +88,14 @@
     }
 
     // Load initial data
-    await Promise.all([
-      vocab.loadDecks(),
-      randomMode ? vocab.loadRandomWords() : vocab.loadWords(),
-      progress.loadProgress(),
-    ]);
+    await vocab.loadDecks();
+    await progress.loadProgress();
+    
+    // Only load words if we don't have any stored (from localStorage)
+    const vocabState = get(vocab);
+    if (vocabState.words.length === 0) {
+      await (randomMode ? vocab.loadRandomWords() : vocab.loadWords());
+    }
 
     // Check for active session and resume or start new based on 30-minute rule
     const sessionId = await progress.checkAndResumeSession(mode);
@@ -88,14 +138,27 @@
       
       const result = await progress.updateProgress($currentWord.id, true);
       
+      // Queue level up celebration if leveled up
       if (result.levelUp) {
-        confetti();
-        ui.showLevelUp();
+        confettiPresets.levelUp();
+        confettiPresets.explosion();
+        queueCelebration({
+          type: 'levelUp',
+          level: result.newLevel
+        });
       }
 
+      // Queue achievement celebrations
       if (result.newAchievements.length > 0) {
-        result.newAchievements.forEach((achievement) => {
-          ui.showAchievement(achievement);
+        result.newAchievements.forEach((achievementId) => {
+          confettiPresets.fireworks();
+          queueCelebration({
+            type: 'achievement',
+            achievementName: achievementNames[achievementId] || achievementId,
+            achievementId: achievementId,
+            xpBonus: achievementXP[achievementId] || 50
+          });
+          ui.showAchievement(achievementId);
         });
       }
 
@@ -104,8 +167,14 @@
       
       // Award set completion bonus
       if (setCompleted) {
-        confetti();
-        progress.awardSetCompletionBonus();
+        // Epic set completion celebration!
+        confettiPresets.fireworks();
+        setTimeout(() => confettiPresets.explosion(), 400);
+        const bonus = progress.awardSetCompletionBonus();
+        queueCelebration({
+          type: 'setComplete',
+          xpBonus: bonus
+        });
       }
     } catch (error) {
       console.error('Failed to update progress:', error);
@@ -171,7 +240,6 @@
   <GamificationBar
     level={$gamification?.level || 1}
     currentXP={$gamification?.totalXp || 0}
-    xpToNextLevel={($gamification?.level || 1) * 100}
     streak={$gamification?.dailyStreak || 0}
     correctStreakBonus={$progress.currentSession.correctStreakBonus}
   />
@@ -259,8 +327,19 @@
     duration={$progress.lastSessionSummary?.duration || 0}
     completedSets={$progress.lastSessionSummary?.completedSets || 0}
     levelUp={$progress.lastSessionSummary?.levelUp || false}
-    newLevel={$gamification?.level || 1}
+    newLevel={Math.floor(Math.sqrt(($gamification?.totalXp || 0) / 100)) + 1}
     on:close={() => ui.closeSessionSummary()}
     on:continue={handleContinueSession}
   />
+  
+  {#if currentCelebration}
+    <CelebrationOverlay
+      type={currentCelebration.type}
+      level={currentCelebration.level || 1}
+      xpBonus={currentCelebration.xpBonus || 50}
+      achievementName={currentCelebration.achievementName || ''}
+      achievementId={currentCelebration.achievementId || ''}
+      onClose={handleCloseCelebration}
+    />
+  {/if}
 </div>

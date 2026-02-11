@@ -158,26 +158,25 @@ router.post('/answer', requireAuth, async (req, res) => {
       const result = gamification.addXP(calculatedXP);
       leveledUp = result.leveledUp;
       newLevel = result.newLevel;
-      await gamification.save();
     }
     
     // Update streak
     const streak = gamification.updateStreak();
-    await gamification.save();
     
-    // Check for achievements
-    const achievements = gamification.unlockedAchievements || [];
+    // Check for achievements - get current achievements from database
+    const currentAchievements = [...(gamification.unlockedAchievements || [])];
+    const achievementsBeforeCount = currentAchievements.length;
     
     // First correct answer achievement
-    if (correct && !achievements.includes('first_correct')) {
-      achievements.push('first_correct');
+    if (correct && !currentAchievements.includes('first_correct')) {
+      currentAchievements.push('first_correct');
       newAchievements.push('first_correct');
       gamification.addXP(50); // Achievement bonus
     }
     
     // 7-day streak achievement
-    if (streak >= 7 && !achievements.includes('streak_7')) {
-      achievements.push('streak_7');
+    if (streak >= 7 && !currentAchievements.includes('streak_7')) {
+      currentAchievements.push('streak_7');
       newAchievements.push('streak_7');
       gamification.addXP(100); // Achievement bonus
     }
@@ -186,16 +185,40 @@ router.post('/answer', requireAuth, async (req, res) => {
     const learnedCount = await UserProgress.count({
       where: { userId: req.user.id, isKnown: true }
     });
-    if (learnedCount >= 50 && !achievements.includes('words_50')) {
-      achievements.push('words_50');
+    if (learnedCount >= 50 && !currentAchievements.includes('words_50')) {
+      currentAchievements.push('words_50');
       newAchievements.push('words_50');
       gamification.addXP(150); // Achievement bonus
     }
     
-    // Update achievements if any were unlocked
-    if (newAchievements.length > 0) {
-      gamification.unlockedAchievements = achievements;
-      await gamification.save();
+    // Save gamification changes (XP, level, streak)
+    await gamification.save();
+    
+    // Update achievements using raw SQL to ensure JSONB persistence
+    if (currentAchievements.length > achievementsBeforeCount) {
+      console.log(`[Achievement] User ${req.user.id} unlocking:`, newAchievements);
+      console.log(`[Achievement] Current array:`, currentAchievements);
+      
+      try {
+        const [results, metadata] = await sequelize.query(
+          'UPDATE user_gamification SET unlocked_achievements = $1::jsonb WHERE user_id = $2',
+          {
+            bind: [JSON.stringify(currentAchievements), req.user.id],
+            type: sequelize.QueryTypes.UPDATE
+          }
+        );
+        
+        console.log(`[Achievement] SQL executed, rows affected:`, metadata?.rowCount || 0);
+        
+        // Reload to verify persistence
+        await gamification.reload();
+        console.log(`[Achievement] Verified in DB for user ${req.user.id}:`, gamification.unlockedAchievements);
+      } catch (error) {
+        console.error(`[Achievement] SQL ERROR for user ${req.user.id}:`, error);
+        throw error;
+      }
+    } else {
+      console.log(`[Achievement] No new achievements for user ${req.user.id}`);
     }
     
     res.json({ 
@@ -402,6 +425,37 @@ router.post('/session/:id/end', requireAuth, async (req, res) => {
       }
       
       await gamification.save();
+    }
+    
+    // Check for perfect session achievement (100% accuracy with at least 10 cards)
+    if (gamification && cardsReviewed >= 10 && correctAnswers === cardsReviewed) {
+      const currentAchievements = [...(gamification.unlockedAchievements || [])];
+      
+      if (!currentAchievements.includes('perfect_session')) {
+        currentAchievements.push('perfect_session');
+        newAchievements.push('perfect_session');
+        
+        // Award achievement XP bonus
+        const oldLevel = gamification.level;
+        gamification.totalXp += 100;
+        const newLevel = Math.floor(Math.sqrt(gamification.totalXp / 100)) + 1;
+        if (newLevel > oldLevel) {
+          gamification.level = newLevel;
+          levelUp = true;
+        }
+        await gamification.save();
+        
+        // Persist achievement using raw SQL
+        await sequelize.query(
+          'UPDATE user_gamification SET unlocked_achievements = $1::jsonb WHERE user_id = $2',
+          {
+            bind: [JSON.stringify(currentAchievements), req.user.id],
+            type: sequelize.QueryTypes.UPDATE
+          }
+        );
+        
+        console.log(`Perfect session achievement unlocked for user ${req.user.id}`);
+      }
     }
     
     res.json({ 

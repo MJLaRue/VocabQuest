@@ -172,6 +172,7 @@ function createProgressStore() {
         return {
           xpEarned: result.xpEarned,
           levelUp: result.leveledUp,
+          newLevel: result.newLevel,
           newAchievements: result.newAchievements,
         };
       } catch (err) {

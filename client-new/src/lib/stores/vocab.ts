@@ -19,16 +19,77 @@ interface VocabState {
   mode: 'sequential' | 'random';
 }
 
+// LocalStorage persistence helpers
+const STORAGE_KEY = 'vocabquest-vocab-state';
+const STORAGE_TIMESTAMP_KEY = 'vocabquest-vocab-timestamp';
+const MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+function saveToLocalStorage(state: VocabState) {
+  if (typeof window === 'undefined') return;
+  
+  try {
+    const dataToSave = {
+      words: state.words,
+      completedWords: state.completedWords,
+      currentIndex: state.currentIndex,
+      filters: state.filters,
+      mode: state.mode,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+    localStorage.setItem(STORAGE_TIMESTAMP_KEY, Date.now().toString());
+  } catch (error) {
+    console.warn('Failed to save vocab state to localStorage:', error);
+  }
+}
+
+function loadFromLocalStorage(): Partial<VocabState> | null {
+  if (typeof window === 'undefined') return null;
+  
+  try {
+    const timestamp = localStorage.getItem(STORAGE_TIMESTAMP_KEY);
+    if (!timestamp) return null;
+    
+    // Check if data is too old
+    const age = Date.now() - parseInt(timestamp, 10);
+    if (age > MAX_AGE_MS) {
+      clearLocalStorage();
+      return null;
+    }
+    
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (!stored) return null;
+    
+    return JSON.parse(stored);
+  } catch (error) {
+    console.warn('Failed to load vocab state from localStorage:', error);
+    return null;
+  }
+}
+
+function clearLocalStorage() {
+  if (typeof window === 'undefined') return;
+  
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(STORAGE_TIMESTAMP_KEY);
+  } catch (error) {
+    console.warn('Failed to clear vocab state from localStorage:', error);
+  }
+}
+
 function createVocabStore() {
+  // Try to restore from localStorage
+  const restored = loadFromLocalStorage();
+  
   const { subscribe, set, update } = writable<VocabState>({
-    words: [],
-    completedWords: [],
-    currentIndex: 0,
+    words: restored?.words || [],
+    completedWords: restored?.completedWords || [],
+    currentIndex: restored?.currentIndex || 0,
     decks: [],
-    filters: { deck: null, pos: null, search: '' },
+    filters: restored?.filters || { deck: null, pos: null, search: '' },
     isLoading: false,
     error: null,
-    mode: 'sequential',
+    mode: restored?.mode || 'sequential',
   });
 
   return {
@@ -50,6 +111,8 @@ function createVocabStore() {
           currentIndex: 0,
           isLoading: false,
         }));
+        // Clear localStorage when explicitly loading new words
+        clearLocalStorage();
       } catch (err) {
         const error = err as APIError;
         update((state) => ({
@@ -77,6 +140,8 @@ function createVocabStore() {
           isLoading: false,
           mode: 'random',
         }));
+        // Clear localStorage when explicitly loading new words
+        clearLocalStorage();
       } catch (err) {
         const error = err as APIError;
         update((state) => ({
@@ -119,14 +184,18 @@ function createVocabStore() {
         if (state.mode === 'random') {
           // In random mode, pick a random card
           const nextIndex = Math.floor(Math.random() * state.words.length);
-          return { ...state, currentIndex: nextIndex };
+          const newState = { ...state, currentIndex: nextIndex };
+          saveToLocalStorage(newState);
+          return newState;
         } else {
           // In sequential mode, go to next card
           const nextIndex =
             state.currentIndex < state.words.length - 1
               ? state.currentIndex + 1
               : state.currentIndex;
-          return { ...state, currentIndex: nextIndex };
+          const newState = { ...state, currentIndex: nextIndex };
+          saveToLocalStorage(newState);
+          return newState;
         }
       });
     },
@@ -143,20 +212,28 @@ function createVocabStore() {
           } else {
             nextIndex = 0;
           }
-          return { ...state, currentIndex: nextIndex };
+          const newState = { ...state, currentIndex: nextIndex };
+          saveToLocalStorage(newState);
+          return newState;
         } else {
           // In sequential mode, go to previous card
           const prevIndex = state.currentIndex > 0 ? state.currentIndex - 1 : 0;
-          return { ...state, currentIndex: prevIndex };
+          const newState = { ...state, currentIndex: prevIndex };
+          saveToLocalStorage(newState);
+          return newState;
         }
       });
     },
 
     goToCard(index: number) {
-      update((state) => ({
-        ...state,
-        currentIndex: Math.max(0, Math.min(index, state.words.length - 1)),
-      }));
+      update((state) => {
+        const newState = {
+          ...state,
+          currentIndex: Math.max(0, Math.min(index, state.words.length - 1)),
+        };
+        saveToLocalStorage(newState);
+        return newState;
+      });
     },
 
     removeCurrentCard() {
@@ -179,12 +256,16 @@ function createVocabStore() {
       
       const setCompleted = newWords.length === 0;
       
-      update((state) => ({
-        ...state,
-        words: newWords,
-        completedWords: newCompletedWords,
-        currentIndex: newIndex,
-      }));
+      update((state) => {
+        const newState = {
+          ...state,
+          words: newWords,
+          completedWords: newCompletedWords,
+          currentIndex: newIndex,
+        };
+        saveToLocalStorage(newState);
+        return newState;
+      });
       
       // If we've removed all cards, load more
       if (setCompleted) {
