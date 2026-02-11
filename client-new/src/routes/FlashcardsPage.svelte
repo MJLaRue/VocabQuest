@@ -1,9 +1,10 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { push } from 'svelte-spa-router';
+  import { get } from 'svelte/store';
   import { auth, user, gamification } from '$lib/stores/auth';
   import { vocab, currentWord, progress as vocabProgress, hasNext, hasPrev } from '$lib/stores/vocab';
-  import { progress, sessionStats } from '$lib/stores/progress';
+  import { progress, sessionStats, hasActiveSession } from '$lib/stores/progress';
   import { ui } from '$lib/stores/ui';
   import Header from '$lib/components/layout/Header.svelte';
   import Container from '$lib/components/layout/Container.svelte';
@@ -37,8 +38,16 @@
       progress.loadProgress(),
     ]);
 
-    // Start a session
-    await progress.startSession(mode);
+    // Start a session only if there isn't one already
+    if (!get(hasActiveSession)) {
+      await progress.startSession(mode);
+    } else {
+      // Restore mode from active session
+      const progressState = get(progress);
+      if (progressState.currentSession.mode) {
+        mode = progressState.currentSession.mode;
+      }
+    }
   });
 
   async function handleModeChange(newMode: 'practice' | 'quiz' | 'typing') {
