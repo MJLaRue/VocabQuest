@@ -217,13 +217,15 @@
         on:next={() => vocab.nextCard()}
       />
 
-      <!-- Actions -->
-      <FlashcardActions
-        disabled={!$currentWord}
-        loading={isLoading}
-        on:know={handleKnow}
-        on:notYet={handleNotYet}
-      />
+      <!-- Actions (Practice mode only) -->
+      {#if mode === 'practice'}
+        <FlashcardActions
+          disabled={!$currentWord}
+          loading={isLoading}
+          on:know={handleKnow}
+          on:notYet={handleNotYet}
+        />
+      {/if}
 
       <!-- Session Stats -->
       <div class="flex justify-center gap-8 text-sm text-gray-600 dark:text-gray-400">
