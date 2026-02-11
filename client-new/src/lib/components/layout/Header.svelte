@@ -1,35 +1,56 @@
 <script lang="ts">
-  import { Sparkles, Moon, Sun, BarChart3, BookOpen, Layers, Shield, Menu, X } from 'lucide-svelte';
-  import { fade, fly } from 'svelte/transition';
-  import { theme } from '$lib/stores/theme';
-  import { isAdmin } from '$lib/stores/auth';
-  import { link } from 'svelte-spa-router';
+  import {
+    Sparkles,
+    Moon,
+    Sun,
+    BarChart3,
+    BookOpen,
+    Layers,
+    Shield,
+    Menu,
+    X,
+  } from "lucide-svelte";
+  import { fade, fly } from "svelte/transition";
+  import { theme } from "$lib/stores/theme";
+  import { isAdmin } from "$lib/stores/auth";
+  import { link } from "svelte-spa-router";
 
-  export let user: { 
-    username: string; 
-    level?: number; 
-    totalXp?: number; 
+  export let user: {
+    username: string;
+    level?: number;
+    totalXp?: number;
     dailyStreak?: number;
     role?: string;
   } | null = null;
   export let showNav = true;
-  
+
   // Mobile menu state
   let mobileMenuOpen = false;
-  
+
   // Check if user is admin from either the store or the prop
-  $: userIsAdmin = $isAdmin || user?.role === 'admin';
-  
+  $: userIsAdmin = $isAdmin || user?.role === "admin";
+
   function toggleMobileMenu() {
     mobileMenuOpen = !mobileMenuOpen;
   }
-  
+
   function closeMobileMenu() {
     mobileMenuOpen = false;
   }
+
+  // No design preview state needed anymore
 </script>
 
-<header class="sticky top-0 z-50 border-b border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
+<svelte:head>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;900&display=swap"
+    rel="stylesheet"
+  />
+</svelte:head>
+
+<header
+  class="sticky top-0 z-50 border-b border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm"
+>
   <!-- Skip to main content link for keyboard users -->
   <a
     href="#main-content"
@@ -37,40 +58,82 @@
   >
     Skip to main content
   </a>
-  
+
   <div class="container mx-auto px-4 py-4">
     <div class="flex items-center justify-between">
       <!-- Logo / Brand -->
-      <a href="/" use:link class="flex items-center gap-3 hover:opacity-80 transition-opacity" aria-label="VocabQuest home">
-        <Sparkles class="w-8 h-8 text-primary-500" aria-hidden="true" />
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">VocabQuest</h1>
+      <a
+        href="/"
+        use:link
+        class="flex items-center gap-3 hover:opacity-80 transition-opacity"
+        aria-label="VocabQuest home"
+      >
+        <div class="flex items-center gap-3">
+          <div
+            class="relative w-12 h-12 flex-shrink-0 flex items-center justify-center"
+          >
+            <img
+              src={user?.dailyStreak && user.dailyStreak >= 7
+                ? "/assets/mascot/header_streak.png"
+                : "/assets/mascot/header_default.png"}
+              alt=""
+              class="absolute -top-2 w-16 h-16 max-w-none object-contain drop-shadow-md mix-blend-multiply"
+            />
+          </div>
+          <div class="flex flex-col leading-none">
+            <h1
+              class="text-3xl font-cinzel font-black tracking-wide bg-gradient-to-r from-amber-900 to-orange-500 bg-clip-text text-transparent"
+            >
+              VocabQuest
+            </h1>
+          </div>
+        </div>
       </a>
 
       <!-- Navigation & User Info -->
       <div class="flex items-center gap-4">
         {#if user && showNav}
           <!-- Desktop Navigation -->
-          <nav class="hidden md:flex items-center gap-2" aria-label="Main navigation">
-            <a href="/" use:link class="px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-1">
+          <nav
+            class="hidden md:flex items-center gap-2"
+            aria-label="Main navigation"
+          >
+            <a
+              href="/"
+              use:link
+              class="px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-1"
+            >
               <Layers class="w-4 h-4" />
               Flashcards
             </a>
-            <a href="/stats" use:link class="px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-1">
+            <a
+              href="/stats"
+              use:link
+              class="px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-1"
+            >
               <BarChart3 class="w-4 h-4" />
               My Stats
             </a>
-            <a href="/guide" use:link class="px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-1">
+            <a
+              href="/guide"
+              use:link
+              class="px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-1"
+            >
               <BookOpen class="w-4 h-4" />
               Guide
             </a>
             {#if userIsAdmin}
-              <a href="/admin" use:link class="px-4 py-2 rounded-lg text-sm font-medium bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 hover:bg-teal-200 dark:hover:bg-teal-900/50 transition-colors flex items-center gap-1">
+              <a
+                href="/admin"
+                use:link
+                class="px-4 py-2 rounded-lg text-sm font-medium bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 hover:bg-teal-200 dark:hover:bg-teal-900/50 transition-colors flex items-center gap-1"
+              >
                 <Shield class="w-4 h-4" />
                 Admin
               </a>
             {/if}
           </nav>
-          
+
           <!-- Mobile Menu Button -->
           <button
             on:click={toggleMobileMenu}
@@ -78,7 +141,10 @@
             aria-label="Toggle menu"
             aria-expanded={mobileMenuOpen}
           >
-            <Menu class="w-6 h-6 text-gray-700 dark:text-slate-300" aria-hidden="true" />
+            <Menu
+              class="w-6 h-6 text-gray-700 dark:text-slate-300"
+              aria-hidden="true"
+            />
           </button>
         {/if}
 
@@ -86,19 +152,34 @@
         <button
           on:click={() => theme.toggle()}
           class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
-          aria-label={$theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+          aria-label={$theme === "light"
+            ? "Switch to dark mode"
+            : "Switch to light mode"}
         >
-          {#if $theme === 'light'}
-            <Moon class="w-5 h-5 text-gray-700 dark:text-slate-300" aria-hidden="true" />
+          {#if $theme === "light"}
+            <Moon
+              class="w-5 h-5 text-gray-700 dark:text-slate-300"
+              aria-hidden="true"
+            />
           {:else}
-            <Sun class="w-5 h-5 text-gray-700 dark:text-slate-300" aria-hidden="true" />
+            <Sun
+              class="w-5 h-5 text-gray-700 dark:text-slate-300"
+              aria-hidden="true"
+            />
           {/if}
         </button>
 
         {#if user}
           <!-- User Menu -->
-          <div class="flex items-center gap-2" role="img" aria-label={`User: ${user.username}`}>
-            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-bold text-sm" aria-hidden="true">
+          <div
+            class="flex items-center gap-2"
+            role="img"
+            aria-label={`User: ${user.username}`}
+          >
+            <div
+              class="w-8 h-8 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-bold text-sm"
+              aria-hidden="true"
+            >
               {user.username.charAt(0).toUpperCase()}
             </div>
           </div>
@@ -115,12 +196,12 @@
     transition:fade={{ duration: 200 }}
     class="fixed inset-0 bg-black/50 z-40 md:hidden"
     on:click={closeMobileMenu}
-    on:keydown={(e) => e.key === 'Escape' && closeMobileMenu()}
+    on:keydown={(e) => e.key === "Escape" && closeMobileMenu()}
     role="button"
     tabindex="-1"
     aria-label="Close menu"
   ></div>
-  
+
   <!-- Mobile Menu Panel -->
   <div
     transition:fly={{ x: 300, duration: 300 }}
@@ -130,17 +211,24 @@
   >
     <div class="flex flex-col h-full">
       <!-- Menu Header -->
-      <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-slate-700">
-        <span class="text-lg font-semibold text-gray-900 dark:text-white">Menu</span>
+      <div
+        class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-slate-700"
+      >
+        <span class="text-lg font-semibold text-gray-900 dark:text-white"
+          >Menu</span
+        >
         <button
           on:click={closeMobileMenu}
           class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
           aria-label="Close menu"
         >
-          <X class="w-5 h-5 text-gray-700 dark:text-slate-300" aria-hidden="true" />
+          <X
+            class="w-5 h-5 text-gray-700 dark:text-slate-300"
+            aria-hidden="true"
+          />
         </button>
       </div>
-      
+
       <!-- Navigation Links -->
       <nav class="flex-1 overflow-y-auto p-4" aria-label="Mobile navigation">
         <div class="space-y-2">
@@ -153,7 +241,7 @@
             <Layers class="w-5 h-5" aria-hidden="true" />
             <span class="font-medium">Flashcards</span>
           </a>
-          
+
           <a
             href="/stats"
             use:link
@@ -163,7 +251,7 @@
             <BarChart3 class="w-5 h-5" aria-hidden="true" />
             <span class="font-medium">My Stats</span>
           </a>
-          
+
           <a
             href="/guide"
             use:link
@@ -173,7 +261,7 @@
             <BookOpen class="w-5 h-5" aria-hidden="true" />
             <span class="font-medium">Guide</span>
           </a>
-          
+
           {#if userIsAdmin}
             <a
               href="/admin"
@@ -187,17 +275,23 @@
           {/if}
         </div>
       </nav>
-      
+
       <!-- User Info -->
       <div class="p-4 border-t border-gray-200 dark:border-slate-700">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-bold">
+          <div
+            class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-bold"
+          >
             {user.username.charAt(0).toUpperCase()}
           </div>
           <div>
-            <div class="text-sm font-medium text-gray-900 dark:text-white">{user.username}</div>
+            <div class="text-sm font-medium text-gray-900 dark:text-white">
+              {user.username}
+            </div>
             {#if user.level}
-              <div class="text-xs text-gray-500 dark:text-gray-400">Level {user.level}</div>
+              <div class="text-xs text-gray-500 dark:text-gray-400">
+                Level {user.level}
+              </div>
             {/if}
           </div>
         </div>
