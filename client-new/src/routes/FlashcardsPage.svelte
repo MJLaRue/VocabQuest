@@ -170,6 +170,7 @@
     currentXP={$gamification?.totalXp || 0}
     xpToNextLevel={($gamification?.level || 1) * 100}
     streak={$gamification?.dailyStreak || 0}
+    correctStreakBonus={$progress.currentSession.correctStreakBonus}
   />
 
   <ControlBar

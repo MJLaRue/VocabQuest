@@ -47,7 +47,7 @@ export interface UserStats {
 }
 
 export const progressApi = {
-  updateProgress: (vocabId: number, isKnown: boolean, mode: 'practice' | 'quiz' | 'typing' = 'practice') =>
+  updateProgress: (vocabId: number, isKnown: boolean, mode: 'practice' | 'quiz' | 'typing' = 'practice', xpEarned: number = 0) =>
     apiClient<{ 
       success: boolean;
       leveledUp: boolean;
@@ -60,7 +60,7 @@ export const progressApi = {
       '/progress/answer',
       {
         method: 'POST',
-        body: JSON.stringify({ vocabId, correct: isKnown, mode, xpEarned: 0 }),
+        body: JSON.stringify({ vocabId, correct: isKnown, mode, xpEarned }),
       }
     ),
 

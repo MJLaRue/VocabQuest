@@ -26,6 +26,7 @@ interface ProgressState {
     startTime: number | null;
     cardsReviewed: number;
     correctAnswers: number;
+    correctStreakBonus: number;
   };
   isLoading: boolean;
   error: string | null;
@@ -43,6 +44,7 @@ function createProgressStore() {
       startTime: null,
       cardsReviewed: 0,
       correctAnswers: 0,
+      correctStreakBonus: 0,
     },
     isLoading: false,
     error: null,
@@ -117,7 +119,16 @@ function createProgressStore() {
         const state = get({ subscribe });
         const mode = state.currentSession.mode || 'practice';
         
-        const result = await progressApi.updateProgress(vocabId, isKnown, mode);
+        // Calculate XP with streak bonus
+        let baseXP = 10;
+        if (mode === 'quiz') baseXP = 15;
+        else if (mode === 'typing') baseXP = 20;
+        
+        // Add streak bonus BEFORE updating (we want the bonus from the previous streak)
+        const streakBonus = isKnown ? state.currentSession.correctStreakBonus : 0;
+        const totalXP = baseXP + streakBonus;
+        
+        const result = await progressApi.updateProgress(vocabId, isKnown, mode, totalXP);
 
         update((state) => {
           return {
@@ -128,6 +139,9 @@ function createProgressStore() {
               correctAnswers: isKnown
                 ? state.currentSession.correctAnswers + 1
                 : state.currentSession.correctAnswers,
+              correctStreakBonus: isKnown
+                ? state.currentSession.correctStreakBonus + 1
+                : 0,
             },
           };
         });
@@ -160,6 +174,7 @@ function createProgressStore() {
             startTime: Date.now(),
             cardsReviewed: 0,
             correctAnswers: 0,
+            correctStreakBonus: 0,
           },
         }));
         return session_id;
@@ -203,6 +218,7 @@ function createProgressStore() {
             startTime: null,
             cardsReviewed: 0,
             correctAnswers: 0,
+            correctStreakBonus: 0,
           },
         }));
 

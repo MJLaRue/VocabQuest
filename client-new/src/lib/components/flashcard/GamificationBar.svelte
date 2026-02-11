@@ -6,6 +6,7 @@
   export let currentXP = 0;
   export let xpToNextLevel = 100;
   export let streak = 0;
+  export let correctStreakBonus = 0;
 
   $: progress = (currentXP / xpToNextLevel) * 100;
 </script>
@@ -48,10 +49,10 @@
       </div>
     </div>
 
-    <!-- Quick XP Badge -->
+    <!-- Correct Streak Bonus -->
     <Badge variant="warning" class="flex items-center gap-1.5 text-sm px-3 py-1.5">
       <Zap class="w-4 h-4" />
-      +{Math.floor(Math.random() * 20) + 5} XP
+      +{correctStreakBonus} XP
     </Badge>
   </div>
 </div>
