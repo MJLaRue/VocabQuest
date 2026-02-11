@@ -12,7 +12,7 @@ if (process.env.DATABASE_URL) {
   
   sequelize = new Sequelize(process.env.DATABASE_URL, {
     dialect: 'postgres',
-    logging: process.env.NODE_ENV === 'development' ? console.log : false,
+    logging: false, // Disable query logging
     dialectOptions: {
       ssl: !isLocalDatabase ? {
         require: true,
@@ -36,7 +36,7 @@ if (process.env.DATABASE_URL) {
       host: process.env.DB_HOST,
       port: process.env.DB_PORT,
       dialect: 'postgres',
-      logging: process.env.NODE_ENV === 'development' ? console.log : false,
+      logging: false, // Disable query logging
       pool: {
         max: 5,
         min: 0,

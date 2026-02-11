@@ -3,16 +3,63 @@ const express = require('express');
 const session = require('express-session');
 const pgSession = require('connect-pg-simple')(session);
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const path = require('path');
 const { sequelize } = require('./config/db');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Validate required environment variables
+if (!process.env.SESSION_SECRET || process.env.SESSION_SECRET.length < 32) {
+  console.error('ERROR: SESSION_SECRET must be set and at least 32 characters long');
+  process.exit(1);
+}
+
+if (!process.env.DATABASE_URL && (!process.env.DB_NAME || !process.env.DB_USER)) {
+  console.error('ERROR: Database configuration required');
+  process.exit(1);
+}
+
 // Trust Render proxy (needed for secure cookies over HTTPS)
 if (process.env.NODE_ENV === 'production') {
   app.set('trust proxy', 1);
 }
+
+// Security Headers
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", 'data:', 'https:'],
+    },
+  },
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  }
+}));
+
+// Rate limiting
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: process.env.NODE_ENV === 'production' ? 10 : 1000, // 10 in prod, 1000 in dev
+  message: 'Too many login attempts, please try again later',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const apiLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute window
+  max: process.env.NODE_ENV === 'production' ? 60 : 1000, // 60/min in prod, 1000/min in dev
+  message: 'Too many requests, please slow down',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // Middleware
 // In production, frontend and API are on same domain (no CORS needed)
@@ -23,8 +70,8 @@ if (process.env.NODE_ENV !== 'production') {
     credentials: true
   }));
 }
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' })); // Limit request body size
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Session configuration
 const sessionConnectionString = process.env.DATABASE_URL || 
@@ -53,10 +100,10 @@ app.use(express.static(path.join(__dirname, '../client/public')));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/vocab', require('./routes/vocab'));
-app.use('/api/progress', require('./routes/progress'));
-app.use('/api/admin', require('./routes/admin'));
+app.use('/api/auth', authLimiter, require('./routes/auth'));
+app.use('/api/vocab', apiLimiter, require('./routes/vocab'));
+app.use('/api/progress', apiLimiter, require('./routes/progress'));
+app.use('/api/admin', apiLimiter, require('./routes/admin'));
 
 // Health check
 app.get('/api/health', (req, res) => {

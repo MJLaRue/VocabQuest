@@ -160,6 +160,8 @@
 <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
   <Header user={$user} />
 
+  <main id="main-content" role="main">
+
   <GamificationBar
     level={$gamification?.level || 1}
     currentXP={$gamification?.totalXp || 0}
@@ -235,12 +237,14 @@
         <button
           class="text-sm text-teal-600 dark:text-teal-400 hover:underline"
           on:click={handleEndSession}
+          aria-label="End current study session"
         >
           End Session
         </button>
       </div>
     </div>
   </Container>
+  </main>
 
   <SessionSummaryModal
     show={$ui.showSessionSummary}

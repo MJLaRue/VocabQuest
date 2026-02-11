@@ -61,6 +61,9 @@
             placeholder="Enter your email"
             required
             disabled={isLoading}
+            aria-required="true"
+            aria-label="Email address"
+            autocomplete="email"
           />
         </div>
 
@@ -75,11 +78,14 @@
             placeholder="Enter your password"
             required
             disabled={isLoading}
+            aria-required="true"
+            aria-label="Password"
+            autocomplete="current-password"
           />
         </div>
 
         {#if error}
-          <div class="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <div class="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg" role="alert" aria-live="polite">
             <p class="text-sm text-red-600 dark:text-red-400">{error}</p>
           </div>
         {/if}
@@ -89,6 +95,7 @@
           variant="primary"
           class="w-full"
           disabled={isLoading}
+          aria-label={isLoading ? 'Logging in...' : 'Log in to your account'}
         >
           {isLoading ? 'Logging in...' : 'Log In'}
         </Button>
