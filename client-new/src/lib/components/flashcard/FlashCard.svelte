@@ -187,6 +187,12 @@
                 on:input={(e) => {
                   typedAnswer = e.currentTarget.value;
                 }}
+                on:keydown={(e) => {
+                  if (e.key === 'Enter' && typedAnswer.trim() && !disabled && !showResult) {
+                    e.preventDefault();
+                    checkTypedAnswer();
+                  }
+                }}
               />
               
               <div class="flex gap-2">
