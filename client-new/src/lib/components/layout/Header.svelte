@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Sparkles, Moon, Sun, BarChart3, BookOpen } from 'lucide-svelte';
+  import { Sparkles, Moon, Sun, BarChart3, BookOpen, Layers } from 'lucide-svelte';
   import { theme } from '$lib/stores/theme';
   import { link } from 'svelte-spa-router';
 
@@ -33,7 +33,8 @@
       <div class="flex items-center gap-4">
         {#if user && showNav}
           <nav class="hidden md:flex items-center gap-2" aria-label="Main navigation">
-            <a href="/" use:link class="px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
+            <a href="/" use:link class="px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-1">
+              <Layers class="w-4 h-4" />
               Flashcards
             </a>
             <a href="/stats" use:link class="px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-1">

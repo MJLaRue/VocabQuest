@@ -10,6 +10,10 @@ export default defineConfig({
       $lib: path.resolve('./src/lib'),
     },
   },
+  build: {
+    outDir: 'dist',
+    emptyOutDir: true,
+  },
   server: {
     port: 3000,
     strictPort: true,

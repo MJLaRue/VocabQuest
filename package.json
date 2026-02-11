@@ -10,7 +10,8 @@
     "create-admin": "node server/scripts/createAdmin.js",
     "migrate": "node server/scripts/initDb.js",
     "seed": "node server/scripts/importVocab.js && node server/scripts/createAdmin.js",
-    "build": "echo 'No build step required for this app'"
+    "build": "cd client-new && npm install && npm run build",
+    "build:prod": "cd client-new && npm ci && npm run build"
   },
   "keywords": [
     "vocabulary",

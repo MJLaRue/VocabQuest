@@ -96,7 +96,8 @@ app.use(session({
 }));
 
 // Static files
-app.use(express.static(path.join(__dirname, '../client/public')));
+// Serve built Svelte app from client-new/dist
+app.use(express.static(path.join(__dirname, '../client-new/dist')));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Routes
@@ -110,14 +111,10 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Root redirect to login
-app.get('/', (req, res) => {
-  res.redirect('/index.html');
-});
-
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ error: 'Not found' });
+// SPA fallback - serve index.html for all non-API routes
+// This allows client-side routing to work
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../client-new/dist/index.html'));
 });
 
 // Error handler

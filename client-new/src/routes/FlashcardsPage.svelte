@@ -160,7 +160,7 @@
 <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
   <Header user={$user} />
 
-  <main id="main-content" role="main">
+  <main id="main-content">
 
   <GamificationBar
     level={$gamification?.level || 1}

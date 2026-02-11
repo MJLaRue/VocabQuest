@@ -39,6 +39,12 @@
     }
   }
 
+  function handleKeydown(event: KeyboardEvent) {
+    if (event.key === 'Escape') {
+      handleClose();
+    }
+  }
+
   // Trigger confetti on level up
   $: if (show && levelUp) {
     setTimeout(() => confetti(), 300);
@@ -48,7 +54,9 @@
 {#if show}
   <div
     class="modal-backdrop fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+    role="presentation"
     on:click={handleClickOutside}
+    on:keydown={handleKeydown}
   >
     <Card class="max-w-lg w-full">
       <div class="p-6 space-y-6">

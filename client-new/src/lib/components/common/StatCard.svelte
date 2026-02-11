@@ -6,7 +6,8 @@
   export let label: string;
   export let value: string | number;
   export let description: string = '';
-  export let trend: 'up' | 'down' | 'neutral' = 'neutral';
+  // Reserved for future use - trend indicators
+  export const trend: 'up' | 'down' | 'neutral' = 'neutral';
   export let iconBgColor: string = 'bg-primary-100 dark:bg-primary-900';
   export let iconColor: string = 'text-primary-500';
 </script>
