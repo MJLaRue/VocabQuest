@@ -99,8 +99,14 @@
         });
       }
 
-      // Move to next card
-      vocab.nextCard();
+      // Remove the card from the current set
+      const { setCompleted } = vocab.removeCurrentCard();
+      
+      // Award set completion bonus
+      if (setCompleted) {
+        confetti();
+        progress.awardSetCompletionBonus();
+      }
     } catch (error) {
       console.error('Failed to update progress:', error);
     } finally {
@@ -205,8 +211,7 @@
       <FlashcardNavigation
         hasPrev={$hasPrev}
         hasNext={$hasNext}
-        current={$vocabProgress.current}
-        total={$vocabProgress.total}
+        remaining={$vocabProgress.remaining}
         disabled={isLoading}
         on:prev={() => vocab.prevCard()}
         on:next={() => vocab.nextCard()}
@@ -248,11 +253,12 @@
 
   <SessionSummaryModal
     show={$ui.showSessionSummary}
-    cardsReviewed={$sessionStats.cardsReviewed}
-    correctAnswers={$sessionStats.correctAnswers}
-    xpEarned={$progress.currentSession.totalXpEarned}
-    duration={$sessionStats.duration}
-    levelUp={$progress.currentSession.didLevelUp}
+    cardsReviewed={$progress.lastSessionSummary?.cardsReviewed || 0}
+    correctAnswers={$progress.lastSessionSummary?.correctAnswers || 0}
+    xpEarned={$progress.lastSessionSummary?.xpEarned || 0}
+    duration={$progress.lastSessionSummary?.duration || 0}
+    completedSets={$progress.lastSessionSummary?.completedSets || 0}
+    levelUp={$progress.lastSessionSummary?.levelUp || false}
     newLevel={$gamification?.level || 1}
     on:close={() => ui.closeSessionSummary()}
     on:continue={handleContinueSession}

@@ -10,6 +10,7 @@ interface VocabFilters {
 
 interface VocabState {
   words: VocabularyWord[];
+  completedWords: VocabularyWord[];
   currentIndex: number;
   decks: Deck[];
   filters: VocabFilters;
@@ -21,6 +22,7 @@ interface VocabState {
 function createVocabStore() {
   const { subscribe, set, update } = writable<VocabState>({
     words: [],
+    completedWords: [],
     currentIndex: 0,
     decks: [],
     filters: { deck: null, pos: null, search: '' },
@@ -44,6 +46,7 @@ function createVocabStore() {
         update((state) => ({
           ...state,
           words,
+          completedWords: [], // Clear completed when loading new set
           currentIndex: 0,
           isLoading: false,
         }));
@@ -69,6 +72,7 @@ function createVocabStore() {
         update((state) => ({
           ...state,
           words,
+          completedWords: [], // Clear completed when loading new set
           currentIndex: 0,
           isLoading: false,
           mode: 'random',
@@ -155,6 +159,45 @@ function createVocabStore() {
       }));
     },
 
+    removeCurrentCard() {
+      const state = get({ subscribe });
+      const currentWord = state.words[state.currentIndex];
+      
+      if (!currentWord) return { setCompleted: false };
+      
+      // Move the current card to completed set
+      const newCompletedWords = [...state.completedWords, currentWord];
+      
+      // Remove the current card from active words
+      const newWords = state.words.filter((_, index) => index !== state.currentIndex);
+      
+      // Adjust currentIndex if necessary
+      let newIndex = state.currentIndex;
+      if (newIndex >= newWords.length && newWords.length > 0) {
+        newIndex = newWords.length - 1;
+      }
+      
+      const setCompleted = newWords.length === 0;
+      
+      update((state) => ({
+        ...state,
+        words: newWords,
+        completedWords: newCompletedWords,
+        currentIndex: newIndex,
+      }));
+      
+      // If we've removed all cards, load more
+      if (setCompleted) {
+        if (state.mode === 'random') {
+          this.loadRandomWords();
+        } else {
+          this.loadWords();
+        }
+      }
+      
+      return { setCompleted };
+    },
+
     setMode(mode: 'sequential' | 'random') {
       update((state) => ({ ...state, mode }));
       if (mode === 'random') {
@@ -179,7 +222,7 @@ export const currentWord = derived(
 );
 
 export const progress = derived(vocab, ($vocab) => ({
-  current: $vocab.currentIndex + 1,
+  remaining: $vocab.words.length,
   total: $vocab.words.length,
   percentage:
     $vocab.words.length > 0
@@ -193,3 +236,9 @@ export const hasNext = derived(
 );
 
 export const hasPrev = derived(vocab, ($vocab) => $vocab.currentIndex > 0);
+
+// Combined words for quiz generation (active + completed)
+export const allAvailableWords = derived(
+  vocab,
+  ($vocab) => [...$vocab.words, ...$vocab.completedWords]
+);

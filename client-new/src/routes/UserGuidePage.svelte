@@ -213,6 +213,37 @@
               </div>
             </div>
 
+            <!-- Set Completion Bonus -->
+            <div>
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                <Trophy class="w-5 h-5 text-yellow-500" />
+                Set Completion Bonus
+              </h3>
+              <div class="bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 p-4 rounded-lg">
+                <p class="text-gray-700 dark:text-gray-300 mb-3">
+                  Complete all cards in a set to earn a big bonus!
+                </p>
+                <ul class="space-y-2 text-gray-600 dark:text-gray-400">
+                  <li class="flex items-start gap-2">
+                    <span class="text-yellow-500 mt-1">•</span>
+                    <span>Earn <strong>+50 XP</strong> when you complete all cards in a set</span>
+                  </li>
+                  <li class="flex items-start gap-2">
+                    <span class="text-yellow-500 mt-1">•</span>
+                    <span>A new set automatically loads after completion</span>
+                  </li>
+                  <li class="flex items-start gap-2">
+                    <span class="text-yellow-500 mt-1">•</span>
+                    <span>Your completed sets count is tracked during each session</span>
+                  </li>
+                  <li class="flex items-start gap-2">
+                    <span class="text-yellow-500 mt-1">•</span>
+                    <span><strong>Tip:</strong> Cards you answer correctly are removed from the active set</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
             <!-- Difficulty Bonus -->
             <div>
               <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">

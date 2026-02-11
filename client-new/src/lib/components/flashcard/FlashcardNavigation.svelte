@@ -5,8 +5,7 @@
 
   export let hasPrev = false;
   export let hasNext = false;
-  export let current = 1;
-  export let total = 0;
+  export let remaining = 0;
   export let disabled = false;
 
   const dispatch = createEventDispatcher<{
@@ -27,7 +26,7 @@
   </Button>
 
   <span class="text-sm text-teal-600 dark:text-teal-400 font-medium">
-    {current} / {total}
+    {remaining} {remaining === 1 ? 'card' : 'cards'} remaining
   </span>
 
   <Button

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import type { VocabularyWord } from '$lib/api/vocab';
-  import { vocab } from '$lib/stores/vocab';
+  import { vocab, allAvailableWords } from '$lib/stores/vocab';
   import { Eye, EyeOff, Lightbulb } from 'lucide-svelte';
   import { cn } from '$lib/utils/cn';
   import { generateHint } from '$lib/utils/hints';
@@ -48,7 +48,7 @@
   }
 
   // Generate quiz options (for quiz mode)
-  $: quizOptions = word ? generateQuizOptions(word, $vocab.words) : [];
+  $: quizOptions = word ? generateQuizOptions(word, $allAvailableWords) : [];
 
   function generateQuizOptions(correctWord: VocabularyWord, allWords: VocabularyWord[]): string[] {
     // Filter out the current word and get other words
@@ -161,9 +161,9 @@
 <div class="relative w-full max-w-2xl mx-auto perspective-1000">
   {#if mode === 'typing'}
     <!-- Typing Mode -->
-    <div class="flashcard-face w-full aspect-[3/2]">
+    <div class="flashcard-face w-full">
       <div
-        class="h-full flex flex-col items-center justify-center gap-4 p-8 bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-teal-950 dark:to-emerald-950 rounded-3xl shadow-xl border border-teal-200 dark:border-teal-800"
+        class="flex flex-col items-center justify-center gap-6 p-6 md:p-8 bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-teal-950 dark:to-emerald-950 rounded-3xl shadow-xl border border-teal-200 dark:border-teal-800"
       >
         {#if word}
           <div class="text-center space-y-3 w-full max-w-md">
@@ -225,9 +225,9 @@
     </div>
   {:else if mode === 'quiz'}
     <!-- Quiz Mode -->
-    <div class="flashcard-face w-full aspect-[3/2]">
+    <div class="flashcard-face w-full">
       <div
-        class="h-full flex flex-col items-center justify-center gap-6 p-8 bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-teal-950 dark:to-emerald-950 rounded-3xl shadow-xl border border-teal-200 dark:border-teal-800"
+        class="flex flex-col items-center justify-center gap-4 md:gap-6 p-6 md:p-8 bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-teal-950 dark:to-emerald-950 rounded-3xl shadow-xl border border-teal-200 dark:border-teal-800"
       >
         {#if word}
           <div class="text-center space-y-4 w-full max-w-md">
@@ -269,7 +269,7 @@
     <!-- Practice Mode (Flip Card) -->
     <button
       class={cn(
-        'flashcard relative w-full aspect-[3/2] cursor-pointer',
+        'flashcard relative w-full min-h-[400px] md:aspect-[3/2] cursor-pointer',
         'transform-style-3d transition-transform duration-500',
         isFlipped && 'rotate-y-180',
         disabled && 'opacity-50 cursor-not-allowed'

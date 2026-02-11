@@ -28,9 +28,18 @@ interface ProgressState {
     cardsReviewed: number;
     correctAnswers: number;
     correctStreakBonus: number;
+    completedSets: number;
     totalXpEarned: number;
     didLevelUp: boolean;
   };
+  lastSessionSummary: {
+    cardsReviewed: number;
+    correctAnswers: number;
+    xpEarned: number;
+    duration: number;
+    completedSets: number;
+    levelUp: boolean;
+  } | null;
   isLoading: boolean;
   error: string | null;
 }
@@ -48,9 +57,11 @@ function createProgressStore() {
       cardsReviewed: 0,
       correctAnswers: 0,
       correctStreakBonus: 0,
+      completedSets: 0,
       totalXpEarned: 0,
       didLevelUp: false,
     },
+    lastSessionSummary: null,
     isLoading: false,
     error: null,
   });
@@ -204,6 +215,7 @@ function createProgressStore() {
             cardsReviewed: session.cardsReviewed,
             correctAnswers: session.correctAnswers,
             correctStreakBonus: 0, // Reset streak bonus on resume
+            completedSets: 0, // Reset on resume
             totalXpEarned: session.xpEarned,
             didLevelUp: false,
           },
@@ -228,6 +240,7 @@ function createProgressStore() {
             cardsReviewed: 0,
             correctAnswers: 0,
             correctStreakBonus: 0,
+            completedSets: 0,
             totalXpEarned: 0,
             didLevelUp: false,
           },
@@ -272,9 +285,14 @@ function createProgressStore() {
           throw new Error('No active session');
         }
 
+        // Capture session stats before ending
+        const duration = currentState!.currentSession.startTime
+          ? Math.floor((Date.now() - currentState!.currentSession.startTime) / 1000)
+          : 0;
+
         const sessionData: StudySessionData = {
           mode: currentState!.currentSession.mode,
-          xp_earned: 0, // Backend will calculate
+          xp_earned: currentState!.currentSession.totalXpEarned,
           cards_reviewed: currentState!.currentSession.cardsReviewed,
           correct_answers: currentState!.currentSession.correctAnswers,
         };
@@ -286,6 +304,14 @@ function createProgressStore() {
 
         update((state) => ({
           ...state,
+          lastSessionSummary: {
+            cardsReviewed: currentState!.currentSession.cardsReviewed,
+            correctAnswers: currentState!.currentSession.correctAnswers,
+            xpEarned: currentState!.currentSession.totalXpEarned,
+            duration,
+            completedSets: currentState!.currentSession.completedSets,
+            levelUp: currentState!.currentSession.didLevelUp,
+          },
           currentSession: {
             id: null,
             mode: null,
@@ -293,6 +319,7 @@ function createProgressStore() {
             cardsReviewed: 0,
             correctAnswers: 0,
             correctStreakBonus: 0,
+            completedSets: 0,
             totalXpEarned: 0,
             didLevelUp: false,
           },
@@ -316,6 +343,24 @@ function createProgressStore() {
         result = state.userProgress.get(vocabId);
       })();
       return result;
+    },
+
+    awardSetCompletionBonus() {
+      const SET_COMPLETION_BONUS = 50;
+      
+      update((state) => ({
+        ...state,
+        currentSession: {
+          ...state.currentSession,
+          completedSets: state.currentSession.completedSets + 1,
+          totalXpEarned: state.currentSession.totalXpEarned + SET_COMPLETION_BONUS,
+        },
+      }));
+      
+      // Refresh gamification data
+      auth.checkSession();
+      
+      return SET_COMPLETION_BONUS;
     },
 
     clearError() {

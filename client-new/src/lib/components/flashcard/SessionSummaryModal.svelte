@@ -11,6 +11,7 @@
   export let correctAnswers = 0;
   export let xpEarned = 0;
   export let duration = 0; // in seconds
+  export let completedSets = 0;
   export let levelUp = false;
   export let newLevel = 1;
 
@@ -84,6 +85,16 @@
             <p class="text-sm text-teal-600 dark:text-teal-400 mt-1">
               Congratulations on your progress!
             </p>
+          </div>
+        {/if}
+
+        <!-- Completed Sets Badge -->
+        {#if completedSets > 0}
+          <div class="flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 rounded-xl border-2 border-yellow-400 dark:border-yellow-600">
+            <Trophy class="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+            <span class="text-sm font-semibold text-yellow-900 dark:text-yellow-100">
+              {completedSets} {completedSets === 1 ? 'Set' : 'Sets'} Completed! (+{completedSets * 50} Bonus XP)
+            </span>
           </div>
         {/if}
 
