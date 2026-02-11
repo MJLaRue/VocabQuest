@@ -5,9 +5,10 @@
   import { Eye, EyeOff, Lightbulb } from 'lucide-svelte';
   import { cn } from '$lib/utils/cn';
   import { generateHint } from '$lib/utils/hints';
-  import { confetti } from '$lib/utils/confetti';
+  import { confettiPresets } from '$lib/utils/confetti';
   import Input from '$lib/components/ui/Input.svelte';
   import Button from '$lib/components/ui/Button.svelte';
+  import AnswerOverlay from './AnswerOverlay.svelte';
 
   export let word: VocabularyWord | null = null;
   export let disabled = false;
@@ -23,6 +24,8 @@
   let quizAnswer: number | null = null;
   let showResult = false;
   let hintLevel = 0; // 0 = no hint, 1-3 = progressive hints
+  let showOverlay = false;
+  let overlayIsCorrect = false;
 
   $: {
     // Reset state when word changes
@@ -32,6 +35,7 @@
       quizAnswer = null;
       showResult = false;
       hintLevel = 0;
+      showOverlay = false;
     }
   }
 
@@ -78,11 +82,18 @@
     const isCorrect = typedAnswer.toLowerCase().trim() === word.word.toLowerCase();
     showResult = true;
     
+    // Show overlay with animation
+    overlayIsCorrect = isCorrect;
+    showOverlay = true;
+    
     if (isCorrect) {
-      confetti();
+      // Trigger fireworks effect
+      confettiPresets.fireworks();
+      confettiPresets.explosion();
+      
       isFlipped = true;
       dispatch('flip');
-      // Show confetti and delay before dispatching answer
+      // Delay before dispatching answer (overlay closes after 1s)
       setTimeout(() => {
         dispatch('answer', { correct: true });
       }, 1500);
@@ -97,21 +108,32 @@
     const isCorrect = quizOptions[index] === word.definition;
     showResult = true;
     
+    // Show overlay with animation
+    overlayIsCorrect = isCorrect;
+    showOverlay = true;
+    
     if (isCorrect) {
-      confetti();
+      // Trigger fireworks effect
+      confettiPresets.fireworks();
+      confettiPresets.explosion();
+      
       isFlipped = true;
       dispatch('flip');
-      // Show confetti and delay before dispatching answer
+      // Delay before dispatching answer (overlay closes after 1s)
       setTimeout(() => {
         dispatch('answer', { correct: true });
       }, 1500);
     } else {
-      // Allow retry - don't auto-advance
+      // Allow retry - don't auto-advance (overlay closes after 1s)
       setTimeout(() => {
         showResult = false;
         quizAnswer = null;
       }, 1500);
     }
+  }
+  
+  function handleOverlayClose() {
+    showOverlay = false;
   }
 
   function handleFlip() {
@@ -127,6 +149,10 @@
     }
   }
 </script>
+
+{#if showOverlay}
+  <AnswerOverlay isCorrect={overlayIsCorrect} onClose={handleOverlayClose} />
+{/if}
 
 <div class="relative w-full max-w-2xl mx-auto perspective-1000">
   {#if mode === 'typing'}
