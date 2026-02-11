@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { Sparkles, Moon, Sun, BarChart3, BookOpen, Layers, Shield } from 'lucide-svelte';
+  import { Sparkles, Moon, Sun, BarChart3, BookOpen, Layers, Shield, Menu, X } from 'lucide-svelte';
+  import { fade, fly } from 'svelte/transition';
   import { theme } from '$lib/stores/theme';
   import { isAdmin } from '$lib/stores/auth';
   import { link } from 'svelte-spa-router';
@@ -13,11 +14,19 @@
   } | null = null;
   export let showNav = true;
   
+  // Mobile menu state
+  let mobileMenuOpen = false;
+  
   // Check if user is admin from either the store or the prop
   $: userIsAdmin = $isAdmin || user?.role === 'admin';
   
-  // Debug: log isAdmin status
-  $: console.log('Header - user:', user, 'isAdmin store:', $isAdmin, 'userIsAdmin:', userIsAdmin);
+  function toggleMobileMenu() {
+    mobileMenuOpen = !mobileMenuOpen;
+  }
+  
+  function closeMobileMenu() {
+    mobileMenuOpen = false;
+  }
 </script>
 
 <header class="sticky top-0 z-50 border-b border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
@@ -40,6 +49,7 @@
       <!-- Navigation & User Info -->
       <div class="flex items-center gap-4">
         {#if user && showNav}
+          <!-- Desktop Navigation -->
           <nav class="hidden md:flex items-center gap-2" aria-label="Main navigation">
             <a href="/" use:link class="px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-1">
               <Layers class="w-4 h-4" />
@@ -60,6 +70,16 @@
               </a>
             {/if}
           </nav>
+          
+          <!-- Mobile Menu Button -->
+          <button
+            on:click={toggleMobileMenu}
+            class="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+            aria-label="Toggle menu"
+            aria-expanded={mobileMenuOpen}
+          >
+            <Menu class="w-6 h-6 text-gray-700 dark:text-slate-300" aria-hidden="true" />
+          </button>
         {/if}
 
         <!-- Theme Toggle -->
@@ -87,3 +107,101 @@
     </div>
   </div>
 </header>
+
+<!-- Mobile Menu Overlay -->
+{#if mobileMenuOpen && user && showNav}
+  <!-- Backdrop -->
+  <div
+    transition:fade={{ duration: 200 }}
+    class="fixed inset-0 bg-black/50 z-40 md:hidden"
+    on:click={closeMobileMenu}
+    on:keydown={(e) => e.key === 'Escape' && closeMobileMenu()}
+    role="button"
+    tabindex="-1"
+    aria-label="Close menu"
+  ></div>
+  
+  <!-- Mobile Menu Panel -->
+  <div
+    transition:fly={{ x: 300, duration: 300 }}
+    class="fixed top-0 right-0 bottom-0 w-64 bg-white dark:bg-slate-800 shadow-xl z-50 md:hidden"
+    role="dialog"
+    aria-label="Mobile navigation menu"
+  >
+    <div class="flex flex-col h-full">
+      <!-- Menu Header -->
+      <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-slate-700">
+        <span class="text-lg font-semibold text-gray-900 dark:text-white">Menu</span>
+        <button
+          on:click={closeMobileMenu}
+          class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+          aria-label="Close menu"
+        >
+          <X class="w-5 h-5 text-gray-700 dark:text-slate-300" aria-hidden="true" />
+        </button>
+      </div>
+      
+      <!-- Navigation Links -->
+      <nav class="flex-1 overflow-y-auto p-4" aria-label="Mobile navigation">
+        <div class="space-y-2">
+          <a
+            href="/"
+            use:link
+            on:click={closeMobileMenu}
+            class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+          >
+            <Layers class="w-5 h-5" aria-hidden="true" />
+            <span class="font-medium">Flashcards</span>
+          </a>
+          
+          <a
+            href="/stats"
+            use:link
+            on:click={closeMobileMenu}
+            class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+          >
+            <BarChart3 class="w-5 h-5" aria-hidden="true" />
+            <span class="font-medium">My Stats</span>
+          </a>
+          
+          <a
+            href="/guide"
+            use:link
+            on:click={closeMobileMenu}
+            class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+          >
+            <BookOpen class="w-5 h-5" aria-hidden="true" />
+            <span class="font-medium">Guide</span>
+          </a>
+          
+          {#if userIsAdmin}
+            <a
+              href="/admin"
+              use:link
+              on:click={closeMobileMenu}
+              class="flex items-center gap-3 px-4 py-3 rounded-lg bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 hover:bg-teal-200 dark:hover:bg-teal-900/50 transition-colors"
+            >
+              <Shield class="w-5 h-5" aria-hidden="true" />
+              <span class="font-medium">Admin</span>
+            </a>
+          {/if}
+        </div>
+      </nav>
+      
+      <!-- User Info -->
+      <div class="p-4 border-t border-gray-200 dark:border-slate-700">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-bold">
+            {user.username.charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <div class="text-sm font-medium text-gray-900 dark:text-white">{user.username}</div>
+            {#if user.level}
+              <div class="text-xs text-gray-500 dark:text-gray-400">Level {user.level}</div>
+            {/if}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{/if}
