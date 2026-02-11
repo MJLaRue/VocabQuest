@@ -23,68 +23,80 @@
   role="button"
   tabindex="0"
 >
-  <div
-    transition:scale={{ duration: 500, easing: elasticOut, start: 0.5 }}
-    class="relative"
-  >
-    {#if isCorrect}
-      <!-- Big Check Mark -->
-      <svg
-        class="w-64 h-64 drop-shadow-2xl animate-pulse-slow"
-        viewBox="0 0 100 100"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <circle
-          cx="50"
-          cy="50"
-          r="45"
-          fill="#10b981"
-          class="animate-scale-in"
-        />
-        <path
-          d="M25 50 L42 67 L75 34"
-          stroke="white"
-          stroke-width="8"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          class="animate-draw-check"
-        />
-      </svg>
-      <div class="absolute inset-0 flex items-center justify-center">
-        <div class="text-6xl font-bold text-white drop-shadow-lg animate-bounce-in">
-          ✓
+  <div class="flex flex-col items-center gap-6">
+    <!-- Text above the icon -->
+    <div
+      class="text-6xl font-bold drop-shadow-2xl animate-pop-in"
+      class:text-green-500={isCorrect}
+      class:text-red-500={!isCorrect}
+    >
+      {isCorrect ? 'Correct!' : 'Try Again!'}
+    </div>
+    
+    <!-- Icon -->
+    <div
+      transition:scale={{ duration: 500, easing: elasticOut, start: 0.5 }}
+      class="relative"
+    >
+      {#if isCorrect}
+        <!-- Big Check Mark -->
+        <svg
+          class="w-64 h-64 drop-shadow-2xl animate-pulse-slow"
+          viewBox="0 0 100 100"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <circle
+            cx="50"
+            cy="50"
+            r="45"
+            fill="#10b981"
+            class="animate-scale-in"
+          />
+          <path
+            d="M25 50 L42 67 L75 34"
+            stroke="white"
+            stroke-width="8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="animate-draw-check"
+          />
+        </svg>
+        <div class="absolute inset-0 flex items-center justify-center">
+          <div class="text-6xl font-bold text-white drop-shadow-lg animate-bounce-in">
+            ✓
+          </div>
         </div>
-      </div>
-    {:else}
-      <!-- Big X Mark -->
-      <svg
-        class="w-64 h-64 drop-shadow-2xl animate-shake"
-        viewBox="0 0 100 100"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <circle
-          cx="50"
-          cy="50"
-          r="45"
-          fill="#ef4444"
-          class="animate-scale-in"
-        />
-        <path
-          d="M30 30 L70 70 M70 30 L30 70"
-          stroke="white"
-          stroke-width="8"
-          stroke-linecap="round"
-          class="animate-draw-x"
-        />
-      </svg>
-      <div class="absolute inset-0 flex items-center justify-center">
-        <div class="text-6xl font-bold text-white drop-shadow-lg animate-bounce-in">
-          ✗
+      {:else}
+        <!-- Big X Mark -->
+        <svg
+          class="w-64 h-64 drop-shadow-2xl animate-shake"
+          viewBox="0 0 100 100"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <circle
+            cx="50"
+            cy="50"
+            r="45"
+            fill="#ef4444"
+            class="animate-scale-in"
+          />
+          <path
+            d="M30 30 L70 70 M70 30 L30 70"
+            stroke="white"
+            stroke-width="8"
+            stroke-linecap="round"
+            class="animate-draw-x"
+          />
+        </svg>
+        <div class="absolute inset-0 flex items-center justify-center">
+          <div class="text-6xl font-bold text-white drop-shadow-lg animate-bounce-in">
+            ✗
+          </div>
         </div>
-      </div>
-    {/if}
+      {/if}
+    </div>
   </div>
 </div>
 
@@ -133,7 +145,21 @@
       transform: scale(1);
     }
   }
+@keyframes pop-in {
+    0% {
+      transform: scale(0);
+      opacity: 0;
+    }
+    60% {
+      transform: scale(1.15);
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
 
+  
   @keyframes shake {
     0%, 100% { transform: translateX(0); }
     25% { transform: translateX(-10px); }
@@ -159,6 +185,10 @@
     animation: draw-x 0.5s ease-out 0.2s forwards;
     stroke-dasharray: 100;
     stroke-dashoffset: 100;
+  }
+
+  .animate-pop-in {
+    animation: pop-in 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
   }
 
   .animate-bounce-in {

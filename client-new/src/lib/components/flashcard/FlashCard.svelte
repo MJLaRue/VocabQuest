@@ -98,7 +98,11 @@
         dispatch('answer', { correct: true });
       }, 1500);
     } else {
-      // Don't dispatch answer for wrong attempts - let them try again
+      // Auto-reset after overlay closes to allow immediate retry
+      setTimeout(() => {
+        showResult = false;
+        typedAnswer = '';
+      }, 1200);
     }
   }
 
@@ -214,24 +218,6 @@
                   {hintLevel === 0 ? 'Hint' : `${hintLevel}/3`}
                 </Button>
               </div>
-              
-              {#if showResult}
-                <div class="mt-4 p-4 rounded-xl {typedAnswer.toLowerCase().trim() === word.word.toLowerCase() ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'}">
-                  <p class="text-lg font-semibold {typedAnswer.toLowerCase().trim() === word.word.toLowerCase() ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200'}">
-                    {typedAnswer.toLowerCase().trim() === word.word.toLowerCase() ? '✓ Correct!' : '✗ Try again!'}
-                  </p>
-                  {#if typedAnswer.toLowerCase().trim() !== word.word.toLowerCase()}
-                    <Button
-                      on:click={() => { showResult = false; typedAnswer = ''; hintLevel = 0; }}
-                      variant="secondary"
-                      size="sm"
-                      class="mt-2 w-full"
-                    >
-                      Try Again
-                    </Button>
-                  {/if}
-                </div>
-              {/if}
             </div>
           </div>
         {/if}
@@ -275,14 +261,6 @@
                 </button>
               {/each}
             </div>
-            
-            {#if showResult}
-              <div class="mt-4 p-4 rounded-xl {quizOptions[quizAnswer || 0] === word.definition ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'}">
-                <p class="text-base font-semibold {quizOptions[quizAnswer || 0] === word.definition ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200'}">
-                  {quizOptions[quizAnswer || 0] === word.definition ? '✓ Correct!' : '✗ Try again...'}
-                </p>
-              </div>
-            {/if}
           </div>
         {/if}
       </div>
