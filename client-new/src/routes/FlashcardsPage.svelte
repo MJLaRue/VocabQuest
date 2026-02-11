@@ -47,16 +47,13 @@
       progress.loadProgress(),
     ]);
 
-    // Start a session only if there isn't one already
-    if (!get(hasActiveSession)) {
-      await progress.startSession(mode);
-    } else {
-      // If session mode differs from URL mode, restart session
-      const progressState = get(progress);
-      if (progressState.currentSession.mode && progressState.currentSession.mode !== mode) {
-        await progress.endSession();
-        await progress.startSession(mode);
-      }
+    // Check for active session and resume or start new based on 30-minute rule
+    const sessionId = await progress.checkAndResumeSession(mode);
+    
+    // If resumed session mode differs from URL mode, update the mode
+    const progressState = get(progress);
+    if (progressState.currentSession.mode && progressState.currentSession.mode !== mode) {
+      progress.updateSessionMode(mode);
     }
   });
 
@@ -69,9 +66,8 @@
     };
     push(pathMap[newMode]);
     
-    // Restart session with new mode
-    await progress.endSession();
-    await progress.startSession(newMode);
+    // Update session mode in store
+    progress.updateSessionMode(newMode);
   }
 
   async function handleAnswer(event: CustomEvent<{ correct: boolean }>) {
@@ -250,9 +246,9 @@
     show={$ui.showSessionSummary}
     cardsReviewed={$sessionStats.cardsReviewed}
     correctAnswers={$sessionStats.correctAnswers}
-    xpEarned={0}
+    xpEarned={$progress.currentSession.totalXpEarned}
     duration={$sessionStats.duration}
-    levelUp={false}
+    levelUp={$progress.currentSession.didLevelUp}
     newLevel={$gamification?.level || 1}
     on:close={() => ui.closeSessionSummary()}
     on:continue={handleContinueSession}

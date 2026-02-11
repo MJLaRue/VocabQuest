@@ -17,6 +17,16 @@ export interface StudySessionData {
   correct_answers: number;
 }
 
+export interface ActiveSession {
+  id: number;
+  mode: 'practice' | 'quiz' | 'typing';
+  startedAt: string;
+  cardsReviewed: number;
+  correctAnswers: number;
+  xpEarned: number;
+  updatedAt: string;
+}
+
 export interface UserStats {
   gamification: {
     level: number;
@@ -66,6 +76,15 @@ export const progressApi = {
 
   getProgress: () =>
     apiClient<{ progress: UserProgress[] }>('/progress'),
+
+  getActiveSession: () =>
+    apiClient<{ session: ActiveSession | null }>('/progress/session/active'),
+
+  updateSessionMode: (sessionId: number, mode: 'practice' | 'quiz' | 'typing') =>
+    apiClient<{ success: boolean }>(`/progress/session/${sessionId}/mode`, {
+      method: 'PATCH',
+      body: JSON.stringify({ mode }),
+    }),
 
   startSession: (mode: 'practice' | 'quiz' | 'typing') =>
     apiClient<{ session_id: number }>('/progress/session/start', {

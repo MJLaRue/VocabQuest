@@ -4,6 +4,7 @@ import {
   type UserProgress,
   type UserStats,
   type StudySessionData,
+  type ActiveSession,
 } from '$lib/api/progress';
 import type { APIError } from '$lib/api/client';
 import { auth } from './auth';
@@ -27,6 +28,8 @@ interface ProgressState {
     cardsReviewed: number;
     correctAnswers: number;
     correctStreakBonus: number;
+    totalXpEarned: number;
+    didLevelUp: boolean;
   };
   isLoading: boolean;
   error: string | null;
@@ -45,6 +48,8 @@ function createProgressStore() {
       cardsReviewed: 0,
       correctAnswers: 0,
       correctStreakBonus: 0,
+      totalXpEarned: 0,
+      didLevelUp: false,
     },
     isLoading: false,
     error: null,
@@ -142,6 +147,8 @@ function createProgressStore() {
               correctStreakBonus: isKnown
                 ? state.currentSession.correctStreakBonus + 1
                 : 0,
+              totalXpEarned: state.currentSession.totalXpEarned + (result.xpEarned || 0),
+              didLevelUp: state.currentSession.didLevelUp || result.leveledUp,
             },
           };
         });
@@ -163,6 +170,52 @@ function createProgressStore() {
       }
     },
 
+    async checkAndResumeSession(requestedMode: 'practice' | 'quiz' | 'typing') {
+      try {
+        const { session } = await progressApi.getActiveSession();
+        
+        if (!session) {
+          // No active session, start new one
+          return await this.startSession(requestedMode);
+        }
+        
+        // Check if session is older than 30 minutes
+        const sessionAge = Date.now() - new Date(session.updatedAt).getTime();
+        const THIRTY_MINUTES = 30 * 60 * 1000;
+        
+        if (sessionAge > THIRTY_MINUTES) {
+          // Session is stale, end it and start new one
+          await progressApi.endSession(session.id, {
+            mode: session.mode,
+            xp_earned: session.xpEarned,
+            cards_reviewed: session.cardsReviewed,
+            correct_answers: session.correctAnswers,
+          });
+          return await this.startSession(requestedMode);
+        }
+        
+        // Session is recent, resume it
+        update((state) => ({
+          ...state,
+          currentSession: {
+            id: session.id,
+            mode: session.mode,
+            startTime: new Date(session.startedAt).getTime(),
+            cardsReviewed: session.cardsReviewed,
+            correctAnswers: session.correctAnswers,
+            correctStreakBonus: 0, // Reset streak bonus on resume
+            totalXpEarned: session.xpEarned,
+            didLevelUp: false,
+          },
+        }));
+        return session.id;
+      } catch (err) {
+        const error = err as APIError;
+        update((state) => ({ ...state, error: error.message }));
+        throw error;
+      }
+    },
+
     async startSession(mode: 'practice' | 'quiz' | 'typing') {
       try {
         const { session_id } = await progressApi.startSession(mode);
@@ -175,6 +228,8 @@ function createProgressStore() {
             cardsReviewed: 0,
             correctAnswers: 0,
             correctStreakBonus: 0,
+            totalXpEarned: 0,
+            didLevelUp: false,
           },
         }));
         return session_id;
@@ -183,6 +238,25 @@ function createProgressStore() {
         update((state) => ({ ...state, error: error.message }));
         throw error;
       }
+    },
+
+    updateSessionMode(mode: 'practice' | 'quiz' | 'typing') {
+      const state = get({ subscribe });
+      if (state.currentSession.id) {
+        // Update backend
+        progressApi.updateSessionMode(state.currentSession.id, mode).catch((err) => {
+          console.error('Failed to update session mode:', err);
+        });
+      }
+      
+      // Update local state
+      update((state) => ({
+        ...state,
+        currentSession: {
+          ...state.currentSession,
+          mode,
+        },
+      }));
     },
 
     async endSession() {
@@ -219,6 +293,8 @@ function createProgressStore() {
             cardsReviewed: 0,
             correctAnswers: 0,
             correctStreakBonus: 0,
+            totalXpEarned: 0,
+            didLevelUp: false,
           },
         }));
 

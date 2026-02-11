@@ -58,6 +58,22 @@ router.post('/answer', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'Invalid request data' });
     }
     
+    // Update active session if exists
+    const activeSession = await StudySession.findOne({
+      where: { userId: req.user.id, endedAt: null },
+      order: [['startedAt', 'DESC']]
+    });
+    
+    if (activeSession) {
+      activeSession.cardsReviewed = (activeSession.cardsReviewed || 0) + 1;
+      if (correct) {
+        activeSession.correctAnswers = (activeSession.correctAnswers || 0) + 1;
+      }
+      activeSession.xpEarned = (activeSession.xpEarned || 0) + (xpEarned || 0);
+      // updatedAt is automatically updated by Sequelize
+      await activeSession.save();
+    }
+    
     // Update or create progress
     const [progress, created] = await UserProgress.findOrCreate({
       where: { userId: req.user.id, vocabId },
@@ -265,6 +281,66 @@ router.get('/gamification', requireAuth, async (req, res) => {
   } catch (error) {
     console.error('Get gamification error:', error);
     res.status(500).json({ error: 'Failed to get gamification data' });
+  }
+});
+
+// Get active session
+router.get('/session/active', requireAuth, async (req, res) => {
+  try {
+    const session = await StudySession.findOne({
+      where: { 
+        userId: req.user.id,
+        endedAt: null
+      },
+      order: [['startedAt', 'DESC']]
+    });
+    
+    if (!session) {
+      return res.json({ session: null });
+    }
+    
+    res.json({ 
+      session: {
+        id: session.id,
+        mode: session.mode,
+        startedAt: session.startedAt,
+        cardsReviewed: session.cardsReviewed,
+        correctAnswers: session.correctAnswers,
+        xpEarned: session.xpEarned,
+        updatedAt: session.updatedAt
+      }
+    });
+  } catch (error) {
+    console.error('Get active session error:', error);
+    res.status(500).json({ error: 'Failed to get active session' });
+  }
+});
+
+// Update session mode
+router.patch('/session/:id/mode', requireAuth, async (req, res) => {
+  try {
+    const sessionId = req.params.id;
+    const { mode } = req.body;
+    
+    if (!mode || !['practice', 'quiz', 'typing'].includes(mode)) {
+      return res.status(400).json({ error: 'Invalid mode' });
+    }
+    
+    const session = await StudySession.findOne({
+      where: { id: sessionId, userId: req.user.id, endedAt: null }
+    });
+    
+    if (!session) {
+      return res.status(404).json({ error: 'Session not found or already ended' });
+    }
+    
+    session.mode = mode;
+    await session.save();
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Update session mode error:', error);
+    res.status(500).json({ error: 'Failed to update session mode' });
   }
 });
 
