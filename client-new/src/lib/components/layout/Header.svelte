@@ -1,7 +1,6 @@
 <script lang="ts">
-  import { Sparkles, Moon, Sun, Flame, Trophy, BarChart3, BookOpen } from 'lucide-svelte';
+  import { Sparkles, Moon, Sun, BarChart3, BookOpen } from 'lucide-svelte';
   import { theme } from '$lib/stores/theme';
-  import Badge from '$lib/components/ui/Badge.svelte';
   import { link } from 'svelte-spa-router';
 
   export let user: { 
@@ -38,26 +37,6 @@
               Guide
             </a>
           </nav>
-
-          <!-- User Stats -->
-          <div class="hidden sm:flex items-center gap-3">
-            {#if user.dailyStreak}
-              <Badge variant="warning" size="sm">
-                <Flame class="w-3.5 h-3.5" />
-                {user.dailyStreak} day{user.dailyStreak !== 1 ? 's' : ''}
-              </Badge>
-            {/if}
-            {#if user.level}
-              <Badge variant="success" size="sm">
-                Level {user.level}
-              </Badge>
-            {/if}
-            {#if user.totalXp !== undefined}
-              <Badge variant="neutral" size="sm">
-                {user.totalXp.toLocaleString()} XP
-              </Badge>
-            {/if}
-          </div>
         {/if}
 
         <!-- Theme Toggle -->
