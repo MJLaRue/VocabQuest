@@ -36,9 +36,6 @@
   }
 
   $: hintText = word && hintLevel > 0 ? generateHint(word.word, hintLevel) : '';
-  
-  // Debug logging
-  $: console.log('FlashCard debug:', { disabled, typedAnswer, showResult, mode });
 
   function showHint() {
     if (hintLevel < 3) {
@@ -163,7 +160,6 @@
                 class="flex h-11 w-full rounded-lg border-2 border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-center text-2xl text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
                 on:input={(e) => {
                   typedAnswer = e.currentTarget.value;
-                  console.log('Input event:', e.currentTarget.value, 'typedAnswer:', typedAnswer);
                 }}
               />
               
