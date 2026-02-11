@@ -97,8 +97,19 @@ app.use(session({
 
 // Static files
 // Serve built Svelte app from client-new/dist
-app.use(express.static(path.join(__dirname, '../client-new/dist')));
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+// Use path from project root for more reliable deployment
+const projectRoot = path.join(__dirname, '..');
+const clientDistPath = path.join(projectRoot, 'client-new', 'dist');
+const uploadsPath = path.join(projectRoot, 'uploads');
+
+console.log('Server directory (__dirname):', __dirname);
+console.log('Project root:', projectRoot);
+console.log('Client dist path:', clientDistPath);
+console.log('Client dist exists:', require('fs').existsSync(clientDistPath));
+console.log('Index.html exists:', require('fs').existsSync(path.join(clientDistPath, 'index.html')));
+
+app.use(express.static(clientDistPath));
+app.use('/uploads', express.static(uploadsPath));
 
 // Routes
 app.use('/api/auth', authLimiter, require('./routes/auth'));
@@ -114,7 +125,8 @@ app.get('/api/health', (req, res) => {
 // SPA fallback - serve index.html for all non-API routes
 // This allows client-side routing to work
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../client-new/dist/index.html'));
+  const indexPath = path.join(projectRoot, 'client-new', 'dist', 'index.html');
+  res.sendFile(indexPath);
 });
 
 // Error handler
