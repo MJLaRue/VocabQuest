@@ -9,6 +9,7 @@
   import { auth, user, isAdmin } from '$lib/stores/auth';
   import { adminApi, type AdminStats, type TopStudent, type UserManagement } from '$lib/api/admin';
   import Header from '$lib/components/layout/Header.svelte';
+  import Footer from '$lib/components/layout/Footer.svelte';
   import AdminSidebar from '$lib/components/admin/AdminSidebar.svelte';
   import OverviewCards from '$lib/components/admin/OverviewCards.svelte';
   import TopStudents from '$lib/components/admin/TopStudents.svelte';
@@ -183,7 +184,7 @@
   }
 </script>
 
-<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+<div class="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
   <Header user={$user} />
 
   <div class="flex">
@@ -254,4 +255,6 @@
       </div>
     </main>
   </div>
+  
+  <Footer />
 </div>

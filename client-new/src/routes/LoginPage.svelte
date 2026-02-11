@@ -4,6 +4,7 @@
   import Button from '$lib/components/ui/Button.svelte';
   import Card from '$lib/components/ui/Card.svelte';
   import Input from '$lib/components/ui/Input.svelte';
+  import Footer from '$lib/components/layout/Footer.svelte';
   import { Sparkles } from 'lucide-svelte';
 
   let email = '';
@@ -32,7 +33,8 @@
   }
 </script>
 
-<div class="min-h-screen bg-gradient-to-br from-teal-50 via-emerald-50 to-teal-100 dark:from-gray-900 dark:via-teal-950 dark:to-gray-900 flex items-center justify-center p-4">
+<div class="flex flex-col min-h-screen bg-gradient-to-br from-teal-50 via-emerald-50 to-teal-100 dark:from-gray-900 dark:via-teal-950 dark:to-gray-900">
+  <div class="flex-1 flex items-center justify-center p-4">
   <Card class="w-full max-w-md">
     <div class="p-8 space-y-6">
       <!-- Logo/Header -->
@@ -113,4 +115,7 @@
       </div>
     </div>
   </Card>
+  </div>
+  
+  <Footer />
 </div>
