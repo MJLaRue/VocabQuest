@@ -13,27 +13,31 @@
     icon={Users}
     label="Total Users"
     value={totalUsers.toString()}
-    variant="primary"
+    iconBgColor="bg-blue-100 dark:bg-blue-900"
+    iconColor="text-blue-500"
   />
 
   <StatCard
     icon={BookOpen}
     label="Vocabulary Words"
     value={totalWords.toString()}
-    variant="success"
+    iconBgColor="bg-green-100 dark:bg-green-900"
+    iconColor="text-green-500"
   />
 
   <StatCard
     icon={Calendar}
     label="Study Sessions"
     value={totalSessions.toString()}
-    variant="warning"
+    iconBgColor="bg-amber-100 dark:bg-amber-900"
+    iconColor="text-amber-500"
   />
 
   <StatCard
     icon={TrendingUp}
     label="Active Today"
     value={activeToday.toString()}
-    variant="primary"
+    iconBgColor="bg-teal-100 dark:bg-teal-900"
+    iconColor="text-teal-500"
   />
 </div>
