@@ -35,10 +35,36 @@ router.post('/register', async (req, res) => {
       existingUser.password = password;
       await existingUser.save();
       
-      return res.json({ 
-        success: true, 
-        message: 'Registration complete',
-        userId: existingUser.id 
+      // Get or create gamification record
+      let gamification = await UserGamification.findOne({ where: { userId: existingUser.id } });
+      if (!gamification) {
+        gamification = await UserGamification.create({ userId: existingUser.id });
+      }
+      
+      // Set session
+      req.session.userId = existingUser.id;
+      req.session.role = existingUser.role;
+      
+      // Save session before responding
+      return req.session.save((err) => {
+        if (err) {
+          console.error('Session save error:', err);
+          return res.status(500).json({ error: 'Session creation failed' });
+        }
+        
+        return res.json({ 
+          success: true, 
+          message: 'Registration complete',
+          user: {
+            id: existingUser.id,
+            username: existingUser.email.split('@')[0],
+            email: existingUser.email,
+            role: existingUser.role,
+            level: gamification.level || 1,
+            totalXp: gamification.totalXp || 0,
+            dailyStreak: gamification.dailyStreak || 0
+          }
+        });
       });
     }
     
@@ -56,14 +82,34 @@ router.post('/register', async (req, res) => {
     });
     
     // Create gamification record
-    await UserGamification.create({
+    const gamification = await UserGamification.create({
       userId: user.id
     });
     
-    res.status(201).json({ 
-      success: true, 
-      message: 'Registration successful',
-      userId: user.id 
+    // Set session
+    req.session.userId = user.id;
+    req.session.role = user.role;
+    
+    // Save session before responding
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save error:', err);
+        return res.status(500).json({ error: 'Session creation failed' });
+      }
+      
+      res.status(201).json({ 
+        success: true, 
+        message: 'Registration successful',
+        user: {
+          id: user.id,
+          username: user.email.split('@')[0],
+          email: user.email,
+          role: user.role,
+          level: gamification.level || 1,
+          totalXp: gamification.totalXp || 0,
+          dailyStreak: gamification.dailyStreak || 0
+        }
+      });
     });
     
   } catch (error) {
@@ -123,6 +169,7 @@ router.post('/login', async (req, res) => {
         success: true,
         user: {
           id: user.id,
+          username: user.email.split('@')[0], // Derive username from email
           email: user.email,
           role: user.role,
           level: user.gamification?.level || 1,
@@ -161,6 +208,7 @@ router.get('/me', requireAuth, async (req, res) => {
     res.json({ 
       user: {
         id: user.id,
+        username: user.email.split('@')[0], // Derive username from email
         email: user.email,
         role: user.role,
         level: user.gamification?.level || 1,

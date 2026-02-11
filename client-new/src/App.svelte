@@ -1,0 +1,28 @@
+<script lang="ts">
+  import { onMount } from 'svelte';
+  import Router from 'svelte-spa-router';
+  import { theme } from '$lib/stores/theme';
+  import { auth } from '$lib/stores/auth';
+
+  // Routes
+  import LoginPage from './routes/LoginPage.svelte';
+  import RegisterPage from './routes/RegisterPage.svelte';
+  import FlashcardsPage from './routes/FlashcardsPage.svelte';
+  import StatsPage from './routes/StatsPage.svelte';
+  import AdminPage from './routes/AdminPage.svelte';
+
+  const routes = {
+    '/': FlashcardsPage,
+    '/stats': StatsPage,
+    '/admin': AdminPage,
+    '/login': LoginPage,
+    '/register': RegisterPage,
+  };
+
+  onMount(() => {
+    theme.init();
+    auth.checkSession();
+  });
+</script>
+
+<Router {routes} />

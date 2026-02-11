@@ -1,0 +1,265 @@
+import { writable, derived, get } from 'svelte/store';
+import {
+  progressApi,
+  type UserProgress,
+  type UserStats,
+  type StudySessionData,
+} from '$lib/api/progress';
+import type { APIError } from '$lib/api/client';
+import { auth } from './auth';
+
+interface ProgressState {
+  userProgress: Map<number, UserProgress>;
+  stats: UserStats | null;
+  achievements: Array<{
+    id: string;
+    name: string;
+    description: string;
+    icon: string;
+    unlocked: boolean;
+    unlockedAt?: string;
+  }>;
+  difficultWords: Array<{ word: string; vocab_id: number; accuracy: number }>;
+  currentSession: {
+    id: number | null;
+    mode: 'practice' | 'quiz' | 'typing' | null;
+    startTime: number | null;
+    cardsReviewed: number;
+    correctAnswers: number;
+  };
+  isLoading: boolean;
+  error: string | null;
+}
+
+function createProgressStore() {
+  const { subscribe, set, update } = writable<ProgressState>({
+    userProgress: new Map(),
+    stats: null,
+    achievements: [],
+    difficultWords: [],
+    currentSession: {
+      id: null,
+      mode: null,
+      startTime: null,
+      cardsReviewed: 0,
+      correctAnswers: 0,
+    },
+    isLoading: false,
+    error: null,
+  });
+
+  return {
+    subscribe,
+
+    async loadProgress() {
+      update((state) => ({ ...state, isLoading: true, error: null }));
+      try {
+        const { progress } = await progressApi.getProgress();
+        const progressMap = new Map(progress.map((p) => [p.vocab_id, p]));
+        update((state) => ({
+          ...state,
+          userProgress: progressMap,
+          isLoading: false,
+        }));
+      } catch (err) {
+        const error = err as APIError;
+        update((state) => ({
+          ...state,
+          isLoading: false,
+          error: error.message,
+        }));
+      }
+    },
+
+    async loadStats() {
+      try {
+        const stats = await progressApi.getStats();
+        update((state) => ({ ...state, stats }));
+      } catch (err) {
+        const error = err as APIError;
+        update((state) => ({ ...state, error: error.message }));
+      }
+    },
+
+    async loadAchievements() {
+      try {
+        const { achievements } = await progressApi.getAchievements();
+        update((state) => ({ ...state, achievements }));
+      } catch (err) {
+        const error = err as APIError;
+        update((state) => ({ ...state, error: error.message }));
+      }
+    },
+
+    async loadDifficultWords(limit: number = 10) {
+      try {
+        const { difficultWords } = await progressApi.getDifficultWords(limit);
+        // Transform to match the expected format
+        const weakWords = difficultWords.map(w => ({
+          word: w.word,
+          vocab_id: w.id,
+          accuracy: w.reviewCount > 0 
+            ? Math.round((w.correctCount / w.reviewCount) * 100)
+            : 0
+        }));
+        update((state) => ({ ...state, difficultWords: weakWords }));
+        return weakWords;
+      } catch (err) {
+        const error = err as APIError;
+        update((state) => ({ ...state, error: error.message }));
+        return [];
+      }
+    },
+
+    async updateProgress(vocabId: number, isKnown: boolean) {
+      try {
+        // Get current mode from state
+        const state = get({ subscribe });
+        const mode = state.currentSession.mode || 'practice';
+        
+        const result = await progressApi.updateProgress(vocabId, isKnown, mode);
+
+        update((state) => {
+          return {
+            ...state,
+            currentSession: {
+              ...state.currentSession,
+              cardsReviewed: state.currentSession.cardsReviewed + 1,
+              correctAnswers: isKnown
+                ? state.currentSession.correctAnswers + 1
+                : state.currentSession.correctAnswers,
+            },
+          };
+        });
+
+        // Update user's gamification data in auth store
+        if (result.xpEarned > 0 || result.leveledUp) {
+          auth.checkSession();
+        }
+
+        return {
+          xpEarned: result.xpEarned,
+          levelUp: result.leveledUp,
+          newAchievements: result.newAchievements,
+        };
+      } catch (err) {
+        const error = err as APIError;
+        update((state) => ({ ...state, error: error.message }));
+        throw error;
+      }
+    },
+
+    async startSession(mode: 'practice' | 'quiz' | 'typing') {
+      try {
+        const { session_id } = await progressApi.startSession(mode);
+        update((state) => ({
+          ...state,
+          currentSession: {
+            id: session_id,
+            mode,
+            startTime: Date.now(),
+            cardsReviewed: 0,
+            correctAnswers: 0,
+          },
+        }));
+        return session_id;
+      } catch (err) {
+        const error = err as APIError;
+        update((state) => ({ ...state, error: error.message }));
+        throw error;
+      }
+    },
+
+    async endSession() {
+      try {
+        // Get current state synchronously
+        let currentState: ProgressState;
+        const unsubscribe = subscribe((s) => {
+          currentState = s;
+        });
+        unsubscribe();
+
+        if (!currentState!.currentSession.id || !currentState!.currentSession.mode) {
+          throw new Error('No active session');
+        }
+
+        const sessionData: StudySessionData = {
+          mode: currentState!.currentSession.mode,
+          xp_earned: 0, // Backend will calculate
+          cards_reviewed: currentState!.currentSession.cardsReviewed,
+          correct_answers: currentState!.currentSession.correctAnswers,
+        };
+
+        const result = await progressApi.endSession(
+          currentState!.currentSession.id,
+          sessionData
+        );
+
+        update((state) => ({
+          ...state,
+          currentSession: {
+            id: null,
+            mode: null,
+            startTime: null,
+            cardsReviewed: 0,
+            correctAnswers: 0,
+          },
+        }));
+
+        // Refresh stats and gamification data
+        this.loadStats();
+        auth.checkSession();
+
+        return result;
+      } catch (err) {
+        const error = err as APIError;
+        update((state) => ({ ...state, error: error.message }));
+        throw error;
+      }
+    },
+
+    getWordProgress(vocabId: number) {
+      let result: UserProgress | undefined;
+      subscribe((state) => {
+        result = state.userProgress.get(vocabId);
+      })();
+      return result;
+    },
+
+    clearError() {
+      update((state) => ({ ...state, error: null }));
+    },
+  };
+}
+
+export const progress = createProgressStore();
+
+// Derived stores
+export const sessionStats = derived(progress, ($progress) => ({
+  cardsReviewed: $progress.currentSession.cardsReviewed,
+  correctAnswers: $progress.currentSession.correctAnswers,
+  accuracy:
+    $progress.currentSession.cardsReviewed > 0
+      ? Math.round(
+          ($progress.currentSession.correctAnswers /
+            $progress.currentSession.cardsReviewed) *
+            100
+        )
+      : 0,
+  duration: $progress.currentSession.startTime
+    ? Math.floor((Date.now() - $progress.currentSession.startTime) / 1000)
+    : 0,
+}));
+
+export const hasActiveSession = derived(
+  progress,
+  ($progress) => $progress.currentSession.id !== null
+);
+
+export const unlockedAchievements = derived(progress, ($progress) =>
+  $progress.achievements.filter((a) => a.unlocked)
+);
+
+export const lockedAchievements = derived(progress, ($progress) =>
+  $progress.achievements.filter((a) => !a.unlocked)
+);

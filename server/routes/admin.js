@@ -55,6 +55,7 @@ router.get('/users', async (req, res) => {
     res.json({
       users: users.map(u => ({
         id: u.id,
+        username: u.email.split('@')[0], // Derive username from email
         email: u.email,
         role: u.role,
         registrationSource: u.registrationSource,
@@ -106,7 +107,7 @@ router.post('/users', async (req, res) => {
 });
 
 // Update user role
-router.put('/users/:id', async (req, res) => {
+router.patch('/users/:id', async (req, res) => {
   try {
     const { role } = req.body;
     

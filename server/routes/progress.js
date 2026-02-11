@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { sequelize } = require('../config/db');
 const { UserProgress, UserGamification, StudySession, Vocabulary } = require('../models');
 const { requireAuth } = require('../middleware/auth');
 const { calculateNextReview, correctnessToQuality } = require('../utils/spacedRepetition');
@@ -148,14 +149,36 @@ router.post('/answer', requireAuth, async (req, res) => {
     const streak = gamification.updateStreak();
     await gamification.save();
     
-    // Check for achievements (simplified - full implementation would check all achievements)
+    // Check for achievements
     const achievements = gamification.unlockedAchievements || [];
     
+    // First correct answer achievement
     if (correct && !achievements.includes('first_correct')) {
       achievements.push('first_correct');
       newAchievements.push('first_correct');
-      gamification.unlockedAchievements = achievements;
       gamification.addXP(50); // Achievement bonus
+    }
+    
+    // 7-day streak achievement
+    if (streak >= 7 && !achievements.includes('streak_7')) {
+      achievements.push('streak_7');
+      newAchievements.push('streak_7');
+      gamification.addXP(100); // Achievement bonus
+    }
+    
+    // 50 words learned achievement
+    const learnedCount = await UserProgress.count({
+      where: { userId: req.user.id, isKnown: true }
+    });
+    if (learnedCount >= 50 && !achievements.includes('words_50')) {
+      achievements.push('words_50');
+      newAchievements.push('words_50');
+      gamification.addXP(150); // Achievement bonus
+    }
+    
+    // Update achievements if any were unlocked
+    if (newAchievements.length > 0) {
+      gamification.unlockedAchievements = achievements;
       await gamification.save();
     }
     
@@ -246,7 +269,7 @@ router.get('/gamification', requireAuth, async (req, res) => {
 });
 
 // Start study session
-router.post('/session-start', requireAuth, async (req, res) => {
+router.post('/session/start', requireAuth, async (req, res) => {
   try {
     const { mode } = req.body;
     
@@ -256,7 +279,7 @@ router.post('/session-start', requireAuth, async (req, res) => {
       startedAt: new Date()
     });
     
-    res.json({ sessionId: session.id });
+    res.json({ session_id: session.id });
   } catch (error) {
     console.error('Start session error:', error);
     res.status(500).json({ error: 'Failed to start session' });
@@ -264,9 +287,10 @@ router.post('/session-start', requireAuth, async (req, res) => {
 });
 
 // End study session
-router.post('/session-end', requireAuth, async (req, res) => {
+router.post('/session/:id/end', requireAuth, async (req, res) => {
   try {
-    const { sessionId, xpEarned, cardsReviewed, correctAnswers } = req.body;
+    const sessionId = req.params.id;
+    const { xpEarned, cardsReviewed, correctAnswers } = req.body;
     
     const session = await StudySession.findOne({
       where: { id: sessionId, userId: req.user.id }
@@ -282,7 +306,33 @@ router.post('/session-end', requireAuth, async (req, res) => {
     session.correctAnswers = correctAnswers || 0;
     await session.save();
     
-    res.json({ success: true });
+    // Update user gamification
+    const gamification = await UserGamification.findOne({
+      where: { userId: req.user.id }
+    });
+    
+    let levelUp = false;
+    const newAchievements = [];
+    
+    if (gamification && xpEarned > 0) {
+      const oldLevel = gamification.level;
+      gamification.totalXp += xpEarned;
+      
+      // Simple level calculation: level = floor(sqrt(totalXp / 100))
+      const newLevel = Math.floor(Math.sqrt(gamification.totalXp / 100)) + 1;
+      if (newLevel > oldLevel) {
+        gamification.level = newLevel;
+        levelUp = true;
+      }
+      
+      await gamification.save();
+    }
+    
+    res.json({ 
+      xpEarned: xpEarned || 0,
+      levelUp,
+      newAchievements
+    });
   } catch (error) {
     console.error('End session error:', error);
     res.status(500).json({ error: 'Failed to end session' });
@@ -359,6 +409,58 @@ router.get('/stats', requireAuth, async (req, res) => {
   } catch (error) {
     console.error('Get stats error:', error);
     res.status(500).json({ error: 'Failed to get statistics' });
+  }
+});
+
+// Get user achievements
+router.get('/achievements', requireAuth, async (req, res) => {
+  try {
+    const gamification = await UserGamification.findOne({
+      where: { userId: req.user.id }
+    });
+
+    const unlockedAchievements = gamification?.unlockedAchievements || [];
+
+    // Define all possible achievements
+    const allAchievements = [
+      {
+        id: 'first_correct',
+        name: 'First Step',
+        description: 'Answer your first question correctly',
+        icon: 'star',
+        unlocked: unlockedAchievements.includes('first_correct'),
+        unlockedAt: unlockedAchievements.includes('first_correct') ? gamification?.updatedAt : undefined
+      },
+      {
+        id: 'streak_7',
+        name: 'Week Warrior',
+        description: 'Maintain a 7-day study streak',
+        icon: 'flame',
+        unlocked: unlockedAchievements.includes('streak_7'),
+        unlockedAt: unlockedAchievements.includes('streak_7') ? gamification?.updatedAt : undefined
+      },
+      {
+        id: 'words_50',
+        name: 'Vocab Builder',
+        description: 'Learn 50 words',
+        icon: 'book',
+        unlocked: unlockedAchievements.includes('words_50'),
+        unlockedAt: unlockedAchievements.includes('words_50') ? gamification?.updatedAt : undefined
+      },
+      {
+        id: 'perfect_session',
+        name: 'Perfectionist',
+        description: 'Complete a session with 100% accuracy',
+        icon: 'trophy',
+        unlocked: unlockedAchievements.includes('perfect_session'),
+        unlockedAt: unlockedAchievements.includes('perfect_session') ? gamification?.updatedAt : undefined
+      }
+    ];
+
+    res.json({ achievements: allAchievements });
+  } catch (error) {
+    console.error('Get achievements error:', error);
+    res.status(500).json({ error: 'Failed to get achievements' });
   }
 });
 
