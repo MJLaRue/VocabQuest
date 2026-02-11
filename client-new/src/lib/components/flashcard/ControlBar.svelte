@@ -7,12 +7,22 @@
   export let mode: 'practice' | 'quiz' | 'typing' = 'practice';
   export let randomMode = false;
   export let searchQuery = '';
+  export let selectedPos: string | null = null;
 
   const dispatch = createEventDispatcher<{
     modeChange: { mode: 'practice' | 'quiz' | 'typing' };
     toggleRandom: void;
     search: { query: string };
+    posSelect: { pos: string | null };
   }>();
+
+  const partsOfSpeech = [
+    { value: '', label: 'All Parts of Speech' },
+    { value: 'n.', label: 'Nouns Only' },
+    { value: 'v.', label: 'Verbs Only' },
+    { value: 'adj.', label: 'Adjectives Only' },
+    { value: 'adv.', label: 'Adverbs Only' },
+  ];
 
   function handleModeChange(newMode: 'practice' | 'quiz' | 'typing') {
     mode = newMode;
@@ -24,13 +34,20 @@
     searchQuery = target.value;
     dispatch('search', { query: searchQuery });
   }
+
+  function handlePosChange(event: Event) {
+    const target = event.target as HTMLSelectElement;
+    const pos = target.value || null;
+    selectedPos = pos;
+    dispatch('posSelect', { pos });
+  }
 </script>
 
 <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
   <div class="container mx-auto px-4 py-3">
-    <div class="flex flex-wrap items-center justify-between gap-4">
-      <!-- Mode Selector -->
-      <div class="flex items-center gap-2">
+    <div class="grid grid-cols-3 items-center gap-4">
+      <!-- Mode Selector (Left) -->
+      <div class="flex items-center gap-2 justify-start">
         <button
           class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {mode ===
           'practice'
@@ -60,22 +77,35 @@
         </button>
       </div>
 
-      <!-- Search -->
-      <div class="relative flex-1 max-w-xs">
-        <Search
-          class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
-        />
-        <Input
-          type="text"
-          placeholder="Search words..."
-          value={searchQuery}
-          on:input={handleSearch}
-          class="pl-10"
-        />
+      <!-- Search & POS Filter (Center) -->
+      <div class="flex items-center justify-center gap-2">
+        <div class="relative flex-1 max-w-xs">
+          <Search
+            class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+          />
+          <Input
+            type="text"
+            placeholder="Search words..."
+            value={searchQuery}
+            on:input={handleSearch}
+            class="pl-10"
+          />
+        </div>
+
+        <!-- POS Filter -->
+        <select
+          value={selectedPos || ''}
+          on:change={handlePosChange}
+          class="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors"
+        >
+          {#each partsOfSpeech as pos}
+            <option value={pos.value}>{pos.label}</option>
+          {/each}
+        </select>
       </div>
 
-      <!-- Toggles -->
-      <div class="flex items-center gap-4">
+      <!-- Random Toggle (Right) -->
+      <div class="flex items-center gap-4 justify-end">
         <div class="flex items-center gap-2">
           <Shuffle class="w-4 h-4 text-gray-500" />
           <Toggle

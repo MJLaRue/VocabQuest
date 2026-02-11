@@ -11,7 +11,6 @@
   import ControlBar from '$lib/components/flashcard/ControlBar.svelte';
   import GamificationBar from '$lib/components/flashcard/GamificationBar.svelte';
   import DeckSelector from '$lib/components/flashcard/DeckSelector.svelte';
-  import POSFilter from '$lib/components/flashcard/POSFilter.svelte';
   import FlashCard from '$lib/components/flashcard/FlashCard.svelte';
   import FlashcardActions from '$lib/components/flashcard/FlashcardActions.svelte';
   import FlashcardNavigation from '$lib/components/flashcard/FlashcardNavigation.svelte';
@@ -176,27 +175,25 @@
   <ControlBar
     {mode}
     {randomMode}
+    selectedPos={$vocab.filters.pos}
     on:modeChange={({ detail }) => handleModeChange(detail.mode)}
     on:toggleRandom={handleToggleRandom}
     on:search={handleSearch}
+    on:posSelect={handlePOSSelect}
   />
 
   <Container>
     <div class="py-8 space-y-6">
       <!-- Filters -->
-      <div class="flex flex-wrap items-center justify-center gap-4">
-        {#if $vocab.decks.length > 1}
+      {#if $vocab.decks.length > 1}
+        <div class="flex flex-wrap items-center justify-center gap-4">
           <DeckSelector
             decks={$vocab.decks}
             selectedDeck={$vocab.filters.deck}
             on:select={handleDeckSelect}
           />
-        {/if}
-        <POSFilter
-          selectedPos={$vocab.filters.pos}
-          on:select={handlePOSSelect}
-        />
-      </div>
+        </div>
+      {/if}
 
       <!-- Flashcard -->
       <FlashCard
