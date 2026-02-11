@@ -30,12 +30,12 @@
     dispatch('search', { query: searchQuery });
   }
 
-  function getPOSColor(pos: string): 'primary' | 'success' | 'warning' | 'danger' {
+  function getPOSColor(pos: string): 'primary' | 'success' | 'warning' | 'neutral' {
     const lowerPos = pos.toLowerCase();
     if (lowerPos.includes('noun')) return 'primary';
     if (lowerPos.includes('verb')) return 'success';
     if (lowerPos.includes('adjective')) return 'warning';
-    return 'default' as any;
+    return 'neutral';
   }
 </script>
 

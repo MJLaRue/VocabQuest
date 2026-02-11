@@ -20,8 +20,12 @@
     '/stats': StatsPage,
     '/guide': UserGuidePage,
     '/admin': AdminPage,
+    '/admin/users': AdminPage,
+    '/admin/vocabulary': AdminPage,
+    '/admin/analytics': AdminPage,
     '/login': LoginPage,
     '/register': RegisterPage,
+    '*': FlashcardsPage, // Wildcard catch-all fallback
   };
 
   onMount(() => {

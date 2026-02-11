@@ -1,6 +1,7 @@
 <script lang="ts">
-  import { Sparkles, Moon, Sun, BarChart3, BookOpen, Layers } from 'lucide-svelte';
+  import { Sparkles, Moon, Sun, BarChart3, BookOpen, Layers, Shield } from 'lucide-svelte';
   import { theme } from '$lib/stores/theme';
+  import { isAdmin } from '$lib/stores/auth';
   import { link } from 'svelte-spa-router';
 
   export let user: { 
@@ -8,8 +9,15 @@
     level?: number; 
     totalXp?: number; 
     dailyStreak?: number;
+    role?: string;
   } | null = null;
   export let showNav = true;
+  
+  // Check if user is admin from either the store or the prop
+  $: userIsAdmin = $isAdmin || user?.role === 'admin';
+  
+  // Debug: log isAdmin status
+  $: console.log('Header - user:', user, 'isAdmin store:', $isAdmin, 'userIsAdmin:', userIsAdmin);
 </script>
 
 <header class="sticky top-0 z-50 border-b border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
@@ -45,6 +53,12 @@
               <BookOpen class="w-4 h-4" />
               Guide
             </a>
+            {#if userIsAdmin}
+              <a href="/admin" use:link class="px-4 py-2 rounded-lg text-sm font-medium bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 hover:bg-teal-200 dark:hover:bg-teal-900/50 transition-colors flex items-center gap-1">
+                <Shield class="w-4 h-4" />
+                Admin
+              </a>
+            {/if}
           </nav>
         {/if}
 

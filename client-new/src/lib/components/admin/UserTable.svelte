@@ -104,7 +104,7 @@
                     Admin
                   </Badge>
                 {:else}
-                  <Badge variant="default">Student</Badge>
+                  <Badge variant="neutral">Student</Badge>
                 {/if}
               </td>
               <td class="py-3 px-3 text-center">

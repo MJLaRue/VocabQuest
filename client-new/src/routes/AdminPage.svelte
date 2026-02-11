@@ -1,6 +1,11 @@
+<script context="module" lang="ts">
+  // Module-level variable to track if admin auth has been checked
+  let adminAuthChecked = false;
+</script>
+
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { push } from 'svelte-spa-router';
+  import { push, location } from 'svelte-spa-router';
   import { auth, user, isAdmin } from '$lib/stores/auth';
   import { adminApi, type AdminStats, type TopStudent, type UserManagement } from '$lib/api/admin';
   import Header from '$lib/components/layout/Header.svelte';
@@ -11,7 +16,7 @@
   import VocabTable from '$lib/components/admin/VocabTable.svelte';
 
   type AdminView = 'overview' | 'users' | 'vocabulary' | 'analytics';
-  let currentView: AdminView = 'overview';
+  
   let stats: AdminStats = {
     totalUsers: 0,
     totalWords: 0,
@@ -22,21 +27,62 @@
   let users: UserManagement[] = [];
   let vocabulary: any[] = [];
   let isLoading = true;
+  let isAuthenticated = false;
+
+  // Update view based on URL
+  $: currentView = getCurrentView($location);
+  
+  function getCurrentView(path: string): AdminView {
+    if (path === '/admin/users') return 'users';
+    if (path === '/admin/vocabulary') return 'vocabulary';
+    if (path === '/admin/analytics') return 'analytics';
+    return 'overview';
+  }
 
   onMount(async () => {
-    const user = await auth.checkSession();
-    if (!user) {
+    // Only check auth once, not on every sub-route navigation
+    if (adminAuthChecked && isAuthenticated) {
+      return;
+    }
+    
+    adminAuthChecked = true;
+    
+    try {
+      // Wait for auth to be ready if it's still loading
+      if (!$user) {
+        const currentUser = await auth.checkSession();
+        if (!currentUser) {
+          push('/login');
+          return;
+        }
+      }
+
+      // Check admin role using the store value
+      // Use setTimeout to ensure the derived store is updated
+      await new Promise(resolve => setTimeout(resolve, 0));
+      
+      if (!$isAdmin) {
+        console.log('Not admin, redirecting to home');
+        push('/');
+        return;
+      }
+
+      isAuthenticated = true;
+      await loadData();
+    } catch (error) {
+      console.error('Auth check failed:', error);
       push('/login');
-      return;
     }
-
-    if (!$isAdmin) {
-      push('/');
-      return;
-    }
-
-    await loadData();
   });
+
+  // Track previous view to avoid reloading on view change
+  let previousView: AdminView | null = null;
+  
+  // Reload data when view changes (after initial load)
+  $: if (isAuthenticated && !isLoading && currentView && currentView !== previousView) {
+    previousView = currentView;
+    loadDataForView(currentView);
+  }
 
   async function loadData() {
     try {
@@ -44,18 +90,41 @@
       const [statsData, studentsData, usersData, vocabData] = await Promise.all([
         adminApi.getStats(),
         adminApi.getTopStudents(10),
-        adminApi.getUsers(),
-        adminApi.getVocabulary({ limit: 50 }),
+        adminApi.getUsers({ limit: 100 }),
+        adminApi.getVocabulary({ limit: 100 }),
       ]);
 
       stats = statsData;
       topStudents = studentsData.students;
-      users = usersData.users;
-      vocabulary = vocabData.words;
+      users = usersData.users || [];
+      vocabulary = vocabData.words || [];
+      console.log('Loaded data:', { 
+        users: users.length, 
+        vocabulary: vocabulary.length,
+        stats 
+      });
     } catch (error) {
       console.error('Failed to load admin data:', error);
     } finally {
       isLoading = false;
+    }
+  }
+
+  async function loadDataForView(view: AdminView) {
+    try {
+      if (view === 'users' && users.length === 0) {
+        console.log('Loading users data...');
+        const usersData = await adminApi.getUsers({ limit: 100 });
+        users = usersData.users || [];
+        console.log('Loaded users:', users.length);
+      } else if (view === 'vocabulary' && vocabulary.length === 0) {
+        console.log('Loading vocabulary data...');
+        const vocabData = await adminApi.getVocabulary({ limit: 100 });
+        vocabulary = vocabData.words || [];
+        console.log('Loaded vocabulary:', vocabulary.length);
+      }
+    } catch (error) {
+      console.error(`Failed to load data for ${view}:`, error);
     }
   }
 
@@ -118,7 +187,7 @@
   <Header user={$user} />
 
   <div class="flex">
-    <AdminSidebar currentPath="/admin/{currentView}" on:navigate={({ detail }) => currentView = detail.view} />
+    <AdminSidebar currentPath={$location} />
 
     <main class="flex-1 p-8">
       <div class="max-w-7xl mx-auto space-y-8">
@@ -147,21 +216,33 @@
             <TopStudents students={topStudents} />
           {:else if currentView === 'users'}
             <!-- User Management -->
-            <UserTable
-              {users}
-              on:toggleAdmin={handleToggleAdmin}
-              on:deleteUser={handleDeleteUser}
-              on:search={handleSearchUsers}
-            />
+            {#if users.length === 0}
+              <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
+                <p class="text-gray-600 dark:text-gray-400">No users found. Loading...</p>
+              </div>
+            {:else}
+              <UserTable
+                {users}
+                on:toggleAdmin={handleToggleAdmin}
+                on:deleteUser={handleDeleteUser}
+                on:search={handleSearchUsers}
+              />
+            {/if}
           {:else if currentView === 'vocabulary'}
             <!-- Vocabulary Management -->
-            <VocabTable
-              words={vocabulary}
-              on:delete={handleDeleteWord}
-              on:search={handleSearchVocab}
-              on:add={() => alert('Add word modal coming soon!')}
-              on:edit={() => alert('Edit word modal coming soon!')}
-            />
+            {#if vocabulary.length === 0}
+              <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
+                <p class="text-gray-600 dark:text-gray-400">No vocabulary found. Loading...</p>
+              </div>
+            {:else}
+              <VocabTable
+                words={vocabulary}
+                on:delete={handleDeleteWord}
+                on:search={handleSearchVocab}
+                on:add={() => alert('Add word modal coming soon!')}
+                on:edit={() => alert('Edit word modal coming soon!')}
+              />
+            {/if}
           {:else if currentView === 'analytics'}
             <!-- Analytics Section -->
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
