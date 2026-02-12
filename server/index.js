@@ -33,7 +33,7 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com", "https://r2cdn.perplexity.ai"],
       scriptSrc: ["'self'", "'unsafe-inline'"],
       workerSrc: ["'self'", "blob:"],
       imgSrc: ["'self'", 'data:', 'https:'],
