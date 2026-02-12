@@ -59,8 +59,7 @@
   let unsubscribe: (() => void) | undefined;
 
   onMount(async () => {
-    const sessionUser = await auth.checkSession();
-    if (!sessionUser) {
+    if (!$user && !$auth.isLoading) {
       push("/login");
       return;
     }

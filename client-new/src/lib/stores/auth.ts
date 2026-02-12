@@ -29,6 +29,9 @@ function createAuthStore() {
         if (error.status === 401) {
           // Not logged in - this is expected
           set({ user: null, isLoading: false, error: null });
+        } else if (error.status === 429) {
+          // Rate limited - don't clear user! Just stop loading
+          update((state) => ({ ...state, isLoading: false, error: error.message }));
         } else {
           set({ user: null, isLoading: false, error: error.message });
         }

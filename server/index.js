@@ -58,7 +58,7 @@ const authLimiter = rateLimit({
 
 const apiLimiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute window
-  max: process.env.NODE_ENV === 'production' ? 60 : 1000, // 60/min in prod, 1000/min in dev
+  max: process.env.NODE_ENV === 'production' ? 300 : 1000, // 300/min in prod, 1000/min in dev
   message: 'Too many requests, please slow down',
   standardHeaders: true,
   legacyHeaders: false,

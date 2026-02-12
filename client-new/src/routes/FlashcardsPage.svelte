@@ -148,8 +148,9 @@
   $: mode = getModeFromPath($location);
 
   onMount(async () => {
-    const user = await auth.checkSession();
-    if (!user) {
+    // Rely on global checkSession from App.svelte
+    // Just verify we have a user, if not push to login
+    if (!$user && !$auth.isLoading) {
       push("/login");
       return;
     }
@@ -309,7 +310,6 @@
 
   <main id="main-content">
     <GamificationBar
-      level={$gamification?.level || 1}
       currentXP={$gamification?.totalXp || 0}
       streak={$gamification?.dailyStreak || 0}
       correctStreakBonus={$progress.currentSession.correctStreakBonus}
