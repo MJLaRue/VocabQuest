@@ -292,7 +292,9 @@
 
   async function handleEndSession() {
     try {
-      await progress.endSession();
+      if ($hasActiveSession) {
+        await progress.endSession();
+      }
       ui.openSessionSummary();
     } catch (error) {
       console.error("Failed to end session:", error);

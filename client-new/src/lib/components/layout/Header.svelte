@@ -9,11 +9,17 @@
     Shield,
     Menu,
     X,
+    LogOut,
   } from "lucide-svelte";
   import { fade, fly } from "svelte/transition";
+  import { push } from "svelte-spa-router";
   import { theme } from "$lib/stores/theme";
-  import { isAdmin } from "$lib/stores/auth";
-  import { sessionStats, progress } from "$lib/stores/progress";
+  import { auth, isAdmin } from "$lib/stores/auth";
+  import {
+    sessionStats,
+    progress,
+    hasActiveSession,
+  } from "$lib/stores/progress";
   import { link } from "svelte-spa-router";
 
   export let user: {
@@ -40,10 +46,11 @@
       return "/assets/mascot/header_disappointed.png";
     }
 
-    // Happy/Sunglasses for streaks or level ups/achievements
+    // Happy/Sunglasses for streaks, level ups, achievements, or completed sets
     if (
       (user.dailyStreak && user.dailyStreak >= 7) ||
-      $progress.currentSession.didLevelUp
+      $progress.currentSession.didLevelUp ||
+      $progress.currentSession.completedSets > 0
     ) {
       return "/assets/mascot/header_happy.png";
     }
@@ -57,6 +64,18 @@
 
   function closeMobileMenu() {
     mobileMenuOpen = false;
+  }
+
+  async function handleLogout() {
+    if ($hasActiveSession) {
+      try {
+        await progress.endSession();
+      } catch (error) {
+        console.error("Failed to end session during logout:", error);
+      }
+    }
+    await auth.logout();
+    push("/login");
   }
 
   // No design preview state needed anymore
@@ -190,17 +209,33 @@
 
         {#if user}
           <!-- User Menu -->
-          <div
-            class="flex items-center gap-2"
-            role="img"
-            aria-label={`User: ${user.username}`}
-          >
+          <div class="flex items-center gap-4">
             <div
-              class="w-8 h-8 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-bold text-sm"
-              aria-hidden="true"
+              class="flex items-center gap-2"
+              role="img"
+              aria-label={`User: ${user.username}`}
             >
-              {user.username.charAt(0).toUpperCase()}
+              <div
+                class="w-8 h-8 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-bold text-sm"
+                aria-hidden="true"
+              >
+                {user.username.charAt(0).toUpperCase()}
+              </div>
+              <div
+                class="hidden lg:block text-xs font-medium text-gray-600 dark:text-slate-400"
+              >
+                {user.username}
+              </div>
             </div>
+
+            <button
+              on:click={handleLogout}
+              class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-600 dark:text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400 transition-all border border-transparent hover:border-red-100 dark:hover:border-red-900/30"
+              aria-label="Log out"
+            >
+              <LogOut class="w-3.5 h-3.5" />
+              Logout
+            </button>
           </div>
         {/if}
       </div>
@@ -314,6 +349,13 @@
             {/if}
           </div>
         </div>
+        <button
+          on:click={handleLogout}
+          class="mt-4 w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors border border-red-100 dark:border-red-900/30 font-medium"
+        >
+          <LogOut class="w-5 h-5" />
+          Log out
+        </button>
       </div>
     </div>
   </div>

@@ -1,10 +1,11 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
-  import Button from '$lib/components/ui/Button.svelte';
-  import Card from '$lib/components/ui/Card.svelte';
-  import Badge from '$lib/components/ui/Badge.svelte';
-  import { X, Trophy, Target, Zap, Clock } from 'lucide-svelte';
-  import { confetti } from '$lib/utils/confetti';
+  import { createEventDispatcher } from "svelte";
+  import { push } from "svelte-spa-router";
+  import Button from "$lib/components/ui/Button.svelte";
+  import Card from "$lib/components/ui/Card.svelte";
+  import Badge from "$lib/components/ui/Badge.svelte";
+  import { X, Trophy, Target, Zap, Clock } from "lucide-svelte";
+  import { confetti } from "$lib/utils/confetti";
 
   export let show = false;
   export let cardsReviewed = 0;
@@ -26,22 +27,23 @@
   $: seconds = duration % 60;
 
   function handleClose() {
-    dispatch('close');
+    dispatch("close");
+    push("/stats");
   }
 
   function handleContinue() {
-    dispatch('continue');
+    dispatch("continue");
   }
 
   function handleClickOutside(event: MouseEvent) {
     const target = event.target as HTMLElement;
-    if (target.classList.contains('modal-backdrop')) {
+    if (target.classList.contains("modal-backdrop")) {
       handleClose();
     }
   }
 
   function handleKeydown(event: KeyboardEvent) {
-    if (event.key === 'Escape') {
+    if (event.key === "Escape") {
       handleClose();
     }
   }
@@ -64,7 +66,7 @@
         <!-- Header -->
         <div class="flex items-center justify-between">
           <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-            {levelUp ? '🎉 Level Up!' : 'Study Session Complete'}
+            {levelUp ? "🎉 Level Up!" : "Study Session Complete"}
           </h2>
           <button
             class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
@@ -90,10 +92,16 @@
 
         <!-- Completed Sets Badge -->
         {#if completedSets > 0}
-          <div class="flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 rounded-xl border-2 border-yellow-400 dark:border-yellow-600">
+          <div
+            class="flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 rounded-xl border-2 border-yellow-400 dark:border-yellow-600"
+          >
             <Trophy class="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
-            <span class="text-sm font-semibold text-yellow-900 dark:text-yellow-100">
-              {completedSets} {completedSets === 1 ? 'Set' : 'Sets'} Completed! (+{completedSets * 50} Bonus XP)
+            <span
+              class="text-sm font-semibold text-yellow-900 dark:text-yellow-100"
+            >
+              {completedSets}
+              {completedSets === 1 ? "Set" : "Sets"} Completed! (+{completedSets *
+                50} Bonus XP)
             </span>
           </div>
         {/if}
@@ -103,7 +111,9 @@
           <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
             <div class="flex items-center gap-2 mb-1">
               <Target class="w-4 h-4 text-teal-600 dark:text-teal-400" />
-              <span class="text-xs text-gray-600 dark:text-gray-400">Cards Reviewed</span>
+              <span class="text-xs text-gray-600 dark:text-gray-400"
+                >Cards Reviewed</span
+              >
             </div>
             <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">
               {cardsReviewed}
@@ -113,7 +123,9 @@
           <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
             <div class="flex items-center gap-2 mb-1">
               <Trophy class="w-4 h-4 text-green-600 dark:text-green-400" />
-              <span class="text-xs text-gray-600 dark:text-gray-400">Accuracy</span>
+              <span class="text-xs text-gray-600 dark:text-gray-400"
+                >Accuracy</span
+              >
             </div>
             <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">
               {accuracy}%
@@ -123,7 +135,9 @@
           <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
             <div class="flex items-center gap-2 mb-1">
               <Zap class="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
-              <span class="text-xs text-gray-600 dark:text-gray-400">XP Earned</span>
+              <span class="text-xs text-gray-600 dark:text-gray-400"
+                >XP Earned</span
+              >
             </div>
             <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">
               +{xpEarned}
@@ -133,10 +147,12 @@
           <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
             <div class="flex items-center gap-2 mb-1">
               <Clock class="w-4 h-4 text-blue-600 dark:text-blue-400" />
-              <span class="text-xs text-gray-600 dark:text-gray-400">Duration</span>
+              <span class="text-xs text-gray-600 dark:text-gray-400"
+                >Duration</span
+              >
             </div>
             <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-              {minutes}:{seconds.toString().padStart(2, '0')}
+              {minutes}:{seconds.toString().padStart(2, "0")}
             </p>
           </div>
         </div>
@@ -158,7 +174,7 @@
 
         <!-- Actions -->
         <div class="flex gap-3">
-          <Button variant="outline" on:click={handleClose} class="flex-1">
+          <Button variant="secondary" on:click={handleClose} class="flex-1">
             View Stats
           </Button>
           <Button variant="primary" on:click={handleContinue} class="flex-1">
