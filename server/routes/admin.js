@@ -55,14 +55,15 @@ router.get('/users', async (req, res) => {
     res.json({
       users: users.map(u => ({
         id: u.id,
+        username: u.email.split('@')[0], // Derive username from email
         email: u.email,
         role: u.role,
         registrationSource: u.registrationSource,
         isEduVerified: u.isEduVerified,
-        createdAt: u.createdAt,
-        lastLogin: u.lastLogin,
+        created_at: u.createdAt,
+        last_login: u.lastLogin,
         level: u.gamification?.level || 1,
-        totalXp: u.gamification?.totalXp || 0,
+        total_xp: u.gamification?.totalXp || 0,
         dailyStreak: u.gamification?.dailyStreak || 0
       })),
       total: count,
@@ -106,7 +107,7 @@ router.post('/users', async (req, res) => {
 });
 
 // Update user role
-router.put('/users/:id', async (req, res) => {
+router.patch('/users/:id', async (req, res) => {
   try {
     const { role } = req.body;
     
@@ -309,109 +310,180 @@ router.delete('/vocab/:id', async (req, res) => {
 
 // === STATISTICS ===
 
-// Get dashboard stats
+// Get dashboard stats (client-new format)
 router.get('/stats', async (req, res) => {
   try {
-    // User stats
     const totalUsers = await User.count();
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    const activeUsers7d = await User.count({
-      where: {
-        last_login: { [Op.gte]: sevenDaysAgo }
-      }
-    });
-    
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const newUsers30d = await User.count({
-      where: {
-        created_at: { [Op.gte]: thirtyDaysAgo }
-      }
-    });
-    
-    // Vocab stats
     const totalVocab = await Vocabulary.count();
+    const totalSessions = await StudySession.count();
     
-    // Gamification stats
-    const gamificationStats = await UserGamification.findAll({
-      attributes: [
-        [require('sequelize').fn('AVG', require('sequelize').col('level')), 'avgLevel'],
-        [require('sequelize').fn('AVG', require('sequelize').col('total_xp')), 'avgXP'],
-        [require('sequelize').fn('SUM', require('sequelize').col('total_xp')), 'totalXP']
-      ]
-    });
-    
-    const avgLevel = Math.round(gamificationStats[0]?.dataValues?.avgLevel || 1);
-    const avgXP = Math.round(gamificationStats[0]?.dataValues?.avgXP || 0);
-    const totalXP = parseInt(gamificationStats[0]?.dataValues?.totalXP || 0);
-    
-    // Mode breakdown
-    const sessions = await StudySession.findAll({
-      attributes: [
-        'mode',
-        [require('sequelize').fn('COUNT', require('sequelize').col('id')), 'count']
-      ],
-      group: ['mode']
-    });
-    
-    const modeBreakdown = {};
-    sessions.forEach(s => {
-      modeBreakdown[s.mode] = parseInt(s.dataValues.count);
-    });
-    
-    // Leaderboard
-    const topXP = await UserGamification.findAll({
-      include: [{
-        model: User,
-        as: 'user',
-        attributes: ['email']
-      }],
-      order: [['total_xp', 'DESC']],
-      limit: 10
-    });
-    
-    const topStreak = await UserGamification.findAll({
-      include: [{
-        model: User,
-        as: 'user',
-        attributes: ['email']
-      }],
-      order: [['daily_streak', 'DESC']],
-      limit: 10
+    // Active today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const activeToday = await User.count({
+      where: {
+        last_login: { [Op.gte]: today }
+      }
     });
     
     res.json({
-      users: {
-        total: totalUsers,
-        active7d: activeUsers7d,
-        new30d: newUsers30d
-      },
-      vocab: {
-        total: totalVocab
-      },
-      gamification: {
-        avgLevel,
-        avgXP,
-        totalXP
-      },
-      modeBreakdown,
-      leaderboard: {
-        topXP: topXP.map(g => ({
-          email: g.user.email,
-          xp: g.totalXp,
-          level: g.level
-        })),
-        topStreak: topStreak.map(g => ({
-          email: g.user.email,
-          streak: g.dailyStreak,
-          level: g.level
-        }))
-      }
+      totalUsers,
+      totalWords: totalVocab,
+      totalSessions,
+      activeToday
     });
   } catch (error) {
     console.error('Get stats error:', error);
     res.status(500).json({ error: 'Failed to get statistics' });
+  }
+});
+
+// Get top students
+router.get('/top-students', async (req, res) => {
+  try {
+    const { limit = 10 } = req.query;
+    
+    const topStudents = await UserGamification.findAll({
+      include: [{
+        model: User,
+        as: 'user',
+        attributes: ['id', 'email']
+      }],
+      order: [['total_xp', 'DESC']],
+      limit: parseInt(limit)
+    });
+    
+    // Get words learned and accuracy for each student
+    const students = await Promise.all(topStudents.map(async (gamif) => {
+      const progress = await UserProgress.findAll({
+        where: { userId: gamif.userId }
+      });
+      
+      const wordsLearned = progress.filter(p => p.correctCount >= 3).length;
+      const totalAttempts = progress.reduce((sum, p) => sum + p.correctCount + p.incorrectCount, 0);
+      const correctAttempts = progress.reduce((sum, p) => sum + p.correctCount, 0);
+      const accuracy = totalAttempts > 0 ? Math.round((correctAttempts / totalAttempts) * 100) : 0;
+      
+      return {
+        id: gamif.user.id,
+        username: gamif.user.email.split('@')[0],
+        level: gamif.level,
+        total_xp: gamif.totalXp,
+        words_learned: wordsLearned,
+        accuracy
+      };
+    }));
+    
+    res.json({ students });
+  } catch (error) {
+    console.error('Get top students error:', error);
+    res.status(500).json({ error: 'Failed to get top students' });
+  }
+});
+
+// Vocabulary endpoint (alias for /vocab with different response format)
+router.get('/vocabulary', async (req, res) => {
+  try {
+    const { search, deck, pos, limit = 50, offset = 0 } = req.query;
+    
+    const where = {};
+    if (search) {
+      where.word = { [Op.iLike]: `%${search}%` };
+    }
+    if (pos) {
+      where.partOfSpeech = pos;
+    }
+    
+    const { count, rows: vocab } = await Vocabulary.findAndCountAll({
+      where,
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+      order: [['word', 'ASC']]
+    });
+    
+    res.json({
+      words: vocab.map(v => ({
+        id: v.id,
+        word: v.word,
+        part_of_speech: v.partOfSpeech,
+        definition: v.definition,
+        example_sentence: v.exampleSentence || null,
+        deck_name: v.deckName || null
+      })),
+      total: count
+    });
+  } catch (error) {
+    console.error('Get vocabulary error:', error);
+    res.status(500).json({ error: 'Failed to get vocabulary' });
+  }
+});
+
+// Create vocabulary (matches /vocabulary endpoint)
+router.post('/vocabulary', async (req, res) => {
+  try {
+    const { word, part_of_speech, definition, example_sentence, deck_name } = req.body;
+    
+    if (!word || !part_of_speech || !definition) {
+      return res.status(400).json({ error: 'Word, part of speech, and definition required' });
+    }
+    
+    const vocab = await Vocabulary.create({
+      word: word.trim(),
+      partOfSpeech: part_of_speech.trim(),
+      definition: definition.trim(),
+      exampleSentence: example_sentence?.trim(),
+      deckName: deck_name?.trim(),
+      createdBy: req.user.id
+    });
+    
+    res.status(201).json({ id: vocab.id, message: 'Word created successfully' });
+  } catch (error) {
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      return res.status(400).json({ error: 'Word with this part of speech already exists' });
+    }
+    console.error('Create vocabulary error:', error);
+    res.status(500).json({ error: 'Failed to create vocabulary' });
+  }
+});
+
+// Update vocabulary (matches /vocabulary/:id endpoint)
+router.patch('/vocabulary/:id', async (req, res) => {
+  try {
+    const { word, part_of_speech, definition, example_sentence, deck_name } = req.body;
+    
+    const vocab = await Vocabulary.findByPk(req.params.id);
+    if (!vocab) {
+      return res.status(404).json({ error: 'Vocabulary not found' });
+    }
+    
+    if (word) vocab.word = word.trim();
+    if (part_of_speech) vocab.partOfSpeech = part_of_speech.trim();
+    if (definition) vocab.definition = definition.trim();
+    if (example_sentence !== undefined) vocab.exampleSentence = example_sentence?.trim();
+    if (deck_name !== undefined) vocab.deckName = deck_name?.trim();
+    
+    await vocab.save();
+    
+    res.json({ message: 'Word updated successfully' });
+  } catch (error) {
+    console.error('Update vocabulary error:', error);
+    res.status(500).json({ error: 'Failed to update vocabulary' });
+  }
+});
+
+// Delete vocabulary (matches /vocabulary/:id endpoint)
+router.delete('/vocabulary/:id', async (req, res) => {
+  try {
+    const vocab = await Vocabulary.findByPk(req.params.id);
+    if (!vocab) {
+      return res.status(404).json({ error: 'Vocabulary not found' });
+    }
+    
+    await vocab.destroy();
+    res.json({ message: 'Word deleted successfully' });
+  } catch (error) {
+    console.error('Delete vocabulary error:', error);
+    res.status(500).json({ error: 'Failed to delete vocabulary' });
   }
 });
 

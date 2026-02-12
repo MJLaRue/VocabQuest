@@ -5,6 +5,88 @@ const { requireAuth } = require('../middleware/auth');
 const { sequelize } = require('../config/db');
 const { Op } = require('sequelize');
 
+// Get vocabulary words with filters
+router.get('/words', requireAuth, async (req, res) => {
+  try {
+    const { deck, pos, search, limit = 50, offset = 0 } = req.query;
+    
+    const where = {};
+    if (pos) {
+      where.partOfSpeech = pos;
+    }
+    if (search) {
+      where[Op.or] = [
+        { word: { [Op.iLike]: `%${search}%` } },
+        { definition: { [Op.iLike]: `%${search}%` } }
+      ];
+    }
+    
+    const { count, rows: words } = await Vocabulary.findAndCountAll({
+      where,
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+      order: [['word', 'ASC']]
+    });
+    
+    res.json({ 
+      words: words.map(w => ({
+        id: w.id,
+        word: w.word,
+        part_of_speech: w.partOfSpeech,
+        definition: w.definition,
+        example_sentence: null,
+        deck_name: null
+      })),
+      total: count
+    });
+  } catch (error) {
+    console.error('Get words error:', error);
+    res.status(500).json({ error: 'Failed to get words' });
+  }
+});
+
+// Get available decks (not implemented yet - return empty)
+router.get('/decks', requireAuth, async (req, res) => {
+  try {
+    res.json({ decks: [] });
+  } catch (error) {
+    console.error('Get decks error:', error);
+    res.status(500).json({ error: 'Failed to get decks' });
+  }
+});
+
+// Get random words
+router.get('/random', requireAuth, async (req, res) => {
+  try {
+    const { pos, limit = 20 } = req.query;
+    
+    const where = {};
+    if (pos) {
+      where.partOfSpeech = pos;
+    }
+    
+    const words = await Vocabulary.findAll({
+      where,
+      order: sequelize.random(),
+      limit: parseInt(limit)
+    });
+    
+    res.json({ 
+      words: words.map(w => ({
+        id: w.id,
+        word: w.word,
+        part_of_speech: w.partOfSpeech,
+        definition: w.definition,
+        example_sentence: null,
+        deck_name: null
+      }))
+    });
+  } catch (error) {
+    console.error('Get random words error:', error);
+    res.status(500).json({ error: 'Failed to get random words' });
+  }
+});
+
 // Get all vocabulary words
 router.get('/', requireAuth, async (req, res) => {
   try {

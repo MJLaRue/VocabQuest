@@ -36,10 +36,20 @@ const UserGamification = sequelize.define('UserGamification', {
     type: DataTypes.DATEONLY,
     field: 'last_visit_date'
   },
+  perfectSessions: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+    field: 'perfect_sessions'
+  },
   unlockedAchievements: {
     type: DataTypes.JSONB,
     defaultValue: [],
-    field: 'unlocked_achievements'
+    field: 'unlocked_achievements',
+    get() {
+      // Ensure NULL values are treated as empty array
+      const value = this.getDataValue('unlockedAchievements');
+      return value || [];
+    }
   }
 }, {
   tableName: 'user_gamification',
@@ -48,42 +58,34 @@ const UserGamification = sequelize.define('UserGamification', {
   updatedAt: 'updated_at'
 });
 
-// Helper method to calculate XP needed for next level
-UserGamification.getXPForLevel = function(level) {
-  return Math.floor(100 * Math.pow(1.5, level - 1));
-};
-
-// Instance method to add XP and handle level ups
-UserGamification.prototype.addXP = function(amount) {
+// Instance method to add XP and handle level ups using quadratic cumulative formula
+// Level = floor(sqrt(totalXp / 100)) + 1
+// This means XP is never subtracted, only accumulated
+UserGamification.prototype.addXP = function (amount) {
+  const oldLevel = Math.floor(Math.sqrt(this.totalXp / 100)) + 1;
   this.totalXp += amount;
-  
-  let leveledUp = false;
-  let xpNeeded = UserGamification.getXPForLevel(this.level);
-  
-  while (this.totalXp >= xpNeeded) {
-    this.totalXp -= xpNeeded;
-    this.level++;
-    leveledUp = true;
-    xpNeeded = UserGamification.getXPForLevel(this.level);
-  }
-  
+  const newLevel = Math.floor(Math.sqrt(this.totalXp / 100)) + 1;
+
+  const leveledUp = newLevel > oldLevel;
+  this.level = newLevel; // Keep level in sync with actual formula
+
   return { leveledUp, newLevel: this.level };
 };
 
 // Instance method to update streak
-UserGamification.prototype.updateStreak = function() {
+UserGamification.prototype.updateStreak = function () {
   const today = new Date().toISOString().split('T')[0];
-  
+
   if (this.lastVisitDate === today) {
     // Already visited today, no change
     return this.dailyStreak;
   }
-  
+
   if (this.lastVisitDate) {
     const lastDate = new Date(this.lastVisitDate);
     const todayDate = new Date(today);
     const diffDays = Math.floor((todayDate - lastDate) / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays === 1) {
       // Consecutive day
       this.dailyStreak++;
@@ -95,7 +97,7 @@ UserGamification.prototype.updateStreak = function() {
     // First visit
     this.dailyStreak = 1;
   }
-  
+
   this.lastVisitDate = today;
   return this.dailyStreak;
 };

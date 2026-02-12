@@ -8,7 +8,35 @@ services:
     runtime: node
     region: ohio # us-east-2
     plan: free # Free tier: 512 MB RAM, spins down after 15 min inactivity
-    buildCommand: npm install && npm run migrate && npm run seed
+    buildCommand: |
+      set -e
+      echo "=== Build starting ==="
+      pwd
+      ls -la
+      npm install
+      echo "=== Building client ==="
+      cd client-new
+      pwd
+      npm ci
+      npm run build
+      echo "=== Checking dist in client-new ==="
+      ls -la
+      ls -la dist/ || echo "ERROR: dist folder not found in client-new!"
+      cd ..
+      echo "=== Checking from project root ==="
+      pwd
+      ls -la client-new/
+      ls -la client-new/dist/ || echo "WARNING: dist folder not found at client-new/dist!"
+      test -f client-new/dist/index.html && echo "✓ index.html found" || echo "ERROR: index.html missing!"
+      echo "=== Finding all dist folders ==="
+      find . -name "dist" -type d
+      echo "=== Running migrations (may fail if DB not ready) ==="
+      npm run migrate || echo "WARNING: Migration failed, will retry on startup"
+      echo "=== Seeding database (may fail if DB not ready) ==="
+      npm run seed || echo "WARNING: Seed failed, will retry on startup"
+      echo "=== Final check ==="
+      ls -la client-new/dist/
+      echo "=== Build complete ==="
     startCommand: npm start
     envVars:
       - key: NODE_ENV
