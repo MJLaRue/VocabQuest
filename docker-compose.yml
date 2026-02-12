@@ -2,18 +2,20 @@ services:
   # Node/Express Application
   app:
     build: .
+    command: node --watch server/index.js
     ports:
       - "3000:3000"
     env_file:
-      - .env.docker  # Copy this file and customize before running
+      - .env.docker
     environment:
+      - NODE_ENV=development
       # Override DATABASE_URL to reference db service
       - DATABASE_URL=postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-vocab_app}
     depends_on:
       db:
         condition: service_healthy
     volumes:
-      # Mount code for development (optional - remove for production-like testing)
+      # Mount code for development
       - ./server:/app/server
       - ./client:/app/client
       # Persist uploads

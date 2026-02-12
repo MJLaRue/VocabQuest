@@ -14,7 +14,7 @@
     --text-secondary: 107 114 128;
     --text-tertiary: 156 163 175;
     --border-color: 229 231 235;
-    
+
     --color-primary-500: 20 184 166;
     --color-primary-600: 13 148 136;
     --color-success-500: 16 185 129;
@@ -31,7 +31,7 @@
     --text-secondary: 203 213 225;
     --text-tertiary: 148 163 184;
     --border-color: 51 65 85;
-    
+
     --color-primary-400: 45 212 191;
     --color-primary-500: 20 184 166;
     --color-primary-600: 13 148 136;
@@ -56,11 +56,19 @@
   }
 
   @keyframes shimmer {
-    0%, 100% {
+
+    0%,
+    100% {
       opacity: 1;
     }
+
     50% {
       opacity: 0.5;
     }
+  }
+
+  /* Hide browser extension autofill buttons (Bitwarden, LastPass, etc.) */
+  autofill-inline-menu-button {
+    display: none !important;
   }
 }

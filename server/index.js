@@ -102,7 +102,7 @@ app.use(session({
 // Serve built Svelte app from client-new/dist
 // Use path from project root for more reliable deployment
 const projectRoot = path.join(__dirname, '..');
-const clientDistPath = path.join(projectRoot, 'client-new', 'dist');
+const clientDistPath = path.join(projectRoot, 'client', 'dist');
 const uploadsPath = path.join(projectRoot, 'uploads');
 
 console.log('Server directory (__dirname):', __dirname);
@@ -128,7 +128,7 @@ app.get('/api/health', (req, res) => {
 // SPA fallback - serve index.html for all non-API routes
 // This allows client-side routing to work
 app.get('*', (req, res) => {
-  const indexPath = path.join(projectRoot, 'client-new', 'dist', 'index.html');
+  const indexPath = path.join(projectRoot, 'client', 'dist', 'index.html');
   res.sendFile(indexPath);
 });
 

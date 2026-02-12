@@ -1,149 +1,91 @@
-# Vocabulary Extraction from Textbook Images
+# VocabQuest - HSPT Vocabulary Flashcards
 
-This project extracts vocabulary words and definitions from textbook images and exports them to a CSV file.
+A full-stack, gamified vocabulary learning application built with Svelte, Node.js, and PostgreSQL.
 
-## Setup
+## 🚀 Features
 
-### 1. Install Python Dependencies
+- **Interactive Learning**: Practice, Quiz, and Typing modes.
+- **Gamification**: XP system, levels, daily streaks, and achievements.
+- **Admin Dashboard**: Manage users and vocabulary, upload CSVs, and view stats.
+- **Modern Tech Stack**: Svelte frontend, Express backend, Sequelize ORM.
+
+## 🛠️ Development Setup
+
+### Option 1: Local Development (Recommended for Frontend Work)
+
+Best for active frontend development with hot module reloading:
+
+1. **Setup Environment Variables**:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. **Install Dependencies**:
+   ```bash
+   npm install
+   cd client && npm install && cd ..
+   ```
+
+3. **Start PostgreSQL** (via Docker or local install):
+   ```bash
+   # Using Docker for just the database:
+   docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=vocab_app postgres:14-alpine
+   ```
+
+4. **Run Development Servers**:
+   ```bash
+   npm run dev
+   ```
+   - **Frontend**: http://localhost:3000 (Vite with HMR)
+   - **Backend**: http://localhost:3001 (Express with auto-reload)
+
+### Option 2: Docker Compose (Full Stack)
+
+Good for testing the full production-like environment:
+
+1. **Setup Environment**:
+   ```bash
+   cp .env.example .env.docker
+   ```
+
+2. **Build the Client** (must be done on host due to architecture issues):
+   ```bash
+   cd client && npm install && npm run build && cd ..
+   ```
+
+3. **Start Docker**:
+   ```bash
+   docker-compose up
+   ```
+   - **Application**: http://localhost:3000 (serves pre-built client)
+   - **Database**: PostgreSQL on port 5432
+
+> **Note**: The Docker setup serves the pre-built client. For active frontend development with hot reloading, use Option 1.
+
+## 📦 Building for Production
 
 ```bash
-pip install -r requirements.txt
+npm run build
 ```
 
-**Note:** On first run, EasyOCR will download language models (~100-200MB). This is a one-time download.
+This builds the Svelte app to `client/dist/` which is served by the Express backend.
 
-### 2. Verify Images
+## 🚀 Deployment (Render)
 
-Ensure the following image files are in the project directory:
-- IMG_2031.JPG through IMG_2039.JPG
+This project is configured for easy deployment on Render:
 
-## Usage
+- **Build Command**: Defined in `render.yaml`
+- **Start Command**: `npm start`
+- **Frontend**: Served as static files from `client/dist`
 
-Run the extraction script:
+## 📁 Project Structure
 
-```bash
-python extract_vocab.py
-```
+- `client/`: Svelte frontend
+- `server/`: Express backend and API
+- `server/models/`: Sequelize database models
+- `server/scripts/`: Migration and seeding scripts
+- `vocabulary.csv`: Source vocabulary data
 
-### Expected Output
+## 📄 License
 
-The script will:
-1. Process each image sequentially
-2. Extract vocabulary entries matching the pattern: `word (part_of_speech) definition`
-3. Save results to `vocabulary.csv`
-4. Log unparsed lines to `review.txt`
-
-**Processing time:** Approximately 2-3 minutes per image (~20-30 minutes total).
-
-### Progress Output
-
-```
-Processing IMG_2031.JPG... ✓ Found 47 entries (3 unparsed)
-Processing IMG_2032.JPG... ✓ Found 52 entries (5 unparsed)
-...
-```
-
-## Output Files
-
-### vocabulary.csv
-
-CSV file with columns:
-- `word` - The vocabulary term
-- `part_of_speech` - Part of speech (n., v., adj., etc.)
-- `definition` - Full definition text
-- `source_image` - Source image filename
-- `confidence` - OCR confidence score (0.000-1.000)
-
-**Example:**
-```csv
-word,part_of_speech,definition,source_image,confidence
-augment,v.,to make greater,IMG_2031.JPG,0.952
-authentic,adj.,real,IMG_2031.JPG,0.943
-```
-
-### review.txt
-
-Log of text that couldn't be parsed as vocabulary entries. Use this to:
-- Identify OCR errors
-- Find entries that need manual correction
-- Adjust regex patterns if needed
-
-**Example:**
-```
-[IMG_2031.JPG] [conf: 0.87] "CHAPTER 3: VOCABULARY"
-[IMG_2031.JPG] [conf: 0.92] "37"
-```
-
-## How It Works
-
-1. **Preprocessing** (`preprocess.py`)
-   - Converts images to grayscale
-   - Enhances contrast
-   - Splits two-column layout into separate regions
-
-2. **OCR Extraction** (`extract_vocab.py`)
-   - Uses EasyOCR to extract text from images
-   - Returns text with confidence scores
-
-3. **Filtering** (`filter.py`)
-   - Removes headers, footers, page numbers
-   - Filters out section markers (A, B, C, etc.)
-   - Keeps only text with vocabulary pattern
-
-4. **Parsing** (`parser.py`)
-   - Extracts word, part of speech, and definition
-   - Uses regex pattern matching
-   - Cleans and normalizes text
-
-5. **Export**
-   - Appends results to CSV progressively
-   - Logs unparsed entries for review
-
-## Troubleshooting
-
-### Low Entry Count
-
-If few entries are extracted:
-- Check `review.txt` for patterns
-- Adjust regex in `parser.py`
-- Try different preprocessing settings
-
-### OCR Errors
-
-If many OCR mistakes:
-- Check image quality
-- Adjust contrast enhancement in `preprocess.py`
-- Consider using cloud OCR API for better accuracy
-
-### Missing Entries
-
-- Review source images for specific words
-- Check if entries appear in `review.txt`
-- Manually add missing entries to CSV
-
-## Customization
-
-### Change Column Detection
-
-In `preprocess.py`, adjust `split_columns()` overlap parameter:
-```python
-overlap = 20  # Increase if words at column boundary are missed
-```
-
-### Adjust Filtering
-
-In `filter.py`, modify margin threshold:
-```python
-margin = img_height * 0.12  # Increase to remove more header/footer content
-```
-
-### Modify Entry Pattern
-
-In `parser.py`, adjust regex pattern to match different formats:
-```python
-pattern = r'^([a-zA-Z\s\-\']+?)\s*\(([^)]+)\)\s*(.+)$'
-```
-
-## License
-
-MIT License
+MIT
