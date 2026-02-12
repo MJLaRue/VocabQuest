@@ -1,44 +1,22 @@
 <script lang="ts">
-    import { Trophy, Medal, User as UserIcon, Star } from "lucide-svelte";
+    import { Trophy, Flame, Target, BookOpen } from "lucide-svelte";
+    import Badge from "$lib/components/ui/Badge.svelte";
 
     export let leaderboard: Array<{
         rank: number;
-        email: string;
+        username: string;
         totalXp: number;
         level: number;
+        streak: number;
+        wordsLearned: number;
+        accuracy: number;
     }> = [];
 
-    // Helper to format email for privacy (e.g., user@example.com -> use***@example.com)
-    function formatName(email: string) {
-        const [local, domain] = email.split("@");
-        if (local.length <= 3) return email;
-        return `${local.substring(0, 3)}***@${domain}`;
-    }
-
-    function getRankColor(rank: number) {
-        switch (rank) {
-            case 1:
-                return "text-yellow-400";
-            case 2:
-                return "text-gray-300";
-            case 3:
-                return "text-amber-600";
-            default:
-                return "text-gray-400";
-        }
-    }
-
-    function getRankBadge(rank: number) {
-        switch (rank) {
-            case 1:
-                return "from-yellow-400/20 to-yellow-600/20 border-yellow-400/30";
-            case 2:
-                return "from-gray-300/20 to-gray-500/20 border-gray-300/30";
-            case 3:
-                return "from-amber-600/20 to-amber-800/20 border-amber-600/30";
-            default:
-                return "from-teal-500/10 to-emerald-500/10 border-white/10";
-        }
+    function getMedal(rank: number) {
+        if (rank === 1) return "🥇";
+        if (rank === 2) return "🥈";
+        if (rank === 3) return "🥉";
+        return null;
     }
 </script>
 
@@ -55,107 +33,141 @@
         <span class="text-teal-100 text-sm font-medium">Top 10 Performers</span>
     </div>
 
-    <div class="p-2">
-        {#if leaderboard.length === 0}
-            <div class="py-12 text-center text-gray-500 dark:text-gray-400">
-                <UserIcon class="w-12 h-12 mx-auto mb-3 opacity-20" />
-                <p>No rankings available yet.</p>
-            </div>
-        {:else}
-            <div class="space-y-1">
-                {#each leaderboard as entry}
-                    <div
-                        class="flex items-center gap-4 p-3 rounded-xl transition-all duration-200 hover:bg-gray-50 dark:hover:bg-gray-700/50 group"
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead>
+                <tr
+                    class="bg-gray-50/50 dark:bg-gray-900/20 border-b border-gray-100 dark:border-gray-700"
+                >
+                    <th
+                        class="py-3 px-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider w-16"
+                        >Rank</th
                     >
-                        <!-- Rank Indicator -->
-                        <div
-                            class="w-10 h-10 flex items-center justify-center shrink-0"
+                    <th
+                        class="py-3 px-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider"
+                        >Student</th
+                    >
+                    <th
+                        class="py-3 px-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider"
+                        >Level</th
+                    >
+                    <th
+                        class="py-3 px-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider"
+                        >Words</th
+                    >
+                    <th
+                        class="py-3 px-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider"
+                        >Accuracy</th
+                    >
+                    <th
+                        class="py-3 px-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider"
+                        >XP</th
+                    >
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50 dark:divide-gray-700/50">
+                {#if leaderboard.length === 0}
+                    <tr>
+                        <td
+                            colspan="6"
+                            class="py-12 text-center text-gray-500 dark:text-gray-400"
                         >
-                            {#if entry.rank <= 3}
-                                <div class="relative">
-                                    <Medal
-                                        class="w-8 h-8 {getRankColor(
-                                            entry.rank,
-                                        )}"
-                                    />
+                            <BookOpen
+                                class="w-12 h-12 mx-auto mb-3 opacity-20"
+                            />
+                            <p>No rankings available yet.</p>
+                        </td>
+                    </tr>
+                {:else}
+                    {#each leaderboard as entry}
+                        <tr
+                            class="hover:bg-gray-50/80 dark:hover:bg-gray-700/30 transition-colors group"
+                        >
+                            <td class="py-4 px-4">
+                                <div
+                                    class="flex items-center justify-center w-8 h-8"
+                                >
+                                    {#if entry.rank <= 3}
+                                        <span
+                                            class="text-2xl"
+                                            role="img"
+                                            aria-label="Medal"
+                                            >{getMedal(entry.rank)}</span
+                                        >
+                                    {:else}
+                                        <span
+                                            class="text-sm font-bold text-gray-400 group-hover:text-teal-500 transition-colors"
+                                        >
+                                            {entry.rank}
+                                        </span>
+                                    {/if}
+                                </div>
+                            </td>
+                            <td class="py-4 px-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="flex flex-col">
+                                        <span
+                                            class="font-bold text-gray-900 dark:text-gray-100"
+                                        >
+                                            {entry.username}
+                                        </span>
+                                        {#if entry.streak > 0}
+                                            <div
+                                                class="flex items-center gap-1 text-[10px] text-orange-500 font-bold uppercase tracking-wider"
+                                            >
+                                                <Flame
+                                                    class="w-3 h-3 fill-orange-500"
+                                                />
+                                                {entry.streak} Day Streak
+                                            </div>
+                                        {/if}
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="py-4 px-4 text-center">
+                                <Badge variant="secondary" class="font-black"
+                                    >Lvl {entry.level}</Badge
+                                >
+                            </td>
+                            <td class="py-4 px-4 text-center">
+                                <div class="flex flex-col items-center">
                                     <span
-                                        class="absolute inset-0 flex items-center justify-center text-xs font-bold text-gray-900 dark:text-white mt-1"
+                                        class="text-sm font-bold text-gray-700 dark:text-gray-300"
+                                        >{entry.wordsLearned}</span
                                     >
-                                        {entry.rank}
+                                    <span
+                                        class="text-[9px] uppercase text-gray-500 font-medium"
+                                        >Learned</span
+                                    >
+                                </div>
+                            </td>
+                            <td class="py-4 px-4 text-center">
+                                <Badge
+                                    variant={entry.accuracy >= 80
+                                        ? "success"
+                                        : "warning"}
+                                    class="text-[10px] px-1.5 py-0.5"
+                                >
+                                    {entry.accuracy}%
+                                </Badge>
+                            </td>
+                            <td class="py-4 px-4 text-right">
+                                <div class="flex flex-col items-end">
+                                    <span
+                                        class="text-sm font-black text-teal-600 dark:text-teal-400"
+                                    >
+                                        {entry.totalXp.toLocaleString()}
                                     </span>
-                                </div>
-                            {:else}
-                                <span
-                                    class="text-lg font-bold text-gray-400 group-hover:text-teal-500 transition-colors"
-                                >
-                                    {entry.rank}
-                                </span>
-                            {/if}
-                        </div>
-
-                        <!-- User Info -->
-                        <div class="flex-grow flex items-center gap-3">
-                            <div
-                                class="w-10 h-10 rounded-full bg-gradient-to-br {getRankBadge(
-                                    entry.rank,
-                                )} border flex items-center justify-center"
-                            >
-                                <UserIcon
-                                    class="w-5 h-5 {entry.rank <= 3
-                                        ? getRankColor(entry.rank)
-                                        : 'text-teal-500'}"
-                                />
-                            </div>
-                            <div class="flex flex-col">
-                                <span
-                                    class="font-bold text-gray-800 dark:text-gray-100"
-                                >
-                                    {formatName(entry.email)}
-                                </span>
-                                <span
-                                    class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold"
-                                >
-                                    Student
-                                </span>
-                            </div>
-                        </div>
-
-                        <!-- Stats -->
-                        <div class="flex items-center gap-6">
-                            <div class="text-right">
-                                <div
-                                    class="flex items-center gap-1.5 justify-end"
-                                >
-                                    <Star
-                                        class="w-4 h-4 text-yellow-500 fill-yellow-500"
-                                    />
                                     <span
-                                        class="font-bold text-gray-900 dark:text-white"
-                                        >{entry.totalXp}</span
+                                        class="text-[9px] uppercase text-gray-500 font-medium"
+                                        >Total XP</span
                                     >
                                 </div>
-                                <p
-                                    class="text-[10px] text-gray-500 uppercase font-bold tracking-tighter"
-                                >
-                                    Total XP
-                                </p>
-                            </div>
-
-                            <div class="w-12 text-center">
-                                <div
-                                    class="inline-flex items-center justify-center px-2 py-1 rounded bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 text-xs font-black ring-1 ring-inset ring-teal-500/20"
-                                >
-                                    Lvl {entry.level}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                {/each}
-            </div>
-        {/if}
+                            </td>
+                        </tr>
+                    {/each}
+                {/if}
+            </tbody>
+        </table>
     </div>
 </div>
-
-<style>
-    /* Optional: Highlight for current user if email matches (needs user store) */
-</style>

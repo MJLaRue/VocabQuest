@@ -20,21 +20,14 @@
     icon={Calendar}
     label="Study Sessions"
     value={(totalSessions || 0).toString()}
-    variant="primary"
   />
 
-  <StatCard
-    icon={Clock}
-    label="Total Study Time"
-    value="{hours}h {minutes}m"
-    variant="success"
-  />
+  <StatCard icon={Clock} label="Total Study Time" value="{hours}h {minutes}m" />
 
   <StatCard
     icon={TrendingUp}
     label="Avg. Session"
     value="{averageSessionTime || 0} min"
-    variant="warning"
   />
 
   <StatCard

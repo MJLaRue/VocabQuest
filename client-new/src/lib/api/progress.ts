@@ -139,11 +139,6 @@ export const progressApi = {
 
   getLeaderboard: () =>
     apiClient<{
-      leaderboard: Array<{
-        rank: number;
-        email: string;
-        totalXp: number;
-        level: number;
-      }>;
+      leaderboard: Array<LeaderboardEntry>;
     }>('/progress/leaderboard'),
 };

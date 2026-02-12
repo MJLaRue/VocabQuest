@@ -633,17 +633,39 @@ router.get('/leaderboard', requireAuth, async (req, res) => {
         model: User,
         as: 'user',
         where: { role: 'student' },
-        attributes: ['email']
+        attributes: ['id', 'email']
       }],
       order: [[sequelize.col('total_xp'), 'DESC']],
       limit: 10
     });
 
-    const formattedLeaderboard = leaderboard.map((entry, index) => ({
-      rank: index + 1,
-      email: entry.user.email,
-      totalXp: entry.totalXp,
-      level: Math.floor(Math.sqrt(entry.totalXp / 100)) + 1
+    const formattedLeaderboard = await Promise.all(leaderboard.map(async (entry, index) => {
+      // Fetch dynamic stats for each top user
+      const progressStats = await UserProgress.findOne({
+        where: { userId: entry.userId },
+        attributes: [
+          [sequelize.fn('COUNT', sequelize.literal('CASE WHEN is_known = true THEN 1 END')), 'wordsLearned'],
+          [sequelize.fn('SUM', sequelize.col('correct_count')), 'totalCorrect'],
+          [sequelize.fn('SUM', sequelize.col('incorrect_count')), 'totalIncorrect']
+        ],
+        raw: true
+      });
+
+      const totalCorrect = parseInt(progressStats?.totalCorrect) || 0;
+      const totalIncorrect = parseInt(progressStats?.totalIncorrect) || 0;
+      const totalReviews = totalCorrect + totalIncorrect;
+      const accuracy = totalReviews > 0 ? Math.round((totalCorrect / totalReviews) * 100) : 0;
+      const wordsLearned = parseInt(progressStats?.wordsLearned) || 0;
+
+      return {
+        rank: index + 1,
+        username: entry.user.email.split('@')[0],
+        totalXp: entry.totalXp,
+        level: Math.floor(Math.sqrt(entry.totalXp / 100)) + 1,
+        streak: entry.dailyStreak || 0,
+        wordsLearned,
+        accuracy
+      };
     }));
 
     res.json({ leaderboard: formattedLeaderboard });
