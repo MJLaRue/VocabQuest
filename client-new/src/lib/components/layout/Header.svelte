@@ -13,6 +13,7 @@
   import { fade, fly } from "svelte/transition";
   import { theme } from "$lib/stores/theme";
   import { isAdmin } from "$lib/stores/auth";
+  import { sessionStats, progress } from "$lib/stores/progress";
   import { link } from "svelte-spa-router";
 
   export let user: {
@@ -29,6 +30,26 @@
 
   // Check if user is admin from either the store or the prop
   $: userIsAdmin = $isAdmin || user?.role === "admin";
+
+  // Dynamic mascot selection
+  $: mascotSrc = (() => {
+    if (!user) return "/assets/mascot/header_default.png";
+
+    // Disappointed if accuracy drops below 80% during a session
+    if ($sessionStats.cardsReviewed >= 5 && $sessionStats.accuracy < 80) {
+      return "/assets/mascot/header_disappointed.png";
+    }
+
+    // Happy/Sunglasses for streaks or level ups/achievements
+    if (
+      (user.dailyStreak && user.dailyStreak >= 7) ||
+      $progress.currentSession.didLevelUp
+    ) {
+      return "/assets/mascot/header_happy.png";
+    }
+
+    return "/assets/mascot/header_default.png";
+  })();
 
   function toggleMobileMenu() {
     mobileMenuOpen = !mobileMenuOpen;
@@ -73,11 +94,9 @@
             class="relative w-12 h-12 flex-shrink-0 flex items-center justify-center"
           >
             <img
-              src={user?.dailyStreak && user.dailyStreak >= 7
-                ? "/assets/mascot/header_streak.png"
-                : "/assets/mascot/header_default.png"}
+              src={mascotSrc}
               alt=""
-              class="absolute -top-2 w-16 h-16 max-w-none object-contain drop-shadow-md mix-blend-multiply"
+              class="absolute -top-2 w-16 h-16 max-w-none object-contain"
             />
           </div>
           <div class="flex flex-col leading-none">

@@ -73,9 +73,9 @@
           class="md:w-1/2 p-8 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-teal-100 dark:border-teal-900/30"
         >
           <img
-            src="/assets/mascot/packing.png"
-            alt="Explorer Fox getting ready"
-            class="w-64 h-auto drop-shadow-xl mix-blend-multiply dark:mix-blend-normal"
+            src="/assets/mascot/packing_adventurous.png"
+            alt="Explorer fox packing for a new expedition"
+            class="w-64 h-auto mix-blend-multiply dark:mix-blend-normal"
           />
           <div class="mt-6 text-center">
             <h2 class="text-2xl font-bold text-teal-700 dark:text-teal-300">
