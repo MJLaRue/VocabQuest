@@ -1,16 +1,16 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
-  import { push } from 'svelte-spa-router';
-  import { auth, user, gamification } from '$lib/stores/auth';
-  import { progress } from '$lib/stores/progress';
-  import Header from '$lib/components/layout/Header.svelte';
-  import Footer from '$lib/components/layout/Footer.svelte';
-  import Container from '$lib/components/layout/Container.svelte';
-  import StatsOverview from '$lib/components/stats/StatsOverview.svelte';
-  import VocabularyProgress from '$lib/components/stats/VocabularyProgress.svelte';
-  import StudyActivity from '$lib/components/stats/StudyActivity.svelte';
-  import WordsToFocusOn from '$lib/components/stats/WordsToFocusOn.svelte';
-  import AchievementGrid from '$lib/components/stats/AchievementGrid.svelte';
+  import { onMount, onDestroy } from "svelte";
+  import { push } from "svelte-spa-router";
+  import { auth, user, gamification } from "$lib/stores/auth";
+  import { progress } from "$lib/stores/progress";
+  import Header from "$lib/components/layout/Header.svelte";
+  import Footer from "$lib/components/layout/Footer.svelte";
+  import Container from "$lib/components/layout/Container.svelte";
+  import StatsOverview from "$lib/components/stats/StatsOverview.svelte";
+  import VocabularyProgress from "$lib/components/stats/VocabularyProgress.svelte";
+  import StudyActivity from "$lib/components/stats/StudyActivity.svelte";
+  import AchievementGrid from "$lib/components/stats/AchievementGrid.svelte";
+  import Leaderboard from "$lib/components/stats/Leaderboard.svelte";
 
   let stats = {
     totalWords: 0,
@@ -22,7 +22,11 @@
     averageSessionTime: 0,
     averageAccuracy: 0,
     lastStudyDate: undefined as string | undefined,
-    weakWords: [] as Array<{ word: string; vocab_id: number; accuracy: number }>,
+    weakWords: [] as Array<{
+      word: string;
+      vocab_id: number;
+      accuracy: number;
+    }>,
   };
 
   let achievements: Array<{
@@ -31,23 +35,41 @@
     description: string;
     icon: string;
     unlocked: boolean;
+    type:
+      | "vocab_builder"
+      | "streak_warrior"
+      | "perfectionist"
+      | "xp_enthusiast"
+      | "one_off";
+    level?: number;
+    currentProgress?: number;
+    targetProgress?: number;
+    nextLevelReward?: number;
+    description_next?: string;
     unlockedAt?: string;
+  }> = [];
+
+  let leaderboard: Array<{
+    rank: number;
+    email: string;
+    totalXp: number;
+    level: number;
   }> = [];
 
   let unsubscribe: (() => void) | undefined;
 
   onMount(async () => {
-    const user = await auth.checkSession();
-    if (!user) {
-      push('/login');
+    const sessionUser = await auth.checkSession();
+    if (!sessionUser) {
+      push("/login");
       return;
     }
 
-    // Load stats and achievements
+    // Load stats, achievements, and leaderboard
     await Promise.all([
       progress.loadStats(),
       progress.loadAchievements(),
-      progress.loadDifficultWords(10),
+      progress.loadLeaderboard(),
     ]);
 
     // Update local state from stores - store unsubscribe function for cleanup
@@ -57,8 +79,11 @@
         stats = {
           totalWords: apiStats.progress.totalWords,
           learnedWords: apiStats.progress.wordsLearned,
-          inProgressWords: Math.floor(apiStats.progress.totalWords * 0.3), // Mock data
-          notStartedWords: apiStats.progress.totalWords - apiStats.progress.wordsLearned,
+          inProgressWords: apiStats.progress.inProgressWords || 0,
+          notStartedWords:
+            apiStats.progress.totalWords -
+            (apiStats.progress.wordsLearned +
+              (apiStats.progress.inProgressWords || 0)),
           totalSessions: apiStats.activity.totalSessions,
           totalStudyTime: apiStats.activity.totalStudyTime,
           averageSessionTime: apiStats.activity.avgSessionTime,
@@ -68,6 +93,7 @@
         };
       }
       achievements = state.achievements;
+      leaderboard = state.leaderboard;
     });
   });
 
@@ -89,38 +115,37 @@
 
       <!-- Overview Hero -->
       <StatsOverview
-          level={$gamification?.level || 1}
-          currentXP={$gamification?.totalXp || 0}
-          xpToNextLevel={($gamification?.level || 1) * 100}
-          streak={$gamification?.dailyStreak || 0}
-          totalWords={stats.totalWords}
-          learnedWords={stats.learnedWords}
-        />
+        currentXP={$gamification?.totalXp || 0}
+        streak={$gamification?.dailyStreak || 0}
+        totalWords={stats.totalWords}
+        learnedWords={stats.learnedWords}
+        lastStudyDate={stats.lastStudyDate}
+      />
 
       <!-- Study Activity -->
       <StudyActivity
-          totalSessions={stats.totalSessions}
-          totalStudyTime={stats.totalStudyTime}
-          averageSessionTime={stats.averageSessionTime}
-          averageAccuracy={stats.averageAccuracy}
-          lastStudyDate={stats.lastStudyDate}
-        />
+        totalSessions={stats.totalSessions}
+        totalStudyTime={stats.totalStudyTime}
+        averageSessionTime={stats.averageSessionTime}
+        averageAccuracy={stats.averageAccuracy}
+        lastStudyDate={stats.lastStudyDate}
+      />
 
       <!-- Vocabulary Progress -->
       <VocabularyProgress
-          totalWords={stats.totalWords}
-          learnedWords={stats.learnedWords}
-          inProgressWords={stats.inProgressWords}
-          notStartedWords={stats.notStartedWords}
-        />
+        totalWords={stats.totalWords}
+        learnedWords={stats.learnedWords}
+        inProgressWords={stats.inProgressWords}
+        notStartedWords={stats.notStartedWords}
+      />
 
-      <!-- Words to Focus On -->
-      <WordsToFocusOn weakWords={stats.weakWords} />
+      <!-- Leaderboard -->
+      <Leaderboard {leaderboard} />
 
       <!-- Achievements -->
       <AchievementGrid {achievements} />
     </div>
   </Container>
-  
+
   <Footer />
 </div>

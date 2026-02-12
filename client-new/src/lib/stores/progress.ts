@@ -18,9 +18,21 @@ interface ProgressState {
     description: string;
     icon: string;
     unlocked: boolean;
+    type: 'vocab_builder' | 'streak_warrior' | 'perfectionist' | 'xp_enthusiast' | 'one_off';
+    level?: number;
+    totalTiers?: number;
+    currentValue?: number;
+    nextThreshold?: number;
+    currentThreshold?: number;
     unlockedAt?: string;
   }>;
   difficultWords: Array<{ word: string; vocab_id: number; accuracy: number }>;
+  leaderboard: Array<{
+    rank: number;
+    email: string;
+    totalXp: number;
+    level: number;
+  }>;
   currentSession: {
     id: number | null;
     mode: 'practice' | 'quiz' | 'typing' | null;
@@ -50,6 +62,7 @@ function createProgressStore() {
     stats: null,
     achievements: [],
     difficultWords: [],
+    leaderboard: [],
     currentSession: {
       id: null,
       mode: null,
@@ -116,7 +129,7 @@ function createProgressStore() {
         const weakWords = difficultWords.map(w => ({
           word: w.word,
           vocab_id: w.id,
-          accuracy: w.reviewCount > 0 
+          accuracy: w.reviewCount > 0
             ? Math.round((w.correctCount / w.reviewCount) * 100)
             : 0
         }));
@@ -129,21 +142,31 @@ function createProgressStore() {
       }
     },
 
+    async loadLeaderboard() {
+      try {
+        const { leaderboard } = await progressApi.getLeaderboard();
+        update((state) => ({ ...state, leaderboard }));
+      } catch (err) {
+        const error = err as APIError;
+        update((state) => ({ ...state, error: error.message }));
+      }
+    },
+
     async updateProgress(vocabId: number, isKnown: boolean) {
       try {
         // Get current mode from state
         const state = get({ subscribe });
         const mode = state.currentSession.mode || 'practice';
-        
+
         // Calculate XP with streak bonus
         let baseXP = 10;
         if (mode === 'quiz') baseXP = 15;
         else if (mode === 'typing') baseXP = 20;
-        
+
         // Add streak bonus BEFORE updating (we want the bonus from the previous streak)
         const streakBonus = isKnown ? state.currentSession.correctStreakBonus : 0;
         const totalXP = baseXP + streakBonus;
-        
+
         const result = await progressApi.updateProgress(vocabId, isKnown, mode, totalXP);
 
         update((state) => {
@@ -184,29 +207,21 @@ function createProgressStore() {
 
     async checkAndResumeSession(requestedMode: 'practice' | 'quiz' | 'typing') {
       try {
-        const { session } = await progressApi.getActiveSession();
-        
+        const { session, timedOut } = await progressApi.getActiveSession();
+
+        if (timedOut) {
+          // Force logout due to inactivity
+          await auth.logout();
+          window.location.hash = '/login?message=session_timeout';
+          return null;
+        }
+
         if (!session) {
           // No active session, start new one
           return await this.startSession(requestedMode);
         }
-        
-        // Check if session is older than 30 minutes
-        const sessionAge = Date.now() - new Date(session.updatedAt).getTime();
-        const THIRTY_MINUTES = 30 * 60 * 1000;
-        
-        if (sessionAge > THIRTY_MINUTES) {
-          // Session is stale, end it and start new one
-          await progressApi.endSession(session.id, {
-            mode: session.mode,
-            xp_earned: session.xpEarned,
-            cards_reviewed: session.cardsReviewed,
-            correct_answers: session.correctAnswers,
-          });
-          return await this.startSession(requestedMode);
-        }
-        
-        // Session is recent, resume it
+
+        // Session is recent, resume it (Backend now handles the 30m stale check)
         update((state) => ({
           ...state,
           currentSession: {
@@ -262,7 +277,7 @@ function createProgressStore() {
           console.error('Failed to update session mode:', err);
         });
       }
-      
+
       // Update local state
       update((state) => ({
         ...state,
@@ -348,7 +363,7 @@ function createProgressStore() {
 
     awardSetCompletionBonus() {
       const SET_COMPLETION_BONUS = 50;
-      
+
       update((state) => ({
         ...state,
         currentSession: {
@@ -357,10 +372,10 @@ function createProgressStore() {
           totalXpEarned: state.currentSession.totalXpEarned + SET_COMPLETION_BONUS,
         },
       }));
-      
+
       // Refresh gamification data
       auth.checkSession();
-      
+
       return SET_COMPLETION_BONUS;
     },
 
@@ -379,10 +394,10 @@ export const sessionStats = derived(progress, ($progress) => ({
   accuracy:
     $progress.currentSession.cardsReviewed > 0
       ? Math.round(
-          ($progress.currentSession.correctAnswers /
-            $progress.currentSession.cardsReviewed) *
-            100
-        )
+        ($progress.currentSession.correctAnswers /
+          $progress.currentSession.cardsReviewed) *
+        100
+      )
       : 0,
   duration: $progress.currentSession.startTime
     ? Math.floor((Date.now() - $progress.currentSession.startTime) / 1000)

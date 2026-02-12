@@ -1,20 +1,31 @@
 <script lang="ts">
-  import { push } from "svelte-spa-router";
+  import { push, querystring } from "svelte-spa-router";
   import { auth } from "$lib/stores/auth";
+  import { onMount } from "svelte";
   import Button from "$lib/components/ui/Button.svelte";
   import Card from "$lib/components/ui/Card.svelte";
   import Input from "$lib/components/ui/Input.svelte";
   import Footer from "$lib/components/layout/Footer.svelte";
-  import { Sparkles } from "lucide-svelte";
+  import { Sparkles, Clock } from "lucide-svelte";
 
   let email = "";
   let password = "";
   let error = "";
+  let infoMessage = "";
   let isLoading = false;
+
+  onMount(() => {
+    const params = new URLSearchParams($querystring);
+    if (params.get("message") === "session_timeout") {
+      infoMessage =
+        "Your session has timed out due to inactivity. Please log in again.";
+    }
+  });
 
   async function handleLogin(event: Event) {
     event.preventDefault();
     error = "";
+    infoMessage = "";
     isLoading = true;
 
     try {
@@ -134,6 +145,20 @@
                 autocomplete="current-password"
               />
             </div>
+
+            {#if infoMessage}
+              <div
+                class="p-3 bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800 rounded-lg flex items-center gap-3"
+                role="status"
+              >
+                <Clock
+                  class="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0"
+                />
+                <p class="text-sm text-teal-700 dark:text-teal-400 font-medium">
+                  {infoMessage}
+                </p>
+              </div>
+            {/if}
 
             {#if error}
               <div

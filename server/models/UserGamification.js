@@ -36,6 +36,11 @@ const UserGamification = sequelize.define('UserGamification', {
     type: DataTypes.DATEONLY,
     field: 'last_visit_date'
   },
+  perfectSessions: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+    field: 'perfect_sessions'
+  },
   unlockedAchievements: {
     type: DataTypes.JSONB,
     defaultValue: [],
@@ -56,31 +61,31 @@ const UserGamification = sequelize.define('UserGamification', {
 // Instance method to add XP and handle level ups using quadratic cumulative formula
 // Level = floor(sqrt(totalXp / 100)) + 1
 // This means XP is never subtracted, only accumulated
-UserGamification.prototype.addXP = function(amount) {
+UserGamification.prototype.addXP = function (amount) {
   const oldLevel = Math.floor(Math.sqrt(this.totalXp / 100)) + 1;
   this.totalXp += amount;
   const newLevel = Math.floor(Math.sqrt(this.totalXp / 100)) + 1;
-  
+
   const leveledUp = newLevel > oldLevel;
   this.level = newLevel; // Keep level in sync with actual formula
-  
+
   return { leveledUp, newLevel: this.level };
 };
 
 // Instance method to update streak
-UserGamification.prototype.updateStreak = function() {
+UserGamification.prototype.updateStreak = function () {
   const today = new Date().toISOString().split('T')[0];
-  
+
   if (this.lastVisitDate === today) {
     // Already visited today, no change
     return this.dailyStreak;
   }
-  
+
   if (this.lastVisitDate) {
     const lastDate = new Date(this.lastVisitDate);
     const todayDate = new Date(today);
     const diffDays = Math.floor((todayDate - lastDate) / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays === 1) {
       // Consecutive day
       this.dailyStreak++;
@@ -92,7 +97,7 @@ UserGamification.prototype.updateStreak = function() {
     // First visit
     this.dailyStreak = 1;
   }
-  
+
   this.lastVisitDate = today;
   return this.dailyStreak;
 };

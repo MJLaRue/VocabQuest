@@ -1,40 +1,51 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { push, location } from 'svelte-spa-router';
-  import { get } from 'svelte/store';
-  import { auth, user, gamification } from '$lib/stores/auth';
-  import { vocab, currentWord, progress as vocabProgress, hasNext, hasPrev } from '$lib/stores/vocab';
-  import { progress, sessionStats, hasActiveSession } from '$lib/stores/progress';
-  import { ui } from '$lib/stores/ui';
-  import Header from '$lib/components/layout/Header.svelte';
-  import Footer from '$lib/components/layout/Footer.svelte';
-  import Container from '$lib/components/layout/Container.svelte';
-  import ControlBar from '$lib/components/flashcard/ControlBar.svelte';
-  import GamificationBar from '$lib/components/flashcard/GamificationBar.svelte';
-  import DeckSelector from '$lib/components/flashcard/DeckSelector.svelte';
-  import FlashCard from '$lib/components/flashcard/FlashCard.svelte';
-  import FlashcardActions from '$lib/components/flashcard/FlashcardActions.svelte';
-  import FlashcardNavigation from '$lib/components/flashcard/FlashcardNavigation.svelte';
-  import SessionSummaryModal from '$lib/components/flashcard/SessionSummaryModal.svelte';
-  import CelebrationOverlay from '$lib/components/flashcard/CelebrationOverlay.svelte';
-  import { confetti, confettiPresets } from '$lib/utils/confetti';
+  import { onMount } from "svelte";
+  import { push, location } from "svelte-spa-router";
+  import { get } from "svelte/store";
+  import { auth, user, gamification } from "$lib/stores/auth";
+  import {
+    vocab,
+    currentWord,
+    progress as vocabProgress,
+    hasNext,
+    hasPrev,
+  } from "$lib/stores/vocab";
+  import {
+    progress,
+    sessionStats,
+    hasActiveSession,
+  } from "$lib/stores/progress";
+  import { ui } from "$lib/stores/ui";
+  import Header from "$lib/components/layout/Header.svelte";
+  import Footer from "$lib/components/layout/Footer.svelte";
+  import Container from "$lib/components/layout/Container.svelte";
+  import ControlBar from "$lib/components/flashcard/ControlBar.svelte";
+  import GamificationBar from "$lib/components/flashcard/GamificationBar.svelte";
+  import DeckSelector from "$lib/components/flashcard/DeckSelector.svelte";
+  import FlashCard from "$lib/components/flashcard/FlashCard.svelte";
+  import FlashcardActions from "$lib/components/flashcard/FlashcardActions.svelte";
+  import FlashcardNavigation from "$lib/components/flashcard/FlashcardNavigation.svelte";
+  import SessionSummaryModal from "$lib/components/flashcard/SessionSummaryModal.svelte";
+  import CelebrationOverlay from "$lib/components/flashcard/CelebrationOverlay.svelte";
+  import { confetti, confettiPresets } from "$lib/utils/confetti";
 
   // Determine mode from URL path
-  function getModeFromPath(path: string): 'practice' | 'quiz' | 'typing' {
-    if (path === '/quiz') return 'quiz';
-    if (path === '/typing') return 'typing';
-    return 'practice';
+  function getModeFromPath(path: string): "practice" | "quiz" | "typing" {
+    if (path === "/quiz") return "quiz";
+    if (path === "/typing") return "typing";
+    return "practice";
   }
 
-  let mode: 'practice' | 'quiz' | 'typing' = getModeFromPath($location);
-  let randomMode = typeof window !== 'undefined' 
-    ? localStorage.getItem('vocabquest-random-mode') === 'true' 
-    : false;
+  let mode: "practice" | "quiz" | "typing" = getModeFromPath($location);
+  let randomMode =
+    typeof window !== "undefined"
+      ? localStorage.getItem("vocabquest-random-mode") === "true"
+      : false;
   let isLoading = false;
-  
+
   // Celebration queue system
   type Celebration = {
-    type: 'levelUp' | 'setComplete' | 'achievement';
+    type: "levelUp" | "setComplete" | "achievement";
     level?: number;
     xpBonus?: number;
     achievementName?: string;
@@ -42,29 +53,84 @@
   };
   let celebrationQueue: Celebration[] = [];
   let currentCelebration: Celebration | null = null;
-  
-  // Achievement XP bonuses
-  const achievementXP: Record<string, number> = {
-    first_correct: 50,
-    streak_7: 100,
-    words_50: 150,
-    perfect_session: 100
-  };
-  
-  const achievementNames: Record<string, string> = {
-    first_correct: 'First Step',
-    streak_7: 'Week Warrior',
-    words_50: 'Vocab Builder',
-    perfect_session: 'Perfectionist'
-  };
-  
+
+  // Achievement helpers
+  function getAchievementInfo(id: string) {
+    const config: Record<string, { name: string; xp: number }> = {
+      first_correct: { name: "First Step", xp: 50 },
+      words: { name: "Vocab Builder", xp: 150 },
+      streak: { name: "Streak Warrior", xp: 100 },
+      perfect: { name: "Perfectionist", xp: 100 },
+      xp: { name: "XP Enthusiast", xp: 100 },
+    };
+
+    if (id === "first_correct") return { ...config.first_correct, level: 1 };
+
+    // Handle tiered IDs like words_50, streak_7, perfect_5, xp_1k
+    const [type, value] = id.split("_");
+    const base = config[type] || { name: id, xp: 50 };
+
+    const levelMap: Record<string, Record<string, number>> = {
+      words: {
+        "50": 1,
+        "100": 2,
+        "200": 3,
+        "350": 4,
+        "550": 5,
+        "800": 6,
+        "1100": 7,
+        "1450": 8,
+        "1850": 9,
+        "2300": 10,
+      },
+      streak: {
+        "3": 1,
+        "7": 2,
+        "14": 3,
+        "21": 4,
+        "30": 5,
+        "50": 6,
+        "75": 7,
+        "100": 8,
+        "180": 9,
+        "365": 10,
+      },
+      perfect: {
+        "1": 1,
+        "5": 2,
+        "10": 3,
+        "25": 4,
+        "50": 5,
+        "100": 6,
+        "200": 7,
+        "500": 8,
+      },
+      xp: {
+        "1k": 1,
+        "5k": 2,
+        "15k": 3,
+        "40k": 4,
+        "100k": 5,
+        "250k": 6,
+        "500k": 7,
+        "1m": 8,
+      },
+    };
+
+    return {
+      name: base.name,
+      xp: base.xp,
+      level: levelMap[type]?.[value] || 1,
+    };
+  }
+
   function queueCelebration(celebration: Celebration) {
     celebrationQueue = [...celebrationQueue, celebration];
     if (!currentCelebration) {
       showNextCelebration();
     }
   }
-  
+
   function showNextCelebration() {
     if (celebrationQueue.length === 0) {
       currentCelebration = null;
@@ -73,7 +139,7 @@
     currentCelebration = celebrationQueue[0];
     celebrationQueue = celebrationQueue.slice(1);
   }
-  
+
   function handleCloseCelebration() {
     showNextCelebration();
   }
@@ -84,14 +150,14 @@
   onMount(async () => {
     const user = await auth.checkSession();
     if (!user) {
-      push('/login');
+      push("/login");
       return;
     }
 
     // Load initial data
     await vocab.loadDecks();
     await progress.loadProgress();
-    
+
     // Only load words if we don't have any stored (from localStorage)
     const vocabState = get(vocab);
     if (vocabState.words.length === 0) {
@@ -100,23 +166,26 @@
 
     // Check for active session and resume or start new based on 30-minute rule
     const sessionId = await progress.checkAndResumeSession(mode);
-    
+
     // If resumed session mode differs from URL mode, update the mode
     const progressState = get(progress);
-    if (progressState.currentSession.mode && progressState.currentSession.mode !== mode) {
+    if (
+      progressState.currentSession.mode &&
+      progressState.currentSession.mode !== mode
+    ) {
       progress.updateSessionMode(mode);
     }
   });
 
-  async function handleModeChange(newMode: 'practice' | 'quiz' | 'typing') {
+  async function handleModeChange(newMode: "practice" | "quiz" | "typing") {
     // Update URL to match mode
     const pathMap = {
-      practice: '/practice',
-      quiz: '/quiz',
-      typing: '/typing'
+      practice: "/practice",
+      quiz: "/quiz",
+      typing: "/typing",
     };
     push(pathMap[newMode]);
-    
+
     // Update session mode in store
     progress.updateSessionMode(newMode);
   }
@@ -136,28 +205,30 @@
     try {
       // Show confetti for correct answer
       confetti();
-      
+
       const result = await progress.updateProgress($currentWord.id, true);
-      
+
       // Queue level up celebration if leveled up
       if (result.levelUp) {
         confettiPresets.levelUp();
         confettiPresets.explosion();
         queueCelebration({
-          type: 'levelUp',
-          level: result.newLevel
+          type: "levelUp",
+          level: result.newLevel,
         });
       }
 
       // Queue achievement celebrations
       if (result.newAchievements.length > 0) {
         result.newAchievements.forEach((achievementId) => {
+          const info = getAchievementInfo(achievementId);
           confettiPresets.fireworks();
           queueCelebration({
-            type: 'achievement',
-            achievementName: achievementNames[achievementId] || achievementId,
+            type: "achievement",
+            achievementName: info.name,
             achievementId: achievementId,
-            xpBonus: achievementXP[achievementId] || 50
+            level: info.level,
+            xpBonus: info.xp,
           });
           ui.showAchievement(achievementId);
         });
@@ -165,7 +236,7 @@
 
       // Remove the card from the current set
       const { setCompleted } = vocab.removeCurrentCard();
-      
+
       // Award set completion bonus
       if (setCompleted) {
         // Epic set completion celebration!
@@ -173,12 +244,12 @@
         setTimeout(() => confettiPresets.explosion(), 400);
         const bonus = progress.awardSetCompletionBonus();
         queueCelebration({
-          type: 'setComplete',
-          xpBonus: bonus
+          type: "setComplete",
+          xpBonus: bonus,
         });
       }
     } catch (error) {
-      console.error('Failed to update progress:', error);
+      console.error("Failed to update progress:", error);
     } finally {
       isLoading = false;
     }
@@ -192,7 +263,7 @@
       await progress.updateProgress($currentWord.id, false);
       vocab.nextCard();
     } catch (error) {
-      console.error('Failed to update progress:', error);
+      console.error("Failed to update progress:", error);
     } finally {
       isLoading = false;
     }
@@ -200,22 +271,22 @@
 
   function handleToggleRandom() {
     randomMode = !randomMode;
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('vocabquest-random-mode', String(randomMode));
+    if (typeof window !== "undefined") {
+      localStorage.setItem("vocabquest-random-mode", String(randomMode));
     }
-    vocab.setMode(randomMode ? 'random' : 'sequential');
+    vocab.setMode(randomMode ? "random" : "sequential");
   }
 
   function handleSearch({ detail }: CustomEvent<{ query: string }>) {
-    vocab.setFilter('search', detail.query || null);
+    vocab.setFilter("search", detail.query || null);
   }
 
   function handleDeckSelect({ detail }: CustomEvent<{ deck: string | null }>) {
-    vocab.setFilter('deck', detail.deck);
+    vocab.setFilter("deck", detail.deck);
   }
 
   function handlePOSSelect({ detail }: CustomEvent<{ pos: string | null }>) {
-    vocab.setFilter('pos', detail.pos);
+    vocab.setFilter("pos", detail.pos);
   }
 
   async function handleEndSession() {
@@ -223,7 +294,7 @@
       await progress.endSession();
       ui.openSessionSummary();
     } catch (error) {
-      console.error('Failed to end session:', error);
+      console.error("Failed to end session:", error);
     }
   }
 
@@ -237,87 +308,90 @@
   <Header user={$user} />
 
   <main id="main-content">
+    <GamificationBar
+      level={$gamification?.level || 1}
+      currentXP={$gamification?.totalXp || 0}
+      streak={$gamification?.dailyStreak || 0}
+      correctStreakBonus={$progress.currentSession.correctStreakBonus}
+    />
 
-  <GamificationBar
-    level={$gamification?.level || 1}
-    currentXP={$gamification?.totalXp || 0}
-    streak={$gamification?.dailyStreak || 0}
-    correctStreakBonus={$progress.currentSession.correctStreakBonus}
-  />
+    <ControlBar
+      {mode}
+      {randomMode}
+      selectedPos={$vocab.filters.pos}
+      on:modeChange={({ detail }) => handleModeChange(detail.mode)}
+      on:toggleRandom={handleToggleRandom}
+      on:search={handleSearch}
+      on:posSelect={handlePOSSelect}
+    />
 
-  <ControlBar
-    {mode}
-    {randomMode}
-    selectedPos={$vocab.filters.pos}
-    on:modeChange={({ detail }) => handleModeChange(detail.mode)}
-    on:toggleRandom={handleToggleRandom}
-    on:search={handleSearch}
-    on:posSelect={handlePOSSelect}
-  />
+    <Container>
+      <div class="py-8 space-y-6">
+        <!-- Filters -->
+        {#if $vocab.decks.length > 1}
+          <div class="flex flex-wrap items-center justify-center gap-4">
+            <DeckSelector
+              decks={$vocab.decks}
+              selectedDeck={$vocab.filters.deck}
+              on:select={handleDeckSelect}
+            />
+          </div>
+        {/if}
 
-  <Container>
-    <div class="py-8 space-y-6">
-      <!-- Filters -->
-      {#if $vocab.decks.length > 1}
-        <div class="flex flex-wrap items-center justify-center gap-4">
-          <DeckSelector
-            decks={$vocab.decks}
-            selectedDeck={$vocab.filters.deck}
-            on:select={handleDeckSelect}
-          />
-        </div>
-      {/if}
-
-      <!-- Flashcard -->
-      <FlashCard
-        word={$currentWord}
-        {mode}
-        disabled={isLoading}
-        on:answer={handleAnswer}
-      />
-
-      <!-- Navigation -->
-      <FlashcardNavigation
-        hasPrev={$hasPrev}
-        hasNext={$hasNext}
-        remaining={$vocabProgress.remaining}
-        disabled={isLoading}
-        on:prev={() => vocab.prevCard()}
-        on:next={() => vocab.nextCard()}
-      />
-
-      <!-- Actions (Practice mode only) -->
-      {#if mode === 'practice'}
-        <FlashcardActions
-          disabled={!$currentWord}
-          loading={isLoading}
-          on:know={handleKnow}
-          on:notYet={handleNotYet}
+        <!-- Flashcard -->
+        <FlashCard
+          word={$currentWord}
+          {mode}
+          disabled={isLoading}
+          on:answer={handleAnswer}
         />
-      {/if}
 
-      <!-- Session Stats -->
-      <div class="flex justify-center gap-8 text-sm text-gray-600 dark:text-gray-400">
-        <div>
-          <span class="font-medium">Cards:</span> {$sessionStats.cardsReviewed}
-        </div>
-        <div>
-          <span class="font-medium">Accuracy:</span> {$sessionStats.accuracy}%
-        </div>
-      </div>
+        <!-- Navigation -->
+        <FlashcardNavigation
+          hasPrev={$hasPrev}
+          hasNext={$hasNext}
+          remaining={$vocabProgress.remaining}
+          disabled={isLoading}
+          on:prev={() => vocab.prevCard()}
+          on:next={() => vocab.nextCard()}
+        />
 
-      <!-- End Session Button -->
-      <div class="flex justify-center">
-        <button
-          class="text-sm text-teal-600 dark:text-teal-400 hover:underline"
-          on:click={handleEndSession}
-          aria-label="End current study session"
+        <!-- Actions (Practice mode only) -->
+        {#if mode === "practice"}
+          <FlashcardActions
+            disabled={!$currentWord}
+            loading={isLoading}
+            on:know={handleKnow}
+            on:notYet={handleNotYet}
+          />
+        {/if}
+
+        <!-- Session Stats -->
+        <div
+          class="flex justify-center gap-8 text-sm text-gray-600 dark:text-gray-400"
         >
-          End Session
-        </button>
+          <div>
+            <span class="font-medium">Cards:</span>
+            {$sessionStats.cardsReviewed}
+          </div>
+          <div>
+            <span class="font-medium">Accuracy:</span>
+            {$sessionStats.accuracy}%
+          </div>
+        </div>
+
+        <!-- End Session Button -->
+        <div class="flex justify-center">
+          <button
+            class="text-sm text-teal-600 dark:text-teal-400 hover:underline"
+            on:click={handleEndSession}
+            aria-label="End current study session"
+          >
+            End Session
+          </button>
+        </div>
       </div>
-    </div>
-  </Container>
+    </Container>
   </main>
 
   <SessionSummaryModal
@@ -332,17 +406,17 @@
     on:close={() => ui.closeSessionSummary()}
     on:continue={handleContinueSession}
   />
-  
+
   {#if currentCelebration}
     <CelebrationOverlay
       type={currentCelebration.type}
       level={currentCelebration.level || 1}
       xpBonus={currentCelebration.xpBonus || 50}
-      achievementName={currentCelebration.achievementName || ''}
-      achievementId={currentCelebration.achievementId || ''}
+      achievementName={currentCelebration.achievementName || ""}
+      achievementId={currentCelebration.achievementId || ""}
       onClose={handleCloseCelebration}
     />
   {/if}
-  
+
   <Footer />
 </div>

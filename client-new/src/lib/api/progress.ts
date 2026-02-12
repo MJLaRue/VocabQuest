@@ -37,6 +37,7 @@ export interface UserStats {
   progress: {
     wordsLearned: number;
     totalWords: number;
+    inProgressWords: number;
     totalReviews: number;
     totalCorrect: number;
     totalIncorrect: number;
@@ -58,7 +59,7 @@ export interface UserStats {
 
 export const progressApi = {
   updateProgress: (vocabId: number, isKnown: boolean, mode: 'practice' | 'quiz' | 'typing' = 'practice', xpEarned: number = 0) =>
-    apiClient<{ 
+    apiClient<{
       success: boolean;
       leveledUp: boolean;
       newLevel: number;
@@ -78,7 +79,7 @@ export const progressApi = {
     apiClient<{ progress: UserProgress[] }>('/progress'),
 
   getActiveSession: () =>
-    apiClient<{ session: ActiveSession | null }>('/progress/session/active'),
+    apiClient<{ session: ActiveSession | null; timedOut?: boolean }>('/progress/session/active'),
 
   updateSessionMode: (sessionId: number, mode: 'practice' | 'quiz' | 'typing') =>
     apiClient<{ success: boolean }>(`/progress/session/${sessionId}/mode`, {
@@ -111,6 +112,12 @@ export const progressApi = {
         description: string;
         icon: string;
         unlocked: boolean;
+        type: 'vocab_builder' | 'streak_warrior' | 'perfectionist' | 'xp_enthusiast' | 'one_off';
+        level?: number;
+        totalTiers?: number;
+        currentValue?: number;
+        nextThreshold?: number;
+        currentThreshold?: number;
         unlockedAt?: string;
       }>;
     }>('/progress/achievements'),
@@ -129,4 +136,14 @@ export const progressApi = {
         reviewCount: number;
       }>;
     }>(`/progress/difficult?limit=${limit}`),
+
+  getLeaderboard: () =>
+    apiClient<{
+      leaderboard: Array<{
+        rank: number;
+        email: string;
+        totalXp: number;
+        level: number;
+      }>;
+    }>('/progress/leaderboard'),
 };
