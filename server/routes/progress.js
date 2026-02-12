@@ -631,16 +631,17 @@ router.get('/leaderboard', requireAuth, async (req, res) => {
     const leaderboard = await UserGamification.findAll({
       include: [{
         model: User,
+        as: 'user',
         where: { role: 'student' },
         attributes: ['email']
       }],
-      order: [['totalXp', 'DESC']],
+      order: [[sequelize.col('total_xp'), 'DESC']],
       limit: 10
     });
 
     const formattedLeaderboard = leaderboard.map((entry, index) => ({
       rank: index + 1,
-      email: entry.User.email,
+      email: entry.user.email,
       totalXp: entry.totalXp,
       level: Math.floor(Math.sqrt(entry.totalXp / 100)) + 1
     }));

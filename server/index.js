@@ -92,10 +92,10 @@ app.use(session({
   cookie: {
     secure: process.env.NODE_ENV === 'production', // Secure cookies in production (HTTPS)
     httpOnly: true,
-    sameSite: 'lax', // 'lax' works for same-origin (frontend and API on same domain)
+    sameSite: 'lax',
     maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
   },
-  proxy: process.env.NODE_ENV === 'production' // Trust proxy in production
+  proxy: true // Always trust proxy if we're behind one (Render, etc)
 }));
 
 // Static files
