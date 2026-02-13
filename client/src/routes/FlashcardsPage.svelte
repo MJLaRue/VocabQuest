@@ -39,8 +39,8 @@
   let mode: "practice" | "quiz" | "typing" = getModeFromPath($location);
   let randomMode =
     typeof window !== "undefined"
-      ? localStorage.getItem("vocabquest-random-mode") === "true"
-      : false;
+      ? localStorage.getItem("vocabquest-random-mode") !== "false"
+      : true;
   let isLoading = false;
 
   // Celebration queue system
