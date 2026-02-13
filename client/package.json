@@ -23,9 +23,7 @@
     "postcss": "^8.4.35",
     "svelte": "^4.2.12",
     "tailwindcss": "^3.4.1",
-    "vite": "^5.1.4"
-  },
-  "devDependencies": {
+    "vite": "^5.1.4",
     "@tsconfig/svelte": "^5.0.6",
     "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^20.11.0",

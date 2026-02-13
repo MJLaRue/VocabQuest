@@ -16,10 +16,10 @@
 </script>
 
 <div
-  class="bg-gradient-to-r from-teal-600 to-emerald-600 text-white px-6 py-3 shadow-md"
+  class="bg-gradient-to-r from-teal-600 to-emerald-600 text-white px-4 py-3 shadow-md"
 >
   <div
-    class="container mx-auto flex flex-wrap items-center justify-between gap-6"
+    class="container mx-auto flex flex-wrap items-center justify-between gap-4"
   >
     <!-- Level -->
     <div class="flex items-center gap-3">

@@ -120,7 +120,7 @@
           </div>
           <div class="flex flex-col leading-none">
             <h1
-              class="text-3xl font-cinzel font-black tracking-wide bg-gradient-to-r from-amber-900 to-orange-500 bg-clip-text text-transparent"
+              class="text-2xl md:text-3xl font-cinzel font-black tracking-wide bg-gradient-to-r from-amber-900 to-orange-500 bg-clip-text text-transparent"
             >
               VocabQuest
             </h1>

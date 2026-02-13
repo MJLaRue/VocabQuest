@@ -308,7 +308,9 @@
         >
           {#if word}
             <div class="text-center space-y-2">
-              <h2 class="text-5xl font-bold text-teal-900 dark:text-teal-50">
+              <h2
+                class="text-3xl md:text-5xl font-bold text-teal-900 dark:text-teal-50 break-words"
+              >
                 {word.word}
               </h2>
               <p
@@ -340,7 +342,7 @@
           {#if word}
             <div class="text-center space-y-2">
               <h2
-                class="text-4xl font-bold text-emerald-900 dark:text-emerald-50"
+                class="text-3xl md:text-4xl font-bold text-emerald-900 dark:text-emerald-50 break-words"
               >
                 {word.word}
               </h2>
