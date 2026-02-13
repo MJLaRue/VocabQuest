@@ -34,7 +34,7 @@
 
   // Sync checked prop with internal state
   $: if ($checkedState !== checked) {
-    checkedState.set(checked);
+    checkedState.set(checked || false);
   }
 </script>
 
@@ -43,14 +43,14 @@
     use:melt={$root}
     class={cn(
       "relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2",
-      $checkedState ? "bg-teal-500" : "bg-gray-300 dark:bg-slate-600",
+      checked ? "bg-teal-500" : "bg-gray-300 dark:bg-slate-600",
       disabled && "opacity-50 cursor-not-allowed",
     )}
   >
     <span
       class={cn(
         "inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow-md",
-        $checkedState ? "translate-x-6" : "translate-x-1",
+        checked ? "translate-x-6" : "translate-x-1",
       )}
     />
   </button>
