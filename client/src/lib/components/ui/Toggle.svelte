@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { createSwitch, melt } from "@melt-ui/svelte";
   import { cn } from "$lib/utils/cn";
 
   type $$Props = {
@@ -19,28 +18,21 @@
   let className: $$Props["class"] = "";
   export { className as class };
 
-  const {
-    elements: { root, input },
-    states: { checked: checkedState },
-  } = createSwitch({
-    defaultChecked: checked,
-    disabled,
-    onCheckedChange: ({ next }) => {
-      checked = next;
-      onCheckedChange?.(next);
-      return next;
-    },
-  });
-
-  // Sync checked prop with internal state
-  $: if ($checkedState !== checked) {
-    checkedState.set(checked || false);
+  function handleClick() {
+    if (disabled) return;
+    const next = !checked;
+    checked = next;
+    onCheckedChange?.(next);
   }
 </script>
 
 <div class={cn("flex items-center gap-3", className)}>
   <button
-    use:melt={$root}
+    type="button"
+    role="switch"
+    aria-checked={checked}
+    {disabled}
+    on:click={handleClick}
     class={cn(
       "relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2",
       checked ? "bg-teal-500" : "bg-gray-300 dark:bg-slate-600",
@@ -54,7 +46,7 @@
       )}
     />
   </button>
-  <input use:melt={$input} />
+  <input type="checkbox" {checked} class="hidden" aria-hidden="true" />
 
   {#if label || $$slots.default}
     <div class="flex flex-col gap-0.5">
