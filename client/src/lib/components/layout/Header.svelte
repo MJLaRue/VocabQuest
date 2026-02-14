@@ -133,7 +133,7 @@
         {#if user && showNav}
           <!-- Desktop Navigation -->
           <nav
-            class="hidden md:flex items-center gap-2"
+            class="hidden lg:flex items-center gap-2"
             aria-label="Main navigation"
           >
             <a
@@ -175,7 +175,7 @@
           <!-- Mobile Menu Button -->
           <button
             on:click={toggleMobileMenu}
-            class="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+            class="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
             aria-label="Toggle menu"
             aria-expanded={mobileMenuOpen}
           >
@@ -230,7 +230,7 @@
 
             <button
               on:click={handleLogout}
-              class="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-600 dark:text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400 transition-all border border-transparent hover:border-red-100 dark:hover:border-red-900/30"
+              class="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-600 dark:text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400 transition-all border border-transparent hover:border-red-100 dark:hover:border-red-900/30"
               aria-label="Log out"
             >
               <LogOut class="w-3.5 h-3.5" />
@@ -248,7 +248,7 @@
   <!-- Backdrop -->
   <div
     transition:fade={{ duration: 200 }}
-    class="fixed inset-0 bg-black/50 z-40 md:hidden"
+    class="fixed inset-0 bg-black/50 z-40 lg:hidden"
     on:click={closeMobileMenu}
     on:keydown={(e) => e.key === "Escape" && closeMobileMenu()}
     role="button"
@@ -259,7 +259,7 @@
   <!-- Mobile Menu Panel -->
   <div
     transition:fly={{ x: 300, duration: 300 }}
-    class="fixed top-0 right-0 bottom-0 w-64 bg-white dark:bg-slate-800 shadow-xl z-50 md:hidden"
+    class="fixed top-0 right-0 bottom-0 w-64 bg-white dark:bg-slate-800 shadow-xl z-50 lg:hidden"
     role="dialog"
     aria-label="Mobile navigation menu"
   >
