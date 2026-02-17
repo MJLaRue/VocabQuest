@@ -136,6 +136,7 @@
                         userId: user.id,
                         role: user.role === "admin" ? "student" : "admin",
                       })}
+                    title="Toggle Admin Role"
                   >
                     <Shield class="w-4 h-4" />
                   </Button>
