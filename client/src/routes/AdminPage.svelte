@@ -20,6 +20,7 @@
   import TopStudents from "$lib/components/admin/TopStudents.svelte";
   import UserTable from "$lib/components/admin/UserTable.svelte";
   import VocabTable from "$lib/components/admin/VocabTable.svelte";
+  import ResetPasswordModal from "$lib/components/admin/ResetPasswordModal.svelte";
 
   type AdminView = "overview" | "users" | "vocabulary" | "analytics";
 
@@ -195,6 +196,19 @@
       console.error("Failed to search vocabulary:", error);
     }
   }
+
+  // Password reset modal state
+  let showResetModal = false;
+  let resetUserId: number | null = null;
+  let resetUsername = "";
+
+  function handleResetPassword({
+    detail,
+  }: CustomEvent<{ userId: number; username: string }>) {
+    resetUserId = detail.userId;
+    resetUsername = detail.username;
+    showResetModal = true;
+  }
 </script>
 
 <div class="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -245,6 +259,7 @@
               on:toggleAdmin={handleToggleAdmin}
               on:deleteUser={handleDeleteUser}
               on:search={handleSearchUsers}
+              on:resetPassword={handleResetPassword}
             />
           {/if}
         {:else if currentView === "vocabulary"}
@@ -284,6 +299,17 @@
       </div>
     </main>
   </div>
+
+  <ResetPasswordModal
+    bind:show={showResetModal}
+    bind:userId={resetUserId}
+    username={resetUsername}
+    on:close={() => {
+      showResetModal = false;
+      resetUserId = null;
+      resetUsername = "";
+    }}
+  />
 
   <Footer />
 </div>

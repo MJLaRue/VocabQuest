@@ -55,6 +55,12 @@ export const adminApi = {
       method: 'DELETE',
     }),
 
+  resetUserPassword: (userId: number, password: string) =>
+    apiClient<{ message: string }>(`/admin/users/${userId}/reset-password`, {
+      method: 'POST',
+      body: JSON.stringify({ password }),
+    }),
+
   getVocabulary: (params?: {
     search?: string;
     deck?: string;

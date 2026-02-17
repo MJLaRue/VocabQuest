@@ -10,6 +10,7 @@
     Menu,
     X,
     LogOut,
+    Settings,
   } from "lucide-svelte";
   import { fade, fly } from "svelte/transition";
   import { push } from "svelte-spa-router";
@@ -20,7 +21,9 @@
     progress,
     hasActiveSession,
   } from "$lib/stores/progress";
+  import { ui } from "$lib/stores/ui";
   import { link } from "svelte-spa-router";
+  import SettingsModal from "$lib/components/profile/SettingsModal.svelte";
 
   export let user: {
     username: string;
@@ -229,6 +232,15 @@
             </div>
 
             <button
+              on:click={() => ui.openSettings()}
+              class="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-600 dark:text-slate-400 hover:bg-teal-50 hover:text-teal-600 dark:hover:bg-teal-900/20 dark:hover:text-teal-400 transition-all border border-transparent hover:border-teal-100 dark:hover:border-teal-900/30"
+              aria-label="Settings"
+            >
+              <Settings class="w-3.5 h-3.5" />
+              Settings
+            </button>
+
+            <button
               on:click={handleLogout}
               class="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-600 dark:text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400 transition-all border border-transparent hover:border-red-100 dark:hover:border-red-900/30"
               aria-label="Log out"
@@ -242,6 +254,8 @@
     </div>
   </div>
 </header>
+
+<SettingsModal show={$ui.showSettingsModal} on:close={ui.closeSettings} />
 
 <!-- Mobile Menu Overlay -->
 {#if mobileMenuOpen && user && showNav}
@@ -350,8 +364,18 @@
           </div>
         </div>
         <button
+          on:click={() => {
+            closeMobileMenu();
+            ui.openSettings();
+          }}
+          class="mt-4 w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-teal-600 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-colors border border-teal-100 dark:border-teal-900/30 font-medium mb-2"
+        >
+          <Settings class="w-5 h-5" />
+          Settings
+        </button>
+        <button
           on:click={handleLogout}
-          class="mt-4 w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors border border-red-100 dark:border-red-900/30 font-medium"
+          class="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors border border-red-100 dark:border-red-900/30 font-medium"
         >
           <LogOut class="w-5 h-5" />
           Log out

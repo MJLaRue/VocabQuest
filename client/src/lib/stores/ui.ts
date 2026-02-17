@@ -4,6 +4,7 @@ interface UIState {
   showSessionSummary: boolean;
   showAchievementModal: boolean;
   showLevelUpModal: boolean;
+  showSettingsModal: boolean;
   showDefinition: boolean;
   sidebarOpen: boolean;
   currentAchievement: string | null;
@@ -14,6 +15,7 @@ function createUIStore() {
     showSessionSummary: false,
     showAchievementModal: false,
     showLevelUpModal: false,
+    showSettingsModal: false,
     showDefinition: false,
     sidebarOpen: true,
     currentAchievement: null,
@@ -28,6 +30,14 @@ function createUIStore() {
 
     closeSessionSummary() {
       update((state) => ({ ...state, showSessionSummary: false }));
+    },
+
+    openSettings() {
+      update((state) => ({ ...state, showSettingsModal: true }));
+    },
+
+    closeSettings() {
+      update((state) => ({ ...state, showSettingsModal: false }));
     },
 
     showAchievement(achievementId: string) {

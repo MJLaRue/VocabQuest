@@ -24,7 +24,7 @@ export interface RegisterData {
 
 export const authApi = {
   checkSession: () => apiClient<{ user: User }>('/auth/me'),
-  
+
   login: (credentials: LoginCredentials) =>
     apiClient<{ user: User }>('/auth/login', {
       method: 'POST',
@@ -40,5 +40,11 @@ export const authApi = {
   logout: () =>
     apiClient<{ message: string }>('/auth/logout', {
       method: 'POST',
+    }),
+
+  changePassword: (data: { currentPassword: string; newPassword: string }) =>
+    apiClient<{ message: string }>('/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify(data),
     }),
 };
