@@ -37,6 +37,9 @@
   // Mobile menu state
   let mobileMenuOpen = false;
 
+  // Profile dropdown state
+  let profileDropdownOpen = false;
+
   // Check if user is admin from either the store or the prop
   $: userIsAdmin = $isAdmin || user?.role === "admin";
 
@@ -63,10 +66,37 @@
 
   function toggleMobileMenu() {
     mobileMenuOpen = !mobileMenuOpen;
+    profileDropdownOpen = false;
   }
 
   function closeMobileMenu() {
     mobileMenuOpen = false;
+  }
+
+  function toggleProfileDropdown() {
+    profileDropdownOpen = !profileDropdownOpen;
+    mobileMenuOpen = false;
+  }
+
+  function closeProfileDropdown() {
+    profileDropdownOpen = false;
+  }
+
+  // Handle outside clicks for dropdowns
+  function handleClickOutside(node: HTMLElement, callback: () => void) {
+    const handleClick = (event: MouseEvent) => {
+      if (!node.contains(event.target as Node)) {
+        callback();
+      }
+    };
+
+    document.addEventListener("click", handleClick, true);
+
+    return {
+      destroy() {
+        document.removeEventListener("click", handleClick, true);
+      },
+    };
   }
 
   async function handleLogout() {
@@ -212,42 +242,76 @@
 
         {#if user}
           <!-- User Menu -->
-          <div class="flex items-center gap-4">
-            <div
-              class="flex items-center gap-2"
-              role="img"
-              aria-label={`User: ${user.username}`}
+          <!-- User Profile Dropdown -->
+          <div
+            class="relative hidden lg:block"
+            use:handleClickOutside={closeProfileDropdown}
+          >
+            <button
+              on:click={toggleProfileDropdown}
+              class="flex items-center gap-2 hover:opacity-80 transition-opacity"
+              aria-expanded={profileDropdownOpen}
+              aria-haspopup="true"
+              aria-label="User menu"
             >
               <div
-                class="w-8 h-8 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-bold text-sm"
+                class="w-9 h-9 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-bold text-sm shadow-sm"
                 aria-hidden="true"
               >
                 {user.username.charAt(0).toUpperCase()}
               </div>
               <div
-                class="hidden lg:block text-xs font-medium text-gray-600 dark:text-slate-400"
+                class="text-xs font-medium text-gray-700 dark:text-slate-300"
               >
                 {user.username}
               </div>
-            </div>
-
-            <button
-              on:click={() => ui.openSettings()}
-              class="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-600 dark:text-slate-400 hover:bg-teal-50 hover:text-teal-600 dark:hover:bg-teal-900/20 dark:hover:text-teal-400 transition-all border border-transparent hover:border-teal-100 dark:hover:border-teal-900/30"
-              aria-label="Settings"
-            >
-              <Settings class="w-3.5 h-3.5" />
-              Settings
             </button>
 
-            <button
-              on:click={handleLogout}
-              class="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-600 dark:text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400 transition-all border border-transparent hover:border-red-100 dark:hover:border-red-900/30"
-              aria-label="Log out"
-            >
-              <LogOut class="w-3.5 h-3.5" />
-              Logout
-            </button>
+            <!-- Dropdown Menu -->
+            {#if profileDropdownOpen}
+              <div
+                transition:fade={{ duration: 150 }}
+                class="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-gray-100 dark:border-slate-700 py-1 z-50 overflow-hidden"
+              >
+                <div
+                  class="px-4 py-2 border-b border-gray-100 dark:border-slate-700"
+                >
+                  <p
+                    class="text-sm font-semibold text-gray-900 dark:text-white truncate"
+                  >
+                    {user.username}
+                  </p>
+                  {#if user.level}
+                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                      Level {user.level}
+                    </p>
+                  {/if}
+                </div>
+
+                <button
+                  on:click={() => {
+                    closeProfileDropdown();
+                    ui.openSettings();
+                  }}
+                  class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"
+                >
+                  <Settings class="w-4 h-4" />
+                  Change Password
+                </button>
+
+                <div
+                  class="border-t border-gray-100 dark:border-slate-700 my-1"
+                ></div>
+
+                <button
+                  on:click={handleLogout}
+                  class="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors flex items-center gap-2"
+                >
+                  <LogOut class="w-4 h-4" />
+                  Logout
+                </button>
+              </div>
+            {/if}
           </div>
         {/if}
       </div>
@@ -371,7 +435,7 @@
           class="mt-4 w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-teal-600 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-colors border border-teal-100 dark:border-teal-900/30 font-medium mb-2"
         >
           <Settings class="w-5 h-5" />
-          Settings
+          Change Password
         </button>
         <button
           on:click={handleLogout}

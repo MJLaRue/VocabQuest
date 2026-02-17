@@ -143,15 +143,6 @@
                   <Button
                     variant="ghost"
                     size="sm"
-                    on:click={() => dispatch("deleteUser", { userId: user.id })}
-                    class="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-                    title="Delete User"
-                  >
-                    <Trash2 class="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
                     on:click={() =>
                       dispatch("resetPassword", {
                         userId: user.id,
@@ -161,6 +152,15 @@
                     title="Reset Password"
                   >
                     <Lock class="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    on:click={() => dispatch("deleteUser", { userId: user.id })}
+                    class="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                    title="Delete User"
+                  >
+                    <Trash2 class="w-4 h-4" />
                   </Button>
                 </div>
               </td>
