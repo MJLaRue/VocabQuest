@@ -28,7 +28,7 @@
     easing: cubicOut,
   });
 
-  $: progress.set((value / max) * 100);
+  $: progress.set((value / (max ?? 100)) * 100);
   $: percentage = Math.round($progress);
 
   const sizeMap = {
@@ -43,7 +43,7 @@
     <div
       class={cn(
         'relative w-full overflow-hidden rounded-full bg-gray-200 dark:bg-slate-700',
-        sizeMap[size]
+        sizeMap[size ?? 'md']
       )}
     >
       <div
@@ -65,8 +65,8 @@
   <div class={cn('relative inline-flex items-center justify-center', className)}>
     <svg
       class="transform -rotate-90"
-      width={sizeMap[size]}
-      height={sizeMap[size]}
+      width={sizeMap[size ?? 'md']}
+      height={sizeMap[size ?? 'md']}
       viewBox="0 0 100 100"
     >
       <!-- Background circle -->

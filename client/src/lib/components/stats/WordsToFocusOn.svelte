@@ -13,10 +13,10 @@
 
   function getAccuracyVariant(
     accuracy: number
-  ): 'primary' | 'success' | 'warning' | 'danger' {
+  ): 'primary' | 'success' | 'warning' | 'error' {
     if (accuracy >= 75) return 'success';
     if (accuracy >= 50) return 'warning';
-    return 'danger';
+    return 'error';
   }
 </script>
 

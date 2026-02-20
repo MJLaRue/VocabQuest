@@ -61,16 +61,12 @@
                 newPassword,
             });
 
-            if (response.error) {
-                error = response.error;
-            } else {
-                successMessage = "Password updated successfully";
-                currentPassword = "";
-                newPassword = "";
-                setTimeout(() => {
-                    handleClose();
-                }, 1500);
-            }
+            successMessage = "Password updated successfully";
+            currentPassword = "";
+            newPassword = "";
+            setTimeout(() => {
+                handleClose();
+            }, 1500);
         } catch (err: any) {
             error = err.message || "Failed to update password";
         } finally {

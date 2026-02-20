@@ -1,5 +1,15 @@
 import { apiClient } from './client';
 
+export interface LeaderboardEntry {
+  rank: number;
+  username: string;
+  totalXp: number;
+  level: number;
+  streak: number;
+  wordsLearned: number;
+  accuracy: number;
+}
+
 export interface UserProgress {
   vocab_id: number;
   is_known: boolean;
@@ -139,6 +149,6 @@ export const progressApi = {
 
   getLeaderboard: () =>
     apiClient<{
-      leaderboard: Array<LeaderboardEntry>;
+      leaderboard: LeaderboardEntry[];
     }>('/progress/leaderboard'),
 };

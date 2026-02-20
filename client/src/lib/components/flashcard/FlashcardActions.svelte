@@ -14,7 +14,7 @@
 
 <div class="flex items-center justify-center gap-4">
   <Button
-    variant="outline"
+    variant="ghost"
     size="lg"
     on:click={() => dispatch('notYet')}
     disabled={disabled || loading}

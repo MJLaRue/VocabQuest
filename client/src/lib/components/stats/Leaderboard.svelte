@@ -125,7 +125,7 @@
                                 </div>
                             </td>
                             <td class="py-4 px-4 text-center">
-                                <Badge variant="secondary" class="font-black"
+                                <Badge variant="neutral" class="font-black"
                                     >Lvl {entry.level}</Badge
                                 >
                             </td>
