@@ -1,5 +1,5 @@
 # Use official Node.js runtime
-FROM node:18-alpine
+FROM node:22-alpine
 
 # Set working directory
 WORKDIR /app
@@ -7,8 +7,14 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies (production only)
-RUN npm ci --omit=dev
+# Install root dependencies first
+RUN npm install
+
+# Copy client package files
+COPY client/package*.json ./client/
+
+# Install client dependencies
+RUN cd client && npm install
 
 # Copy application code
 COPY . .
@@ -19,8 +25,9 @@ RUN chmod +x docker-entrypoint.sh
 # Create uploads directory (if needed)
 RUN mkdir -p uploads
 
-# Expose port (Render will set this via $PORT)
+# Expose ports
 EXPOSE 3000
+EXPOSE 3001
 
 # Set environment to production
 ENV NODE_ENV=production
@@ -29,5 +36,6 @@ ENV NODE_ENV=production
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s \
   CMD node -e "require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
-# Start the application (entrypoint handles migrations and seeding)
-CMD ["./docker-entrypoint.sh"]
+# Set entrypoint and default command
+ENTRYPOINT ["./docker-entrypoint.sh"]
+CMD ["npm", "start"]

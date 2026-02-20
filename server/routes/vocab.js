@@ -8,8 +8,8 @@ const { Op } = require('sequelize');
 // Get vocabulary words with filters
 router.get('/words', requireAuth, async (req, res) => {
   try {
-    const { deck, pos, search, limit = 50, offset = 0 } = req.query;
-    
+    const { deck, pos, search, limit = 20, offset = 0 } = req.query;
+
     const where = {};
     if (pos) {
       where.partOfSpeech = pos;
@@ -20,15 +20,15 @@ router.get('/words', requireAuth, async (req, res) => {
         { definition: { [Op.iLike]: `%${search}%` } }
       ];
     }
-    
+
     const { count, rows: words } = await Vocabulary.findAndCountAll({
       where,
       limit: parseInt(limit),
       offset: parseInt(offset),
       order: [['word', 'ASC']]
     });
-    
-    res.json({ 
+
+    res.json({
       words: words.map(w => ({
         id: w.id,
         word: w.word,
@@ -59,19 +59,19 @@ router.get('/decks', requireAuth, async (req, res) => {
 router.get('/random', requireAuth, async (req, res) => {
   try {
     const { pos, limit = 20 } = req.query;
-    
+
     const where = {};
     if (pos) {
       where.partOfSpeech = pos;
     }
-    
+
     const words = await Vocabulary.findAll({
       where,
       order: sequelize.random(),
       limit: parseInt(limit)
     });
-    
-    res.json({ 
+
+    res.json({
       words: words.map(w => ({
         id: w.id,
         word: w.word,
@@ -93,7 +93,7 @@ router.get('/', requireAuth, async (req, res) => {
     const vocab = await Vocabulary.findAll({
       order: [['word', 'ASC']]
     });
-    
+
     res.json({ vocabulary: vocab });
   } catch (error) {
     console.error('Get vocab error:', error);
@@ -105,11 +105,11 @@ router.get('/', requireAuth, async (req, res) => {
 router.get('/:id', requireAuth, async (req, res) => {
   try {
     const vocab = await Vocabulary.findByPk(req.params.id);
-    
+
     if (!vocab) {
       return res.status(404).json({ error: 'Vocabulary not found' });
     }
-    
+
     res.json({ vocab });
   } catch (error) {
     console.error('Get vocab error:', error);
@@ -151,8 +151,8 @@ router.get('/smart/prioritized', requireAuth, async (req, res) => {
       replacements: { userId: req.user.id },
       type: sequelize.QueryTypes.SELECT
     });
-    
-    res.json({ 
+
+    res.json({
       vocabulary: vocab,
       dueCount: vocab.filter(v => v.priority <= 1).length
     });

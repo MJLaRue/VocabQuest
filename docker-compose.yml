@@ -2,40 +2,39 @@ services:
   # Node/Express Application
   app:
     build: .
+    command: node --watch server/index.js
     ports:
       - "3000:3000"
     env_file:
-      - .env.docker  # Copy this file and customize before running
+      - .env
     environment:
-      # Override DATABASE_URL to reference db service
-      - DATABASE_URL=postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-vocab_app}
-    depends_on:
-      db:
-        condition: service_healthy
+      - NODE_ENV=development
+      # Pulls DATABASE_URL from .env seamlessly
+
     volumes:
-      # Mount code for development (optional - remove for production-like testing)
+      # Mount code for development
       - ./server:/app/server
       - ./client:/app/client
       # Persist uploads
       - ./uploads:/app/uploads
     restart: unless-stopped
 
-  # PostgreSQL Database
-  db:
-    image: postgres:14-alpine
-    env_file:
-      - .env.docker
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-
-volumes:
-  pgdata:
-    driver: local
+#   # PostgreSQL Database (Local Fallback Disabled - Connects to Supabase)
+#   db:
+#     image: postgres:14-alpine
+#     env_file:
+#       - .env.docker
+#     ports:
+#       - "5432:5432"
+#     volumes:
+#       - pgdata:/var/lib/postgresql/data
+#     healthcheck:
+#       test: ["CMD-SHELL", "pg_isready -U postgres"]
+#       interval: 10s
+#       timeout: 5s
+#       retries: 5
+#     restart: unless-stopped
+# 
+# volumes:
+#   pgdata:
+#     driver: local

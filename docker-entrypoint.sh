@@ -54,5 +54,5 @@ else
   echo "✓ Admin user already exists or credentials not set, skipping admin creation"
 fi
 
-# Start the application
-npm start
+# Run the passed command (usually npm start or npm run dev)
+exec "$@"
