@@ -22,7 +22,7 @@
     hasActiveSession,
   } from "$lib/stores/progress";
   import { ui } from "$lib/stores/ui";
-  import { link } from "svelte-spa-router";
+  import { link, location } from "svelte-spa-router";
   import SettingsModal from "$lib/components/profile/SettingsModal.svelte";
 
   export let user: {
@@ -63,6 +63,33 @@
 
     return "/assets/mascot/header_default.png";
   })();
+
+  // Reactive nav active states
+  $: isFlashcardsActive =
+    $location === "/" ||
+    $location?.startsWith("/practice") ||
+    $location?.startsWith("/quiz") ||
+    $location?.startsWith("/typing");
+  $: isStatsActive = $location?.startsWith("/stats");
+  $: isGuideActive = $location?.startsWith("/guide");
+  $: isAdminActive = $location?.startsWith("/admin");
+
+  // Nav class helpers
+  $: getNavClass = (isActive: boolean) => {
+    const base =
+      "px-4 py-2 rounded-lg text-sm transition-colors flex items-center gap-1";
+    return isActive
+      ? `${base} bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 font-semibold`
+      : `${base} text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 font-medium`;
+  };
+
+  $: getMobileNavClass = (isActive: boolean) => {
+    const base =
+      "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors";
+    return isActive
+      ? `${base} bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 font-semibold`
+      : `${base} text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-slate-700 font-medium`;
+  };
 
   function toggleMobileMenu() {
     mobileMenuOpen = !mobileMenuOpen;
@@ -169,36 +196,20 @@
             class="hidden lg:flex items-center gap-2"
             aria-label="Main navigation"
           >
-            <a
-              href="/"
-              use:link
-              class="px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-1"
-            >
+            <a href="/" use:link class={getNavClass(isFlashcardsActive)}>
               <Layers class="w-4 h-4" />
               Flashcards
             </a>
-            <a
-              href="/stats"
-              use:link
-              class="px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-1"
-            >
+            <a href="/stats" use:link class={getNavClass(isStatsActive)}>
               <BarChart3 class="w-4 h-4" />
               My Stats
             </a>
-            <a
-              href="/guide"
-              use:link
-              class="px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-1"
-            >
+            <a href="/guide" use:link class={getNavClass(isGuideActive)}>
               <BookOpen class="w-4 h-4" />
               Guide
             </a>
             {#if userIsAdmin}
-              <a
-                href="/admin"
-                use:link
-                class="px-4 py-2 rounded-lg text-sm font-medium bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 hover:bg-teal-200 dark:hover:bg-teal-900/50 transition-colors flex items-center gap-1"
-              >
+              <a href="/admin" use:link class={getNavClass(isAdminActive)}>
                 <Shield class="w-4 h-4" />
                 Admin
               </a>
@@ -368,30 +379,30 @@
             href="/"
             use:link
             on:click={closeMobileMenu}
-            class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+            class={getMobileNavClass(isFlashcardsActive)}
           >
             <Layers class="w-5 h-5" aria-hidden="true" />
-            <span class="font-medium">Flashcards</span>
+            <span>Flashcards</span>
           </a>
 
           <a
             href="/stats"
             use:link
             on:click={closeMobileMenu}
-            class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+            class={getMobileNavClass(isStatsActive)}
           >
             <BarChart3 class="w-5 h-5" aria-hidden="true" />
-            <span class="font-medium">My Stats</span>
+            <span>My Stats</span>
           </a>
 
           <a
             href="/guide"
             use:link
             on:click={closeMobileMenu}
-            class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+            class={getMobileNavClass(isGuideActive)}
           >
             <BookOpen class="w-5 h-5" aria-hidden="true" />
-            <span class="font-medium">Guide</span>
+            <span>Guide</span>
           </a>
 
           {#if userIsAdmin}
@@ -399,10 +410,10 @@
               href="/admin"
               use:link
               on:click={closeMobileMenu}
-              class="flex items-center gap-3 px-4 py-3 rounded-lg bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 hover:bg-teal-200 dark:hover:bg-teal-900/50 transition-colors"
+              class={getMobileNavClass(isAdminActive)}
             >
               <Shield class="w-5 h-5" aria-hidden="true" />
-              <span class="font-medium">Admin</span>
+              <span>Admin</span>
             </a>
           {/if}
         </div>

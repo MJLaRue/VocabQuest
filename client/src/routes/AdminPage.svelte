@@ -57,10 +57,14 @@
     // Subscribe to auth store and wait for isLoading to settle before
     // making any auth decisions. This handles hard refreshes where
     // checkSession() may still be in-flight when onMount fires.
-    const unsubscribe = auth.subscribe(async ($authState) => {
+    // Use `let` (not `const`) so the callback can safely reference it even
+    // when the subscribe callback fires synchronously (temporal dead zone fix).
+    let unsubscribe: (() => void) | undefined;
+    unsubscribe = auth.subscribe(async ($authState) => {
       if ($authState.isLoading) return; // still waiting on session check
 
-      unsubscribe(); // unsubscribe immediately — we only need to act once
+      // Guard in case the callback fired synchronously before assignment
+      if (unsubscribe) unsubscribe(); // unsubscribe immediately — we only need to act once
 
       try {
         if (!$authState.user) {
@@ -113,11 +117,6 @@
       topStudents = studentsData.students;
       users = usersData.users || [];
       vocabulary = vocabData.words || [];
-      console.log("Loaded data:", {
-        users: users.length,
-        vocabulary: vocabulary.length,
-        stats,
-      });
     } catch (error) {
       console.error("Failed to load admin data:", error);
     } finally {
