@@ -141,6 +141,11 @@ router.post('/answer', requireAuth, async (req, res) => {
         progress.isKnown = true;
       } else {
         progress.incorrectCount += 1;
+        // A "Not Yet" answer always moves the word back to In Progress,
+        // regardless of prior correct answers. isKnown reflects the most
+        // recent answer outcome so that Learned / In Progress / Not Started
+        // counts on the Stats page stay accurate.
+        progress.isKnown = false;
       }
     }
 
