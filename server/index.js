@@ -80,9 +80,19 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 const sessionConnectionString = process.env.DATABASE_URL ||
   `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`;
 
+const isLocalDatabase = sessionConnectionString.includes('localhost') ||
+  sessionConnectionString.includes('127.0.0.1') ||
+  sessionConnectionString.includes('@db:');
+
+const { Pool } = require('pg');
+const sessionPool = new Pool({
+  connectionString: sessionConnectionString,
+  ssl: !isLocalDatabase ? { rejectUnauthorized: false } : false
+});
+
 app.use(session({
   store: new pgSession({
-    conString: sessionConnectionString,
+    pool: sessionPool,
     tableName: 'session',
     createTableIfMissing: true
   }),
