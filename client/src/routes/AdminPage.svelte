@@ -46,7 +46,7 @@
     return "overview";
   }
 
-  onMount(async () => {
+  onMount(() => {
     // Only check auth once, not on every sub-route navigation
     if (adminAuthChecked && isAuthenticated) {
       return;
@@ -54,31 +54,33 @@
 
     adminAuthChecked = true;
 
-    try {
-      // Wait for auth to be ready if it's still loading
-      if (!$user && !$auth.isLoading) {
+    // Subscribe to auth store and wait for isLoading to settle before
+    // making any auth decisions. This handles hard refreshes where
+    // checkSession() may still be in-flight when onMount fires.
+    const unsubscribe = auth.subscribe(async ($authState) => {
+      if ($authState.isLoading) return; // still waiting on session check
+
+      unsubscribe(); // unsubscribe immediately — we only need to act once
+
+      try {
+        if (!$authState.user) {
+          push("/login");
+          return;
+        }
+
+        if ($authState.user.role !== "admin") {
+          console.log("Not admin, redirecting to home");
+          push("/");
+          return;
+        }
+
+        isAuthenticated = true;
+        await loadData();
+      } catch (error) {
+        console.error("Auth check failed:", error);
         push("/login");
-        return;
       }
-
-      if ($auth.isLoading) return;
-
-      // Check admin role using the store value
-      // Use setTimeout to ensure the derived store is updated
-      await new Promise((resolve) => setTimeout(resolve, 0));
-
-      if (!$isAdmin) {
-        console.log("Not admin, redirecting to home");
-        push("/");
-        return;
-      }
-
-      isAuthenticated = true;
-      await loadData();
-    } catch (error) {
-      console.error("Auth check failed:", error);
-      push("/login");
-    }
+    });
   });
 
   // Track previous view to avoid reloading on view change
