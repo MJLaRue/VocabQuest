@@ -189,6 +189,11 @@
 
     // Update session mode in store
     progress.updateSessionMode(newMode);
+
+    // Advance to a new word so the user can't preview a card in one mode
+    // and then trivially answer it after switching modes.
+    // nextCard() is synchronous and has no effect on session stats.
+    vocab.nextCard();
   }
 
   async function handleAnswer(event: CustomEvent<{ correct: boolean }>) {

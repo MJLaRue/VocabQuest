@@ -50,6 +50,18 @@
   // Generate quiz options (for quiz mode)
   $: quizOptions = word ? generateQuizOptions(word, $allAvailableWords) : [];
 
+  // Statistically uniform shuffle using Fisher-Yates algorithm.
+  // Replaces the biased `sort(() => Math.random() - 0.5)` anti-pattern,
+  // which causes certain positions to appear more often than others.
+  function fisherYatesShuffle<T>(arr: T[]): T[] {
+    const result = [...arr];
+    for (let i = result.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [result[i], result[j]] = [result[j], result[i]];
+    }
+    return result;
+  }
+
   function generateQuizOptions(
     correctWord: VocabularyWord,
     allWords: VocabularyWord[],
@@ -59,25 +71,20 @@
 
     // If we don't have enough other words, use placeholders
     if (otherWords.length < 3) {
-      return [
+      return fisherYatesShuffle([
         correctWord.definition,
         "A different meaning (placeholder)",
         "Another definition (placeholder)",
         "Yet another option (placeholder)",
-      ].sort(() => Math.random() - 0.5);
+      ]);
     }
 
-    // Randomly select 3 other definitions
-    const wrongOptions: string[] = [];
-    const shuffled = [...otherWords].sort(() => Math.random() - 0.5);
+    // Shuffle the distractor pool and take the first 3
+    const shuffledPool = fisherYatesShuffle(otherWords);
+    const wrongOptions = shuffledPool.slice(0, 3).map((w) => w.definition);
 
-    for (let i = 0; i < 3 && i < shuffled.length; i++) {
-      wrongOptions.push(shuffled[i].definition);
-    }
-
-    // Combine correct answer with wrong options and shuffle
-    const options = [correctWord.definition, ...wrongOptions];
-    return options.sort(() => Math.random() - 0.5);
+    // Combine correct answer with wrong options and shuffle uniformly
+    return fisherYatesShuffle([correctWord.definition, ...wrongOptions]);
   }
 
   function checkTypedAnswer() {
