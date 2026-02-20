@@ -10,11 +10,7 @@
     hasNext,
     hasPrev,
   } from "$lib/stores/vocab";
-  import {
-    progress,
-    sessionStats,
-    hasActiveSession,
-  } from "$lib/stores/progress";
+  import { progress, sessionStats } from "$lib/stores/progress";
   import { ui } from "$lib/stores/ui";
   import Header from "$lib/components/layout/Header.svelte";
   import Footer from "$lib/components/layout/Footer.svelte";
@@ -25,9 +21,9 @@
   import FlashCard from "$lib/components/flashcard/FlashCard.svelte";
   import FlashcardActions from "$lib/components/flashcard/FlashcardActions.svelte";
   import FlashcardNavigation from "$lib/components/flashcard/FlashcardNavigation.svelte";
-  import SessionSummaryModal from "$lib/components/flashcard/SessionSummaryModal.svelte";
   import CelebrationOverlay from "$lib/components/flashcard/CelebrationOverlay.svelte";
   import { confetti, confettiPresets } from "$lib/utils/confetti";
+  import { RefreshCw } from "lucide-svelte";
 
   // Determine mode from URL path
   function getModeFromPath(path: string): "practice" | "quiz" | "typing" {
@@ -42,6 +38,7 @@
       ? localStorage.getItem("vocabquest-random-mode") !== "false"
       : true;
   let isLoading = false;
+  let showNewSetConfirm = false;
 
   // Celebration queue system
   type Celebration = {
@@ -295,20 +292,13 @@
     vocab.setFilter("pos", detail.pos);
   }
 
-  async function handleEndSession() {
-    try {
-      if ($hasActiveSession) {
-        await progress.endSession();
-      }
-      ui.openSessionSummary();
-    } catch (error) {
-      console.error("Failed to end session:", error);
+  async function handleNewSet() {
+    showNewSetConfirm = false;
+    if (randomMode) {
+      await vocab.loadRandomWords();
+    } else {
+      await vocab.loadWords();
     }
-  }
-
-  function handleContinueSession() {
-    ui.closeSessionSummary();
-    progress.startSession(mode);
   }
 </script>
 
@@ -387,32 +377,45 @@
           </div>
         </div>
 
-        <!-- End Session Button -->
+        <!-- New Set Button / Confirmation -->
         <div class="flex justify-center">
-          <button
-            class="text-sm text-teal-600 dark:text-teal-400 hover:underline"
-            on:click={handleEndSession}
-            aria-label="End current study session"
-          >
-            End Session
-          </button>
+          {#if showNewSetConfirm}
+            <div class="text-center space-y-2 p-4 bg-amber-50 dark:bg-gray-800 border border-amber-300 dark:border-amber-600 rounded-lg max-w-sm">
+              <p class="text-sm font-semibold text-amber-900 dark:text-amber-200">
+                Start a new set?
+              </p>
+              <p class="text-xs text-amber-900 dark:text-amber-300">
+                {$vocabProgress.remaining} card{$vocabProgress.remaining === 1 ? "" : "s"} will be skipped and the +50 XP set completion bonus won't be awarded.
+              </p>
+              <div class="flex justify-center gap-3 pt-1">
+                <button
+                  class="text-xs px-3 py-1.5 bg-amber-800 hover:bg-amber-900 dark:bg-amber-700 dark:hover:bg-amber-600 text-white rounded-md font-medium transition-colors"
+                  on:click={handleNewSet}
+                >
+                  Yes, new set
+                </button>
+                <button
+                  class="text-xs px-3 py-1.5 text-amber-900 dark:text-amber-300 hover:underline font-medium"
+                  on:click={() => (showNewSetConfirm = false)}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          {:else}
+            <button
+              class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-900/30 border border-teal-200 dark:border-teal-700 rounded-lg hover:bg-teal-100 dark:hover:bg-teal-900/50 transition-colors"
+              on:click={() => (showNewSetConfirm = true)}
+              aria-label="Load a new set of cards"
+            >
+              <RefreshCw class="w-4 h-4" />
+              New Set
+            </button>
+          {/if}
         </div>
       </div>
     </Container>
   </main>
-
-  <SessionSummaryModal
-    show={$ui.showSessionSummary}
-    cardsReviewed={$progress.lastSessionSummary?.cardsReviewed || 0}
-    correctAnswers={$progress.lastSessionSummary?.correctAnswers || 0}
-    xpEarned={$progress.lastSessionSummary?.xpEarned || 0}
-    duration={$progress.lastSessionSummary?.duration || 0}
-    completedSets={$progress.lastSessionSummary?.completedSets || 0}
-    levelUp={$progress.lastSessionSummary?.levelUp || false}
-    newLevel={Math.floor(Math.sqrt(($gamification?.totalXp || 0) / 100)) + 1}
-    on:close={() => ui.closeSessionSummary()}
-    on:continue={handleContinueSession}
-  />
 
   {#if currentCelebration}
     <CelebrationOverlay
