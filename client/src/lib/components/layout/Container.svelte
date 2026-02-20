@@ -21,6 +21,6 @@
   };
 </script>
 
-<div class={cn('container mx-auto px-4 py-8', maxWidths[maxWidth], className)} {...$$restProps}>
+<div class={cn('container mx-auto px-4 py-8', maxWidths[maxWidth ?? 'xl'], className)} {...$$restProps}>
   <slot />
 </div>

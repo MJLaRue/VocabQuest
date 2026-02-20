@@ -26,7 +26,7 @@
     warning: active
       ? 'bg-amber-500 text-white border-amber-500'
       : 'bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-700 hover:bg-amber-200 dark:hover:bg-amber-800',
-  }[variant];
+  }[variant ?? 'default'];
 </script>
 
 <button

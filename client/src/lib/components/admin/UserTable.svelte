@@ -21,6 +21,7 @@
     toggleAdmin: { userId: number; role: "student" | "admin" };
     deleteUser: { userId: number };
     search: { query: string };
+    resetPassword: { userId: number; username: string };
   }>();
 
   let searchQuery = "";

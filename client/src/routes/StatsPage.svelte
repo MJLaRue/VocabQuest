@@ -51,9 +51,12 @@
 
   let leaderboard: Array<{
     rank: number;
-    email: string;
+    username: string;
     totalXp: number;
     level: number;
+    streak: number;
+    wordsLearned: number;
+    accuracy: number;
   }> = [];
 
   let unsubscribe: (() => void) | undefined;
