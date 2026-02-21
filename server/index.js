@@ -87,7 +87,13 @@ const isLocalDatabase = sessionConnectionString.includes('localhost') ||
 const { Pool } = require('pg');
 const sessionPool = new Pool({
   connectionString: sessionConnectionString,
-  ssl: !isLocalDatabase ? { rejectUnauthorized: false } : false
+  ssl: !isLocalDatabase ? { rejectUnauthorized: false } : false,
+  // Keep-alive prevents stale connections after Render wake-ups
+  keepAlive: true,
+  keepAliveInitialDelayMillis: 10000,
+  // Match Sequelize pool — release idle connections before Supabase drops them
+  idleTimeoutMillis: 5000,
+  connectionTimeoutMillis: 10000
 });
 
 app.use(session({

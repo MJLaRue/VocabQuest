@@ -17,13 +17,19 @@ if (process.env.DATABASE_URL) {
       ssl: !isLocalDatabase ? {
         require: true,
         rejectUnauthorized: false // Required for Render/Supabase
-      } : false
+      } : false,
+      // Keep connections alive so Render wake-ups don't find stale sockets
+      keepAlive: true,
+      keepAliveInitialDelayMillis: 10000
     },
     pool: {
       max: 5,
       min: 0,
       acquire: 30000,
-      idle: 10000
+      // Release idle connections quickly — Supabase pooler drops them at ~60s
+      idle: 5000,
+      // Evict dead connections that were stale when the process woke up
+      evict: 5000
     }
   });
 } else {
