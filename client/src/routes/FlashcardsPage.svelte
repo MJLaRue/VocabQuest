@@ -380,7 +380,7 @@
         <!-- New Set Button / Confirmation -->
         <div class="flex justify-center">
           {#if showNewSetConfirm}
-            <div class="text-center space-y-2 p-4 bg-amber-50 dark:bg-gray-800 border border-amber-300 dark:border-amber-600 rounded-lg max-w-sm">
+            <div class="text-center space-y-2 p-4 bg-amber-50 dark:bg-gray-800 border border-amber-300 dark:border-amber-600 rounded-lg w-full max-w-sm">
               <p class="text-sm font-semibold text-amber-900 dark:text-amber-200">
                 Start a new set?
               </p>
