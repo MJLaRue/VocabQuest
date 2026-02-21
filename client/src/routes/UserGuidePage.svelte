@@ -102,6 +102,25 @@
                   <span>Earn <strong>10 XP</strong> per correct answer</span>
                 </li>
               </ul>
+
+              <!-- Progress tracking explanation -->
+              <div class="mt-4 p-3 bg-teal-50 dark:bg-teal-900/20 rounded-lg border border-teal-200 dark:border-teal-800">
+                <p class="text-sm font-semibold text-teal-700 dark:text-teal-300 mb-2">How progress tracking works:</p>
+                <ul class="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                  <li class="flex items-start gap-2">
+                    <span class="text-green-500 mt-0.5">✓</span>
+                    <span><strong>"I Know It"</strong> — moves the word to <strong>Learned</strong> and removes it from your active set</span>
+                  </li>
+                  <li class="flex items-start gap-2">
+                    <span class="text-yellow-500 mt-0.5">↩</span>
+                    <span><strong>"Not Yet"</strong> — moves the word to <strong>In Progress</strong>, even if you previously knew it, so it stays in rotation</span>
+                  </li>
+                  <li class="flex items-start gap-2">
+                    <span class="text-gray-400 mt-0.5">○</span>
+                    <span><strong>Not Started</strong> — words you haven't answered in any session yet</span>
+                  </li>
+                </ul>
+              </div>
             </div>
 
             <!-- Quiz Mode -->
@@ -489,7 +508,9 @@
                 >
                 <p class="text-gray-600 dark:text-gray-400 text-sm">
                   Start with Practice to learn, then use Quiz to test, and
-                  finally Typing to master.
+                  finally Typing to master. Switching modes always advances
+                  to a fresh word so you can't peek at a card in one mode
+                  and answer it in another.
                 </p>
               </div>
             </div>
