@@ -19,19 +19,13 @@ if (process.env.DATABASE_URL) {
 
   sequelize = new Sequelize(dbUrl.toString(), {
     dialect: 'postgres',
-    logging: false, // Disable query logging
-    // Explicitly set search_path — Neon's transaction pooler does not set
-    // a default search_path, which causes Sequelize sync/alter to fail
-    // with "relation does not exist" without this.
+    logging: false,
     schema: 'public',
     dialectOptions: {
       ssl: !isLocalDatabase ? {
         require: true,
         rejectUnauthorized: false // Required for Neon/Render
-      } : false,
-      // Set search_path at the connection level so every query resolves
-      // unqualified table names to the public schema
-      options: '-c search_path=public'
+      } : false
     },
     pool: {
       max: 5,
@@ -39,6 +33,12 @@ if (process.env.DATABASE_URL) {
       acquire: 30000,
       idle: 10000
     }
+  });
+
+  // Neon's transaction pooler (PgBouncer) blocks search_path as a startup
+  // parameter, so we set it via a query after each connection is established.
+  sequelize.afterConnect(async (connection) => {
+    await connection.query('SET search_path TO public;');
   });
 } else {
   // Local development: Use individual variables
