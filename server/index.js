@@ -84,16 +84,18 @@ const isLocalDatabase = sessionConnectionString.includes('localhost') ||
   sessionConnectionString.includes('127.0.0.1') ||
   sessionConnectionString.includes('@db:');
 
+// Strip sslmode/channel_binding params — handled via ssl option below
+const sessionUrl = new URL(sessionConnectionString);
+sessionUrl.searchParams.delete('sslmode');
+sessionUrl.searchParams.delete('channel_binding');
+
 const { Pool } = require('pg');
 const sessionPool = new Pool({
-  connectionString: sessionConnectionString,
+  connectionString: sessionUrl.toString(),
   ssl: !isLocalDatabase ? { rejectUnauthorized: false } : false,
-  // Keep-alive prevents stale connections after Render wake-ups
-  keepAlive: true,
-  keepAliveInitialDelayMillis: 10000,
-  // Match Sequelize pool — release idle connections before Supabase drops them
-  idleTimeoutMillis: 5000,
-  connectionTimeoutMillis: 10000
+  // Neon's transaction pooler has no default search_path; set explicitly
+  // so the session table is found in the public schema
+  options: '-c search_path=public'
 });
 
 app.use(session({
