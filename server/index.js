@@ -92,11 +92,16 @@ sessionUrl.searchParams.delete('channel_binding');
 const { Pool } = require('pg');
 const sessionPool = new Pool({
   connectionString: sessionUrl.toString(),
-  ssl: !isLocalDatabase ? { rejectUnauthorized: false } : false,
-  // Neon's transaction pooler has no default search_path; set explicitly
-  // so the session table is found in the public schema
-  options: '-c search_path=public'
+  ssl: !isLocalDatabase ? { rejectUnauthorized: false } : false
 });
+
+// Neon's transaction pooler (PgBouncer) blocks search_path as a startup
+// parameter, so set it via a query after each connection is established.
+if (!isLocalDatabase) {
+  sessionPool.on('connect', (client) => {
+    client.query('SET search_path TO public;');
+  });
+}
 
 app.use(session({
   store: new pgSession({
