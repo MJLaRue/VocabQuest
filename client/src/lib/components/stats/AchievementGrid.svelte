@@ -1,7 +1,7 @@
 <script lang="ts">
   import Card from "$lib/components/ui/Card.svelte";
   import Badge from "$lib/components/ui/Badge.svelte";
-  import { Award, Lock, Star, Flame, Book, Trophy } from "lucide-svelte";
+  import { Award, Lock, Star, Flame, Book, Trophy, ClipboardCheck } from "lucide-svelte";
   import type { ComponentType } from "svelte";
 
   const iconMap: Record<string, ComponentType> = {
@@ -9,6 +9,7 @@
     flame: Flame,
     book: Book,
     trophy: Trophy,
+    clipboard: ClipboardCheck,
   };
 
   export let achievements: Array<{
@@ -22,6 +23,8 @@
       | "streak_warrior"
       | "perfectionist"
       | "xp_enthusiast"
+      | "test_taker"
+      | "test_ace"
       | "one_off";
     level?: number;
     totalTiers?: number;

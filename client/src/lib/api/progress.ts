@@ -1,5 +1,7 @@
 import { apiClient } from './client';
 
+export type StudyMode = 'practice' | 'quiz' | 'typing' | 'context' | 'relate';
+
 export interface LeaderboardEntry {
   rank: number;
   username: string;
@@ -21,7 +23,7 @@ export interface UserProgress {
 }
 
 export interface StudySessionData {
-  mode: 'practice' | 'quiz' | 'typing';
+  mode: StudyMode;
   xp_earned: number;
   cards_reviewed: number;
   correct_answers: number;
@@ -29,7 +31,7 @@ export interface StudySessionData {
 
 export interface ActiveSession {
   id: number;
-  mode: 'practice' | 'quiz' | 'typing';
+  mode: StudyMode;
   startedAt: string;
   cardsReviewed: number;
   correctAnswers: number;
@@ -68,7 +70,7 @@ export interface UserStats {
 }
 
 export const progressApi = {
-  updateProgress: (vocabId: number, isKnown: boolean, mode: 'practice' | 'quiz' | 'typing' = 'practice', xpEarned: number = 0) =>
+  updateProgress: (vocabId: number, isKnown: boolean, mode: StudyMode = 'practice', xpEarned: number = 0, advanced: boolean = false) =>
     apiClient<{
       success: boolean;
       leveledUp: boolean;
@@ -81,7 +83,7 @@ export const progressApi = {
       '/progress/answer',
       {
         method: 'POST',
-        body: JSON.stringify({ vocabId, correct: isKnown, mode, xpEarned }),
+        body: JSON.stringify({ vocabId, correct: isKnown, mode, xpEarned, advanced }),
       }
     ),
 
@@ -91,13 +93,13 @@ export const progressApi = {
   getActiveSession: () =>
     apiClient<{ session: ActiveSession | null; timedOut?: boolean }>('/progress/session/active'),
 
-  updateSessionMode: (sessionId: number, mode: 'practice' | 'quiz' | 'typing') =>
+  updateSessionMode: (sessionId: number, mode: StudyMode) =>
     apiClient<{ success: boolean }>(`/progress/session/${sessionId}/mode`, {
       method: 'PATCH',
       body: JSON.stringify({ mode }),
     }),
 
-  startSession: (mode: 'practice' | 'quiz' | 'typing') =>
+  startSession: (mode: StudyMode) =>
     apiClient<{ session_id: number }>('/progress/session/start', {
       method: 'POST',
       body: JSON.stringify({ mode }),

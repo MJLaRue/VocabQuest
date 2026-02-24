@@ -5,6 +5,7 @@ import {
   type UserStats,
   type StudySessionData,
   type ActiveSession,
+  type StudyMode,
 } from '$lib/api/progress';
 import type { APIError } from '$lib/api/client';
 import { auth } from './auth';
@@ -38,7 +39,7 @@ interface ProgressState {
   }>;
   currentSession: {
     id: number | null;
-    mode: 'practice' | 'quiz' | 'typing' | null;
+    mode: StudyMode | null;
     startTime: number | null;
     cardsReviewed: number;
     correctAnswers: number;
@@ -155,7 +156,7 @@ function createProgressStore() {
       }
     },
 
-    async updateProgress(vocabId: number, isKnown: boolean) {
+    async updateProgress(vocabId: number, isKnown: boolean, advanced: boolean = false) {
       try {
         // Get current mode from state
         const state = get({ subscribe });
@@ -165,12 +166,13 @@ function createProgressStore() {
         let baseXP = 10;
         if (mode === 'quiz') baseXP = 15;
         else if (mode === 'typing') baseXP = 20;
+        else if (mode === 'context' || mode === 'relate') baseXP = advanced ? 20 : 15;
 
         // Add streak bonus BEFORE updating (we want the bonus from the previous streak)
         const streakBonus = isKnown ? state.currentSession.correctStreakBonus : 0;
         const totalXP = baseXP + streakBonus;
 
-        const result = await progressApi.updateProgress(vocabId, isKnown, mode, totalXP);
+        const result = await progressApi.updateProgress(vocabId, isKnown, mode, totalXP, advanced);
 
         update((state) => {
           return {
@@ -208,7 +210,7 @@ function createProgressStore() {
       }
     },
 
-    async checkAndResumeSession(requestedMode: 'practice' | 'quiz' | 'typing') {
+    async checkAndResumeSession(requestedMode: StudyMode) {
       try {
         const { session, timedOut } = await progressApi.getActiveSession();
 
@@ -247,7 +249,7 @@ function createProgressStore() {
       }
     },
 
-    async startSession(mode: 'practice' | 'quiz' | 'typing') {
+    async startSession(mode: StudyMode) {
       try {
         const { session_id } = await progressApi.startSession(mode);
         update((state) => ({
@@ -272,7 +274,7 @@ function createProgressStore() {
       }
     },
 
-    updateSessionMode(mode: 'practice' | 'quiz' | 'typing') {
+    updateSessionMode(mode: StudyMode) {
       const state = get({ subscribe });
       if (state.currentSession.id) {
         // Update backend

@@ -34,7 +34,9 @@ router.get('/words', requireAuth, async (req, res) => {
         word: w.word,
         part_of_speech: w.partOfSpeech,
         definition: w.definition,
-        example_sentence: null,
+        example_sentence: w.exampleSentence || null,
+        synonyms: w.synonyms || [],
+        antonyms: w.antonyms || [],
         deck_name: null
       })),
       total: count
@@ -77,7 +79,9 @@ router.get('/random', requireAuth, async (req, res) => {
         word: w.word,
         part_of_speech: w.partOfSpeech,
         definition: w.definition,
-        example_sentence: null,
+        example_sentence: w.exampleSentence || null,
+        synonyms: w.synonyms || [],
+        antonyms: w.antonyms || [],
         deck_name: null
       }))
     });
@@ -98,6 +102,39 @@ router.get('/', requireAuth, async (req, res) => {
   } catch (error) {
     console.error('Get vocab error:', error);
     res.status(500).json({ error: 'Failed to get vocabulary' });
+  }
+});
+
+// Get distractor words for context/match modes (same POS, excluding given word)
+// Must be defined BEFORE /:id to avoid being captured by the param route
+router.get('/distractors', requireAuth, async (req, res) => {
+  try {
+    const { pos, exclude, limit = 10 } = req.query;
+
+    const where = {};
+    if (pos) where.partOfSpeech = pos;
+    if (exclude) where.id = { [Op.ne]: parseInt(exclude) };
+
+    const words = await Vocabulary.findAll({
+      where,
+      order: sequelize.random(),
+      limit: parseInt(limit),
+      attributes: ['id', 'word', 'partOfSpeech', 'definition', 'synonyms', 'antonyms'],
+    });
+
+    res.json({
+      distractors: words.map(w => ({
+        id: w.id,
+        word: w.word,
+        part_of_speech: w.partOfSpeech,
+        definition: w.definition,
+        synonyms: w.synonyms || [],
+        antonyms: w.antonyms || [],
+      })),
+    });
+  } catch (error) {
+    console.error('Get distractors error:', error);
+    res.status(500).json({ error: 'Failed to get distractors' });
   }
 });
 
@@ -122,11 +159,14 @@ router.get('/smart/prioritized', requireAuth, async (req, res) => {
   try {
     // Get all vocabulary with user progress
     const vocab = await sequelize.query(`
-      SELECT 
+      SELECT
         v.id,
         v.word,
         v.part_of_speech as "partOfSpeech",
         v.definition,
+        v.example_sentence as "exampleSentence",
+        v.synonyms,
+        v.antonyms,
         v.created_by as "createdBy",
         v.created_at as "createdAt",
         v.updated_at as "updatedAt",

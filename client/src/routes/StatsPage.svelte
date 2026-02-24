@@ -11,6 +11,8 @@
   import StudyActivity from "$lib/components/stats/StudyActivity.svelte";
   import AchievementGrid from "$lib/components/stats/AchievementGrid.svelte";
   import Leaderboard from "$lib/components/stats/Leaderboard.svelte";
+  import TestTrendChart from "$lib/components/stats/TestTrendChart.svelte";
+  import { testApi, type TestAttempt } from "$lib/api/test";
 
   let stats = {
     totalWords: 0,
@@ -40,6 +42,8 @@
       | "streak_warrior"
       | "perfectionist"
       | "xp_enthusiast"
+      | "test_taker"
+      | "test_ace"
       | "one_off";
     level?: number;
     currentProgress?: number;
@@ -59,6 +63,7 @@
     accuracy: number;
   }> = [];
 
+  let testHistory: TestAttempt[] = [];
   let unsubscribe: (() => void) | undefined;
 
   onMount(async () => {
@@ -67,11 +72,12 @@
       return;
     }
 
-    // Load stats, achievements, and leaderboard
+    // Load stats, achievements, leaderboard, and test history
     await Promise.all([
       progress.loadStats(),
       progress.loadAchievements(),
       progress.loadLeaderboard(),
+      testApi.getHistory().then(d => { testHistory = d.attempts; }).catch(() => {}),
     ]);
 
     // Update local state from stores - store unsubscribe function for cleanup
@@ -132,6 +138,9 @@
         averageAccuracy={stats.averageAccuracy}
         lastStudyDate={stats.lastStudyDate}
       />
+
+      <!-- Test Score Trend -->
+      <TestTrendChart attempts={testHistory} />
 
       <!-- Vocabulary Progress -->
       <VocabularyProgress

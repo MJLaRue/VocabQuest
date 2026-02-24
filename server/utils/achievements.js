@@ -67,6 +67,31 @@ const ACHIEVEMENT_CONFIG = {
             { threshold: 1000000, id: 'xp_1m', xp: 25000 }
         ]
     },
+    test_taker: {
+        name: 'Test Taker',
+        description: 'Complete {n} tests',
+        icon: 'clipboard',
+        tiers: [
+            { threshold: 1,   id: 'test_1',   xp: 50   },
+            { threshold: 5,   id: 'test_5',   xp: 100  },
+            { threshold: 10,  id: 'test_10',  xp: 200  },
+            { threshold: 25,  id: 'test_25',  xp: 400  },
+            { threshold: 50,  id: 'test_50',  xp: 750  },
+            { threshold: 100, id: 'test_100', xp: 1500 }
+        ]
+    },
+    test_ace: {
+        name: 'Test Ace',
+        description: 'Score 90%+ on {n} tests',
+        icon: 'trophy',
+        tiers: [
+            { threshold: 1,  id: 'ace_1',  xp: 100  },
+            { threshold: 5,  id: 'ace_5',  xp: 250  },
+            { threshold: 10, id: 'ace_10', xp: 500  },
+            { threshold: 25, id: 'ace_25', xp: 1000 },
+            { threshold: 50, id: 'ace_50', xp: 2000 }
+        ]
+    },
     one_off: {
         first_correct: {
             name: 'First Step',
@@ -100,7 +125,9 @@ function checkAchievements(userData, currentUnlocked) {
         { type: 'vocab_builder', value: userData.learnedCount },
         { type: 'streak_warrior', value: userData.streak },
         { type: 'perfectionist', value: userData.perfectSessions },
-        { type: 'xp_enthusiast', value: userData.totalXp }
+        { type: 'xp_enthusiast', value: userData.totalXp },
+        { type: 'test_taker', value: userData.testsCompleted ?? 0 },
+        { type: 'test_ace',   value: userData.highScoreTests ?? 0 }
     ];
 
     for (const check of tieredChecks) {
@@ -182,6 +209,8 @@ function getProgressValue(type, userData) {
         case 'streak_warrior': return userData.streak;
         case 'perfectionist': return userData.perfectSessions;
         case 'xp_enthusiast': return userData.totalXp;
+        case 'test_taker': return userData.testsCompleted ?? 0;
+        case 'test_ace':   return userData.highScoreTests ?? 0;
         default: return 0;
     }
 }
