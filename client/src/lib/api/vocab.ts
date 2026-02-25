@@ -6,6 +6,8 @@ export interface VocabularyWord {
   part_of_speech: string;
   definition: string;
   example_sentence?: string;
+  synonyms?: string[];
+  antonyms?: string[];
   deck_name?: string;
 }
 
@@ -41,9 +43,19 @@ export const vocabApi = {
     if (params?.deck) query.set('deck', params.deck);
     if (params?.pos) query.set('pos', params.pos);
     if (params?.limit) query.set('limit', params.limit.toString());
-    
+
     return apiClient<{ words: VocabularyWord[] }>(
       `/vocab/random?${query.toString()}`
+    );
+  },
+
+  getDistractors: (params: { pos: string; exclude: number; limit?: number }) => {
+    const query = new URLSearchParams();
+    query.set('pos', params.pos);
+    query.set('exclude', params.exclude.toString());
+    if (params.limit) query.set('limit', params.limit.toString());
+    return apiClient<{ distractors: VocabularyWord[] }>(
+      `/vocab/distractors?${query.toString()}`
     );
   },
 };

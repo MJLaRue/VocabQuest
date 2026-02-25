@@ -43,7 +43,7 @@ const StudySession = sequelize.define('StudySession', {
     field: 'correct_answers'
   },
   mode: {
-    type: DataTypes.ENUM('practice', 'quiz', 'typing'),
+    type: DataTypes.ENUM('practice', 'quiz', 'typing', 'context', 'match'),
     allowNull: false
   }
 }, {

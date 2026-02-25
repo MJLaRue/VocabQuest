@@ -42,7 +42,10 @@ async function importVocabulary() {
         await Vocabulary.create({
           word: record.word.trim(),
           partOfSpeech: record.part_of_speech.trim(),
-          definition: record.definition.trim()
+          definition: record.definition.trim(),
+          exampleSentence: record.example_sentence?.trim() || null,
+          synonyms: record.synonyms ? record.synonyms.split('|').map(s => s.trim()) : [],
+          antonyms: record.antonyms ? record.antonyms.split('|').map(s => s.trim()) : [],
         });
         
         imported++;

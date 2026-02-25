@@ -11,6 +11,7 @@
     hasPrev,
   } from "$lib/stores/vocab";
   import { progress, sessionStats } from "$lib/stores/progress";
+  import type { StudyMode } from "$lib/api/progress";
   import { ui } from "$lib/stores/ui";
   import Header from "$lib/components/layout/Header.svelte";
   import Footer from "$lib/components/layout/Footer.svelte";
@@ -26,19 +27,22 @@
   import { RefreshCw } from "lucide-svelte";
 
   // Determine mode from URL path
-  function getModeFromPath(path: string): "practice" | "quiz" | "typing" {
+  function getModeFromPath(path: string): StudyMode {
     if (path === "/quiz") return "quiz";
     if (path === "/typing") return "typing";
+    if (path === "/context") return "context";
+    if (path === "/relate") return "relate";
     return "practice";
   }
 
-  let mode: "practice" | "quiz" | "typing" = getModeFromPath($location);
-  let randomMode =
-    typeof window !== "undefined"
-      ? localStorage.getItem("vocabquest-random-mode") !== "false"
-      : true;
+  let mode: StudyMode = getModeFromPath($location);
+  let advanced = false;
   let isLoading = false;
   let showNewSetConfirm = false;
+
+  function handleToggleAdvanced() {
+    advanced = !advanced;
+  }
 
   // Celebration queue system
   type Celebration = {
@@ -59,11 +63,13 @@
       streak: { name: "Streak Warrior", xp: 100 },
       perfect: { name: "Perfectionist", xp: 100 },
       xp: { name: "XP Enthusiast", xp: 100 },
+      test: { name: "Test Taker", xp: 50 },
+      ace: { name: "Test Ace", xp: 100 },
     };
 
     if (id === "first_correct") return { ...config.first_correct, level: 1 };
 
-    // Handle tiered IDs like words_50, streak_7, perfect_5, xp_1k
+    // Handle tiered IDs like words_50, streak_7, perfect_5, xp_1k, test_1, ace_5
     const [type, value] = id.split("_");
     const base = config[type] || { name: id, xp: 50 };
 
@@ -112,6 +118,21 @@
         "500k": 7,
         "1m": 8,
       },
+      test: {
+        "1": 1,
+        "5": 2,
+        "10": 3,
+        "25": 4,
+        "50": 5,
+        "100": 6,
+      },
+      ace: {
+        "1": 1,
+        "5": 2,
+        "10": 3,
+        "25": 4,
+        "50": 5,
+      },
     };
 
     return {
@@ -159,7 +180,7 @@
     // Only load words if we don't have any stored (from localStorage)
     const vocabState = get(vocab);
     if (vocabState.words.length === 0) {
-      await (randomMode ? vocab.loadRandomWords() : vocab.loadWords());
+      await vocab.loadRandomWords();
     }
 
     // Check for active session and resume or start new based on 30-minute rule
@@ -175,12 +196,14 @@
     }
   });
 
-  async function handleModeChange(newMode: "practice" | "quiz" | "typing") {
+  async function handleModeChange(newMode: StudyMode) {
     // Update URL to match mode
-    const pathMap = {
+    const pathMap: Record<StudyMode, string> = {
       practice: "/practice",
       quiz: "/quiz",
       typing: "/typing",
+      context: "/context",
+      relate: "/relate",
     };
     push(pathMap[newMode]);
 
@@ -209,7 +232,7 @@
       // Show confetti for correct answer
       confetti();
 
-      const result = await progress.updateProgress($currentWord.id, true);
+      const result = await progress.updateProgress($currentWord.id, true, advanced);
 
       // Queue level up celebration if leveled up
       if (result.levelUp) {
@@ -263,21 +286,13 @@
     isLoading = true;
 
     try {
-      await progress.updateProgress($currentWord.id, false);
+      await progress.updateProgress($currentWord.id, false, advanced);
       vocab.nextCard();
     } catch (error) {
       console.error("Failed to update progress:", error);
     } finally {
       isLoading = false;
     }
-  }
-
-  function handleToggleRandom() {
-    randomMode = !randomMode;
-    if (typeof window !== "undefined") {
-      localStorage.setItem("vocabquest-random-mode", String(randomMode));
-    }
-    vocab.setMode(randomMode ? "random" : "sequential");
   }
 
   function handleSearch({ detail }: CustomEvent<{ query: string }>) {
@@ -294,11 +309,7 @@
 
   async function handleNewSet() {
     showNewSetConfirm = false;
-    if (randomMode) {
-      await vocab.loadRandomWords();
-    } else {
-      await vocab.loadWords();
-    }
+    await vocab.loadRandomWords();
   }
 </script>
 
@@ -314,10 +325,10 @@
 
     <ControlBar
       {mode}
-      {randomMode}
+      {advanced}
       selectedPos={$vocab.filters.pos}
       on:modeChange={({ detail }) => handleModeChange(detail.mode)}
-      on:toggleRandom={handleToggleRandom}
+      on:toggleAdvanced={handleToggleAdvanced}
       on:search={handleSearch}
       on:posSelect={handlePOSSelect}
     />
@@ -339,6 +350,7 @@
         <FlashCard
           word={$currentWord}
           {mode}
+          {advanced}
           disabled={isLoading}
           on:answer={handleAnswer}
         />

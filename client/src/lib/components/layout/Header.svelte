@@ -11,6 +11,7 @@
     X,
     LogOut,
     Settings,
+    ClipboardList,
   } from "lucide-svelte";
   import { fade, fly } from "svelte/transition";
   import { push } from "svelte-spa-router";
@@ -69,9 +70,12 @@
     $location === "/" ||
     $location?.startsWith("/practice") ||
     $location?.startsWith("/quiz") ||
-    $location?.startsWith("/typing");
+    $location?.startsWith("/typing") ||
+    $location?.startsWith("/context") ||
+    $location?.startsWith("/match");
   $: isStatsActive = $location?.startsWith("/stats");
   $: isGuideActive = $location?.startsWith("/guide");
+  $: isTestActive = $location?.startsWith("/test");
   $: isAdminActive = $location?.startsWith("/admin");
 
   // Nav class helpers
@@ -207,6 +211,10 @@
             <a href="/guide" use:link class={getNavClass(isGuideActive)}>
               <BookOpen class="w-4 h-4" />
               Guide
+            </a>
+            <a href="/test" use:link class={getNavClass(isTestActive)}>
+              <ClipboardList class="w-4 h-4" />
+              Test
             </a>
             {#if userIsAdmin}
               <a href="/admin" use:link class={getNavClass(isAdminActive)}>
@@ -403,6 +411,16 @@
           >
             <BookOpen class="w-5 h-5" aria-hidden="true" />
             <span>Guide</span>
+          </a>
+
+          <a
+            href="/test"
+            use:link
+            on:click={closeMobileMenu}
+            class={getMobileNavClass(isTestActive)}
+          >
+            <ClipboardList class="w-5 h-5" aria-hidden="true" />
+            <span>Test</span>
           </a>
 
           {#if userIsAdmin}

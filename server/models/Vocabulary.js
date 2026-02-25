@@ -20,6 +20,21 @@ const Vocabulary = sequelize.define('Vocabulary', {
     type: DataTypes.TEXT,
     allowNull: false
   },
+  exampleSentence: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+    field: 'example_sentence'
+  },
+  synonyms: {
+    type: DataTypes.ARRAY(DataTypes.TEXT),
+    allowNull: true,
+    defaultValue: []
+  },
+  antonyms: {
+    type: DataTypes.ARRAY(DataTypes.TEXT),
+    allowNull: true,
+    defaultValue: []
+  },
   createdBy: {
     type: DataTypes.INTEGER,
     allowNull: true,

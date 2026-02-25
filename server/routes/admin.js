@@ -3,7 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const { parse } = require('csv-parse/sync');
 const { stringify } = require('csv-stringify/sync');
-const { User, Vocabulary, UserProgress, StudySession, UserGamification } = require('../models');
+const { User, Vocabulary, UserProgress, StudySession, UserGamification, TestAttempt } = require('../models');
 const { requireAuth } = require('../middleware/auth');
 const { requireAdmin } = require('../middleware/admin');
 const { Op } = require('sequelize');
@@ -508,6 +508,95 @@ router.delete('/vocabulary/:id', async (req, res) => {
   } catch (error) {
     console.error('Delete vocabulary error:', error);
     res.status(500).json({ error: 'Failed to delete vocabulary' });
+  }
+});
+
+// === TEST ANALYTICS ===
+
+// Get test analytics for admin
+router.get('/test-analytics', async (req, res) => {
+  try {
+    const { days = 30 } = req.query;
+    const since = new Date();
+    since.setDate(since.getDate() - parseInt(days));
+
+    // Total test attempts
+    const totalAttempts = await TestAttempt.count({
+      where: {
+        status: 'completed',
+        completed_at: { [Op.gte]: since }
+      }
+    });
+
+    // Attempts with user info
+    const recentAttempts = await TestAttempt.findAll({
+      where: {
+        status: 'completed',
+        completed_at: { [Op.gte]: since }
+      },
+      include: [{
+        model: User,
+        as: 'user',
+        attributes: ['id', 'email']
+      }],
+      order: [['completed_at', 'DESC']],
+      limit: 50
+    });
+
+    // Aggregate stats per mode from results JSONB
+    const allAttempts = await TestAttempt.findAll({
+      where: {
+        status: 'completed',
+        completed_at: { [Op.gte]: since }
+      },
+      attributes: ['results', 'config', 'xp_earned']
+    });
+
+    let totalXpAwarded = 0;
+    let totalCorrect = 0;
+    let totalAnswered = 0;
+    const modeStats = {};
+
+    for (const attempt of allAttempts) {
+      totalXpAwarded += attempt.xpEarned || 0;
+      const results = attempt.results || {};
+
+      // results.byMode is an object: { quiz: { correct, total }, ... }
+      if (results.byMode) {
+        for (const [mode, stats] of Object.entries(results.byMode)) {
+          if (!modeStats[mode]) modeStats[mode] = { correct: 0, total: 0 };
+          modeStats[mode].correct += stats.correct || 0;
+          modeStats[mode].total += stats.total || 0;
+          totalCorrect += stats.correct || 0;
+          totalAnswered += stats.total || 0;
+        }
+      }
+    }
+
+    const overallAccuracy = totalAnswered > 0
+      ? Math.round((totalCorrect / totalAnswered) * 100)
+      : 0;
+
+    res.json({
+      totalAttempts,
+      totalXpAwarded,
+      overallAccuracy,
+      modeStats,
+      recentAttempts: recentAttempts.map(a => ({
+        id: a.id,
+        userId: a.userId,
+        username: a.user?.email?.split('@')[0] || 'unknown',
+        questionCount: a.config?.questionCount,
+        modes: a.config?.modes,
+        score: a.results?.score,
+        accuracy: a.results?.accuracy,
+        xpEarned: a.xpEarned,
+        completedAt: a.completedAt
+      }))
+    });
+  } catch (error) {
+    console.error('Get test analytics error:', error);
+    res.status(500).json({ error: 'Failed to get test analytics' });
   }
 });
 
