@@ -5,6 +5,7 @@
 
   export let isCorrect: boolean;
   export let onClose: () => void;
+  export let testMode = false;
 
   onMount(() => {
     const timer = setTimeout(() => {
@@ -30,7 +31,7 @@
       class:text-correct={isCorrect}
       class:text-incorrect={!isCorrect}
     >
-      {isCorrect ? "Correct!" : "Try Again!"}
+      {isCorrect ? "Correct!" : testMode ? "Incorrect!" : "Try Again!"}
     </div>
 
     <!-- Icon -->

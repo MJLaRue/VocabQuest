@@ -23,6 +23,7 @@
   export let disabled = false;
   export let mode: StudyMode = "practice";
   export let advanced = false;
+  export let testMode = false;
 
   const dispatch = createEventDispatcher<{
     flip: void;
@@ -146,8 +147,12 @@
       setTimeout(() => dispatch("answer", { correct: true }), 1500);
     } else {
       setTimeout(() => {
-        showResult = false;
-        typedAnswer = "";
+        if (testMode) {
+          dispatch("answer", { correct: false });
+        } else {
+          showResult = false;
+          typedAnswer = "";
+        }
       }, 1200);
     }
   }
@@ -168,8 +173,12 @@
       setTimeout(() => dispatch("answer", { correct: true }), 1500);
     } else {
       setTimeout(() => {
-        showResult = false;
-        quizAnswer = null;
+        if (testMode) {
+          dispatch("answer", { correct: false });
+        } else {
+          showResult = false;
+          quizAnswer = null;
+        }
       }, 1500);
     }
   }
@@ -190,8 +199,12 @@
       setTimeout(() => dispatch("answer", { correct: true }), 1500);
     } else {
       setTimeout(() => {
-        showResult = false;
-        contextAnswer = null;
+        if (testMode) {
+          dispatch("answer", { correct: false });
+        } else {
+          showResult = false;
+          contextAnswer = null;
+        }
       }, 1500);
     }
   }
@@ -216,8 +229,12 @@
       setTimeout(() => dispatch("answer", { correct: true }), 1500);
     } else {
       setTimeout(() => {
-        showResult = false;
-        typedAnswer = "";
+        if (testMode) {
+          dispatch("answer", { correct: false });
+        } else {
+          showResult = false;
+          typedAnswer = "";
+        }
       }, 1200);
     }
   }
@@ -238,8 +255,12 @@
       setTimeout(() => dispatch("answer", { correct: true }), 1500);
     } else {
       setTimeout(() => {
-        showResult = false;
-        matchAnswer = null;
+        if (testMode) {
+          dispatch("answer", { correct: false });
+        } else {
+          showResult = false;
+          matchAnswer = null;
+        }
       }, 1500);
     }
   }
@@ -277,7 +298,7 @@
 </script>
 
 {#if showOverlay}
-  <AnswerOverlay isCorrect={overlayIsCorrect} onClose={handleOverlayClose} />
+  <AnswerOverlay isCorrect={overlayIsCorrect} onClose={handleOverlayClose} {testMode} />
 {/if}
 
 <div class="relative w-full max-w-2xl mx-auto perspective-1000">

@@ -119,4 +119,23 @@ export const adminApi = {
     apiClient<{ message: string }>(`/admin/vocabulary/${id}`, {
       method: 'DELETE',
     }),
+
+  getTestAnalytics: (days = 30) =>
+    apiClient<{
+      totalAttempts: number;
+      totalXpAwarded: number;
+      overallAccuracy: number;
+      modeStats: Record<string, { correct: number; total: number }>;
+      recentAttempts: Array<{
+        id: number;
+        userId: number;
+        username: string;
+        questionCount: number;
+        modes: string[];
+        score: number;
+        accuracy: number;
+        xpEarned: number;
+        completedAt: string;
+      }>;
+    }>(`/admin/test-analytics?days=${days}`),
 };

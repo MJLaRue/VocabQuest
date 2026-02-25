@@ -6,36 +6,52 @@
   import FlashCard from "$lib/components/flashcard/FlashCard.svelte";
   import { user } from "$lib/stores/auth";
   import { testStore, currentQuestion, testProgress, isTestComplete } from "$lib/stores/test";
+  import { testApi } from "$lib/api/test";
   import type { VocabularyWord } from "$lib/api/vocab";
   import type { StudyMode } from "$lib/api/progress";
 
   let isCompleting = false;
   let showAbortConfirm = false;
-  let redirectTimeout: ReturnType<typeof setTimeout> | null = null;
 
   // Timer
   let startTime = Date.now();
   let elapsedSeconds = 0;
   let timerInterval: ReturnType<typeof setInterval>;
 
-  onMount(() => {
+  onMount(async () => {
     startTime = Date.now();
     timerInterval = setInterval(() => {
       elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
     }, 1000);
 
-    // After a short grace period, redirect to config if still no active test.
-    // This handles direct navigation to /test/active without going through startTest().
-    redirectTimeout = setTimeout(() => {
-      if (!$testStore.activeTest && !isCompleting) {
+    if (!$testStore.activeTest) {
+      // Tier 1: fast path — localStorage key set when test started
+      const savedId = localStorage.getItem("vocab_active_test_id");
+      if (savedId) {
+        const resumed = await testStore.resumeTest(Number(savedId));
+        if (!resumed) push("/test");
+        return;
+      }
+
+      // Tier 2: server fallback — handles cases where localStorage was never
+      // set (test started before this build) or was cleared by the browser
+      try {
+        const data = await testApi.getHistory();
+        const inProgress = data.attempts.find(a => a.status === "in_progress");
+        if (inProgress) {
+          const resumed = await testStore.resumeTest(inProgress.id);
+          if (!resumed) push("/test");
+        } else {
+          push("/test");
+        }
+      } catch {
         push("/test");
       }
-    }, 300);
+    }
   });
 
   onDestroy(() => {
     clearInterval(timerInterval);
-    if (redirectTimeout) clearTimeout(redirectTimeout);
   });
 
   // Auto-complete when all questions answered
@@ -170,6 +186,7 @@
             word={wordForCard}
             mode={cardMode}
             disabled={false}
+            testMode={true}
             on:answer={handleAnswer}
           />
         </div>

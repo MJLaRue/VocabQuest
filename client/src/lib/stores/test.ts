@@ -39,6 +39,8 @@ const initialState: TestState = {
   lastGamification: null,
 };
 
+const STORAGE_KEY = 'vocab_active_test_id';
+
 function createTestStore() {
   const { subscribe, set, update } = writable<TestState>(initialState);
 
@@ -71,6 +73,7 @@ function createTestStore() {
           lastGamification: null,
         }));
 
+        localStorage.setItem(STORAGE_KEY, String(data.testId));
         return data.testId;
       } catch (err: any) {
         update(s => ({ ...s, isLoading: false, error: err.message || 'Failed to start test' }));
@@ -138,6 +141,7 @@ function createTestStore() {
             : null,
         }));
 
+        localStorage.removeItem(STORAGE_KEY);
         return data.results;
       } catch (err: any) {
         update(s => ({ ...s, isLoading: false, error: err.message || 'Failed to complete test' }));
@@ -174,13 +178,52 @@ function createTestStore() {
       }
     },
 
+    /** Resume an in-progress test after a page refresh (reads from server). */
+    async resumeTest(testId: number): Promise<boolean> {
+      update(s => ({ ...s, isLoading: true, error: null }));
+      try {
+        const data = await testApi.getAttempt(testId);
+        const attempt = data.attempt;
+
+        if (!attempt || attempt.status !== 'in_progress') {
+          localStorage.removeItem(STORAGE_KEY);
+          update(s => ({ ...s, isLoading: false }));
+          return false;
+        }
+
+        // Find the first unanswered question to resume from
+        const currentIndex = attempt.questions.findIndex(
+          (q: TestQuestion) => q.correct === null || q.correct === undefined
+        );
+        const resumeIndex = currentIndex === -1 ? attempt.questions.length : currentIndex;
+
+        update(s => ({
+          ...s,
+          activeTest: attempt,
+          currentQuestionIndex: resumeIndex,
+          isLoading: false,
+          error: null,
+          lastResults: null,
+          lastGamification: null,
+        }));
+
+        return true;
+      } catch {
+        localStorage.removeItem(STORAGE_KEY);
+        update(s => ({ ...s, isLoading: false }));
+        return false;
+      }
+    },
+
     /** Clear the active test (e.g. when navigating away). */
     clearActiveTest() {
+      localStorage.removeItem(STORAGE_KEY);
       update(s => ({ ...s, activeTest: null, currentQuestionIndex: 0 }));
     },
 
     /** Reset the entire store (on logout). */
     reset() {
+      localStorage.removeItem(STORAGE_KEY);
       set(initialState);
     },
   };
