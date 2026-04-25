@@ -3,7 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const { parse } = require('csv-parse/sync');
 const { stringify } = require('csv-stringify/sync');
-const { User, Vocabulary, UserProgress, StudySession, UserGamification, TestAttempt } = require('../models');
+const { User, Vocabulary, UserProgress, StudySession, UserGamification, TestAttempt, AppSetting } = require('../models');
 const { requireAuth } = require('../middleware/auth');
 const { requireAdmin } = require('../middleware/admin');
 const { Op } = require('sequelize');
@@ -597,6 +597,59 @@ router.get('/test-analytics', async (req, res) => {
   } catch (error) {
     console.error('Get test analytics error:', error);
     res.status(500).json({ error: 'Failed to get test analytics' });
+  }
+});
+
+// === SETTINGS ===
+
+const ALLOWED_SETTING_KEYS = ['registrationOpen'];
+
+router.get('/settings', async (req, res) => {
+  try {
+    const rows = await AppSetting.findAll();
+    const settings = {};
+    for (const row of rows) {
+      settings[row.key] = row.value;
+    }
+    res.json({ settings });
+  } catch (error) {
+    console.error('Get settings error:', error);
+    res.status(500).json({ error: 'Failed to get settings' });
+  }
+});
+
+router.patch('/settings', async (req, res) => {
+  try {
+    const { key, value } = req.body;
+
+    if (!key || value === undefined) {
+      return res.status(400).json({ error: 'key and value are required' });
+    }
+
+    if (!ALLOWED_SETTING_KEYS.includes(key)) {
+      return res.status(400).json({ error: `Unknown setting key: ${key}` });
+    }
+
+    const [row] = await AppSetting.findOrCreate({
+      where: { key },
+      defaults: { value: String(value) }
+    });
+
+    if (row.value !== String(value)) {
+      row.value = String(value);
+      await row.save();
+    }
+
+    const rows = await AppSetting.findAll();
+    const settings = {};
+    for (const r of rows) {
+      settings[r.key] = r.value;
+    }
+
+    res.json({ settings });
+  } catch (error) {
+    console.error('Update setting error:', error);
+    res.status(500).json({ error: 'Failed to update setting' });
   }
 });
 
