@@ -22,8 +22,9 @@
   import VocabTable from "$lib/components/admin/VocabTable.svelte";
   import ResetPasswordModal from "$lib/components/admin/ResetPasswordModal.svelte";
   import TestAnalytics from "$lib/components/admin/TestAnalytics.svelte";
+  import Settings from "$lib/components/admin/Settings.svelte";
 
-  type AdminView = "overview" | "users" | "vocabulary" | "analytics" | "tests";
+  type AdminView = "overview" | "users" | "vocabulary" | "analytics" | "tests" | "settings";
 
   let stats: AdminStats = {
     totalUsers: 0,
@@ -45,6 +46,7 @@
     if (path === "/admin/vocabulary") return "vocabulary";
     if (path === "/admin/analytics") return "analytics";
     if (path === "/admin/tests") return "tests";
+    if (path === "/admin/settings") return "settings";
     return "overview";
   }
 
@@ -301,6 +303,8 @@
         {:else if currentView === "tests"}
           <!-- Test Analytics -->
           <TestAnalytics />
+        {:else if currentView === "settings"}
+          <Settings />
         {/if}
       </div>
     </main>
