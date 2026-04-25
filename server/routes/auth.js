@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { User, UserGamification, StudySession } = require('../models');
+const { User, UserGamification, StudySession, AppSetting } = require('../models');
 const { requireAuth } = require('../middleware/auth');
 
 // Register
@@ -65,6 +65,14 @@ router.post('/register', async (req, res) => {
             dailyStreak: gamification.dailyStreak || 0
           }
         });
+      });
+    }
+
+    // Check registration lock — pre-registered users already returned above
+    const lockSetting = await AppSetting.findOne({ where: { key: 'registrationOpen' } });
+    if (lockSetting && lockSetting.value === 'false') {
+      return res.status(403).json({
+        error: 'Registration is currently closed. Contact your administrator for access.'
       });
     }
 
