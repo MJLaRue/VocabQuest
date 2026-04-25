@@ -11,6 +11,7 @@
     "init-db": "node server/scripts/initDb.js",
     "create-admin": "node server/scripts/createAdmin.js",
     "migrate": "node server/scripts/initDb.js",
+    "enrich": "node server/scripts/enrichVocab.js",
     "seed": "node server/scripts/importVocab.js && node server/scripts/createAdmin.js",
     "build": "cd client && npm install && npm run build",
     "build:prod": "cd client && npm install && npm run build",
