@@ -4,6 +4,7 @@ const UserProgress = require('./UserProgress');
 const StudySession = require('./StudySession');
 const UserGamification = require('./UserGamification');
 const TestAttempt = require('./TestAttempt');
+const AppSetting = require('./AppSetting');
 
 // Define associations
 User.hasMany(UserProgress, { foreignKey: 'userId', as: 'progress' });
@@ -28,5 +29,6 @@ module.exports = {
   UserProgress,
   StudySession,
   UserGamification,
-  TestAttempt
+  TestAttempt,
+  AppSetting
 };

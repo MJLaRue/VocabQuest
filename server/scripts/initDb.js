@@ -1,6 +1,6 @@
 require('dotenv').config();
 const { sequelize } = require('../config/db');
-const { User, Vocabulary, UserProgress, StudySession, UserGamification, TestAttempt } = require('../models');
+const { User, Vocabulary, UserProgress, StudySession, UserGamification, TestAttempt, AppSetting } = require('../models');
 
 async function initDatabase() {
   try {
@@ -33,7 +33,13 @@ async function initDatabase() {
     console.log('Synchronizing models...');
     await sequelize.sync({ force: false, alter: true });
     console.log('✓ Database models synchronized');
-    
+
+    await AppSetting.findOrCreate({
+      where: { key: 'registrationOpen' },
+      defaults: { value: 'true' }
+    });
+    console.log('✓ Default app settings seeded');
+
     console.log('Database initialization complete!');
     process.exit(0);
   } catch (error) {
