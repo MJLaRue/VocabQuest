@@ -30,6 +30,7 @@
     "/admin/vocabulary": AdminPage,
     "/admin/analytics": AdminPage,
     "/admin/tests": AdminPage,
+    "/admin/settings": AdminPage,
     "/test": TestConfigPage,
     "/test/active": TestPage,
     "/test/results/:id": TestResultsPage,
@@ -57,6 +58,7 @@
     "/admin/vocabulary",
     "/admin/analytics",
     "/admin/tests",
+    "/admin/settings",
   ];
   const publicRoutes = ["/login", "/register"];
 
