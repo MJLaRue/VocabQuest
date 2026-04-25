@@ -21,8 +21,9 @@
   import UserTable from "$lib/components/admin/UserTable.svelte";
   import VocabTable from "$lib/components/admin/VocabTable.svelte";
   import ResetPasswordModal from "$lib/components/admin/ResetPasswordModal.svelte";
+  import TestAnalytics from "$lib/components/admin/TestAnalytics.svelte";
 
-  type AdminView = "overview" | "users" | "vocabulary" | "analytics";
+  type AdminView = "overview" | "users" | "vocabulary" | "analytics" | "tests";
 
   let stats: AdminStats = {
     totalUsers: 0,
@@ -43,6 +44,7 @@
     if (path === "/admin/users") return "users";
     if (path === "/admin/vocabulary") return "vocabulary";
     if (path === "/admin/analytics") return "analytics";
+    if (path === "/admin/tests") return "tests";
     return "overview";
   }
 
@@ -296,6 +298,9 @@
               Analytics dashboard coming soon!
             </p>
           </div>
+        {:else if currentView === "tests"}
+          <!-- Test Analytics -->
+          <TestAnalytics />
         {/if}
       </div>
     </main>

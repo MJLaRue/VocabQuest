@@ -6,6 +6,8 @@ const { requireAuth } = require('../middleware/auth');
 const { calculateNextReview, correctnessToQuality } = require('../utils/spacedRepetition');
 const { checkAchievements, getAllAchievementsStatus } = require('../utils/achievements');
 
+const VALID_MODES = ['practice', 'quiz', 'typing', 'context', 'relate'];
+
 /**
  * Helper to clean up stale sessions for a user.
  * A session is stale if it's been idle for more than 30 minutes.
@@ -96,7 +98,7 @@ router.get('/', requireAuth, async (req, res) => {
 // Submit answer
 router.post('/answer', requireAuth, async (req, res) => {
   try {
-    const { vocabId, correct, mode, xpEarned } = req.body;
+    const { vocabId, correct, mode, xpEarned, advanced = false } = req.body;
 
     if (!vocabId || typeof correct !== 'boolean' || !mode) {
       return res.status(400).json({ error: 'Invalid request data' });
@@ -178,10 +180,11 @@ router.post('/answer', requireAuth, async (req, res) => {
     let calculatedXP = 0;
 
     if (correct) {
-      // Calculate adaptive XP based on word difficulty and mode
+      // Calculate adaptive XP based on word difficulty, mode, and advanced flag
       let baseXP = 10;
       if (mode === 'quiz') baseXP = 15;
       else if (mode === 'typing') baseXP = 20;
+      else if (mode === 'context' || mode === 'relate') baseXP = advanced ? 20 : 15;
 
       // Difficulty bonus: harder words (higher incorrect rate) give more XP
       const totalAttempts = progress.correctCount + progress.incorrectCount;
@@ -389,7 +392,7 @@ router.patch('/session/:id/mode', requireAuth, async (req, res) => {
     const sessionId = req.params.id;
     const { mode } = req.body;
 
-    if (!mode || !['practice', 'quiz', 'typing'].includes(mode)) {
+    if (!mode || !VALID_MODES.includes(mode)) {
       return res.status(400).json({ error: 'Invalid mode' });
     }
 
@@ -432,9 +435,10 @@ router.post('/session/start', requireAuth, async (req, res) => {
       return res.json({ session_id: existingSession.id });
     }
 
+    const resolvedMode = VALID_MODES.includes(mode) ? mode : 'practice';
     const session = await StudySession.create({
       userId: req.user.id,
-      mode: mode || 'practice',
+      mode: resolvedMode,
       startedAt: new Date()
     });
 
@@ -694,11 +698,26 @@ router.get('/achievements', requireAuth, async (req, res) => {
       where: { userId: req.user.id, isKnown: true }
     });
 
+    // Count tests for test_taker and test_ace achievements
+    const { TestAttempt } = require('../models');
+    const testsCompleted = await TestAttempt.count({
+      where: { userId: req.user.id, status: 'completed' }
+    });
+    const allCompletedTests = await TestAttempt.findAll({
+      where: { userId: req.user.id, status: 'completed' },
+      attributes: ['results']
+    });
+    const highScoreTests = allCompletedTests.filter(
+      t => (t.results?.accuracy ?? 0) >= 90
+    ).length;
+
     const userData = {
       learnedCount,
       streak: gamification?.dailyStreak || 0,
       perfectSessions: gamification?.perfectSessions || 0,
-      totalXp: gamification?.totalXp || 0
+      totalXp: gamification?.totalXp || 0,
+      testsCompleted,
+      highScoreTests
     };
 
     const allAchievements = getAllAchievementsStatus(unlockedAchievements, userData);

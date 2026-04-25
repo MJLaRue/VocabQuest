@@ -13,7 +13,10 @@
     "migrate": "node server/scripts/initDb.js",
     "seed": "node server/scripts/importVocab.js && node server/scripts/createAdmin.js",
     "build": "cd client && npm install && npm run build",
-    "build:prod": "cd client && npm install && npm run build"
+    "build:prod": "cd client && npm install && npm run build",
+    "test:server": "vitest run --config vitest.config.server.js",
+    "test:client": "cd client && npm run test",
+    "test": "npm run test:server && npm run test:client"
   },
   "keywords": [
     "vocabulary",
@@ -41,6 +44,8 @@
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
-    "nodemon": "^3.0.2"
+    "nodemon": "^3.0.2",
+    "supertest": "^7.2.2",
+    "vitest": "^1.6.1"
   }
 }

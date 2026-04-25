@@ -2,6 +2,12 @@ import { writable, derived, get } from 'svelte/store';
 import { vocabApi, type VocabularyWord, type Deck } from '$lib/api/vocab';
 import type { APIError } from '$lib/api/client';
 
+// Distractor cache: keyed by POS string, stores words + fetch timestamp.
+// TTL is 5 minutes. Allows context/match modes to get same-POS distractors
+// from the full vocabulary database without repeated API calls.
+const DISTRACTOR_CACHE_TTL_MS = 5 * 60 * 1000;
+const distractorCache = new Map<string, { words: VocabularyWord[]; fetchedAt: number }>();
+
 interface VocabFilters {
   deck: string | null;
   pos: string | null;
@@ -285,6 +291,29 @@ function createVocabStore() {
         this.loadRandomWords();
       } else {
         this.loadWords();
+      }
+    },
+
+    // Fetch distractor words from the full DB for context/match modes.
+    // Caches results per part-of-speech for 5 minutes to minimise API calls.
+    async loadDistractors(pos: string, excludeId: number): Promise<VocabularyWord[]> {
+      const cacheKey = pos;
+      const cached = distractorCache.get(cacheKey);
+      const now = Date.now();
+
+      if (cached && now - cached.fetchedAt < DISTRACTOR_CACHE_TTL_MS) {
+        // Return cached words, still excluding the current word
+        return cached.words.filter(w => w.id !== excludeId);
+      }
+
+      try {
+        const { distractors } = await vocabApi.getDistractors({ pos, exclude: excludeId, limit: 20 });
+        // Store in cache (include all words; we filter by excludeId on the way out)
+        distractorCache.set(cacheKey, { words: distractors, fetchedAt: now });
+        return distractors;
+      } catch (err) {
+        console.warn('Failed to load distractors:', err);
+        return [];
       }
     },
 

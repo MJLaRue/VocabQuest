@@ -1,17 +1,18 @@
 <script lang="ts">
   import { push } from 'svelte-spa-router';
-  import { LayoutDashboard, Users, BookOpen, BarChart3 } from 'lucide-svelte';
+  import { LayoutDashboard, Users, BookOpen, BarChart3, ClipboardList } from 'lucide-svelte';
   import { cn } from '$lib/utils/cn';
 
   export let currentPath = '/admin';
 
-  type AdminView = 'overview' | 'users' | 'vocabulary' | 'analytics';
+  type AdminView = 'overview' | 'users' | 'vocabulary' | 'analytics' | 'tests';
 
   const navItems: Array<{ view: AdminView; label: string; icon: any; path: string }> = [
     { view: 'overview', label: 'Overview', icon: LayoutDashboard, path: '/admin' },
     { view: 'users', label: 'Users', icon: Users, path: '/admin/users' },
     { view: 'vocabulary', label: 'Vocabulary', icon: BookOpen, path: '/admin/vocabulary' },
     { view: 'analytics', label: 'Analytics', icon: BarChart3, path: '/admin/analytics' },
+    { view: 'tests', label: 'Tests', icon: ClipboardList, path: '/admin/tests' },
   ];
 
   function handleNavigate(path: string) {
