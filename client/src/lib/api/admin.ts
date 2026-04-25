@@ -27,6 +27,11 @@ export interface UserManagement {
   total_xp: number;
 }
 
+export interface AppSettings {
+  registrationOpen: string;
+  [key: string]: string;
+}
+
 export const adminApi = {
   getStats: () => apiClient<AdminStats>('/admin/stats'),
 
@@ -138,4 +143,13 @@ export const adminApi = {
         completedAt: string;
       }>;
     }>(`/admin/test-analytics?days=${days}`),
+
+  getSettings: () =>
+    apiClient<{ settings: AppSettings }>('/admin/settings'),
+
+  updateSetting: (key: string, value: string) =>
+    apiClient<{ settings: AppSettings }>('/admin/settings', {
+      method: 'PATCH',
+      body: JSON.stringify({ key, value }),
+    }),
 };
