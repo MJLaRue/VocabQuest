@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { Op } = require('sequelize');
 const { User, UserGamification, StudySession, AppSetting } = require('../models');
 const { requireAuth } = require('../middleware/auth');
 
@@ -68,22 +69,22 @@ router.post('/register', async (req, res) => {
       });
     }
 
-    // Check registration lock — pre-registered users already returned above
-    const lockSetting = await AppSetting.findOne({ where: { key: 'registrationOpen' } });
-    if (lockSetting && lockSetting.value === 'false') {
+    // Check registration gate settings in one round-trip
+    const gateSettings = await AppSetting.findAll({
+      where: { key: { [Op.in]: ['registrationOpen', 'allowEduRegistration'] } }
+    });
+    const settingMap = Object.fromEntries(gateSettings.map(s => [s.key, s.value]));
+
+    if (settingMap.registrationOpen === 'false') {
       return res.status(403).json({
         error: 'Registration is currently closed. Contact your administrator for access.'
       });
     }
 
-    // Check .edu self-registration toggle
-    if (isEduEmail) {
-      const eduSetting = await AppSetting.findOne({ where: { key: 'allowEduRegistration' } });
-      if (eduSetting && eduSetting.value === 'false') {
-        return res.status(403).json({
-          error: 'Self-registration is currently closed. Contact an administrator for access.'
-        });
-      }
+    if (isEduEmail && settingMap.allowEduRegistration === 'false') {
+      return res.status(403).json({
+        error: '.edu registration is temporarily restricted. Contact an administrator to request access.'
+      });
     }
 
     if (!isEduEmail) {
