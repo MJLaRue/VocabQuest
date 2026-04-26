@@ -142,6 +142,7 @@ app.use('/api/auth', authLimiter, require('./routes/auth'));
 app.use('/api/vocab', apiLimiter, require('./routes/vocab'));
 app.use('/api/progress', apiLimiter, require('./routes/progress'));
 app.use('/api/admin', apiLimiter, require('./routes/admin'));
+app.use('/api/settings', apiLimiter, require('./routes/settings'));
 app.use('/api/test', apiLimiter, require('./routes/test'));
 
 // Health check
