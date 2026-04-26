@@ -34,10 +34,18 @@ async function initDatabase() {
     await sequelize.sync({ force: false, alter: true });
     console.log('✓ Database models synchronized');
 
-    await AppSetting.findOrCreate({
-      where: { key: 'registrationOpen' },
-      defaults: { value: 'true' }
-    });
+    // Seed default app settings (idempotent — findOrCreate)
+    const defaultSettings = [
+      { key: 'registrationOpen',       value: 'true'  },
+      { key: 'announcementText',        value: ''      },
+      { key: 'leaderboardVisible',      value: 'true'  },
+      { key: 'allowEduRegistration',    value: 'true'  },
+      { key: 'defaultCardsPerSession',  value: '20'    },
+      { key: 'maintenanceMode',         value: 'false' },
+    ];
+    for (const setting of defaultSettings) {
+      await AppSetting.findOrCreate({ where: { key: setting.key }, defaults: { value: setting.value } });
+    }
     console.log('✓ Default app settings seeded');
 
     console.log('Database initialization complete!');

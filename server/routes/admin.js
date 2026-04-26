@@ -602,7 +602,14 @@ router.get('/test-analytics', async (req, res) => {
 
 // === SETTINGS ===
 
-const ALLOWED_SETTING_KEYS = ['registrationOpen'];
+const ALLOWED_SETTING_KEYS = [
+  'registrationOpen',
+  'announcementText',
+  'leaderboardVisible',
+  'allowEduRegistration',
+  'defaultCardsPerSession',
+  'maintenanceMode',
+];
 
 router.get('/settings', async (req, res) => {
   try {
@@ -630,13 +637,19 @@ router.patch('/settings', async (req, res) => {
       return res.status(400).json({ error: `Unknown setting key: ${key}` });
     }
 
+    let coercedValue = String(value);
+    if (key === 'defaultCardsPerSession') {
+      const num = parseInt(coercedValue, 10);
+      coercedValue = String(Math.min(50, Math.max(5, isNaN(num) ? 20 : num)));
+    }
+
     const [row] = await AppSetting.findOrCreate({
       where: { key },
-      defaults: { value: String(value) }
+      defaults: { value: coercedValue }
     });
 
-    if (row.value !== String(value)) {
-      row.value = String(value);
+    if (row.value !== coercedValue) {
+      row.value = coercedValue;
       await row.save();
     }
 
