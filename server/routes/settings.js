@@ -3,6 +3,9 @@ const router = express.Router();
 const { AppSetting } = require('../models');
 const { Op } = require('sequelize');
 
+// No authentication required — all routes in this file are public.
+// Do NOT add authenticated endpoints here; use server/routes/admin.js instead.
+
 const PUBLIC_KEYS = ['announcementText', 'leaderboardVisible', 'defaultCardsPerSession', 'maintenanceMode'];
 
 const DEFAULTS = {
