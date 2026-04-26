@@ -17,3 +17,4 @@ __pycache__/
 IMG_*.JPG
 IMG_*.jpg
 *.orig
+.worktrees/
