@@ -51,3 +51,24 @@ describe('canRegister', () => {
     expect(canRegister({ password: 'hash' }, false)).toBe(false);
   });
 });
+
+// Mirrors auth.js: is .edu self-registration allowed?
+function isEduRegistrationAllowed(settingValue) {
+  if (settingValue == null) return true; // missing row = allowed (fail-safe)
+  return settingValue !== 'false';
+}
+
+describe('isEduRegistrationAllowed', () => {
+  it('returns true when value is "true"', () => {
+    expect(isEduRegistrationAllowed('true')).toBe(true);
+  });
+
+  it('returns false when value is "false"', () => {
+    expect(isEduRegistrationAllowed('false')).toBe(false);
+  });
+
+  it('returns true when setting row is missing (fail-safe default)', () => {
+    expect(isEduRegistrationAllowed(null)).toBe(true);
+    expect(isEduRegistrationAllowed(undefined)).toBe(true);
+  });
+});

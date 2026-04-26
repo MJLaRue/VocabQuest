@@ -76,6 +76,16 @@ router.post('/register', async (req, res) => {
       });
     }
 
+    // Check .edu self-registration toggle
+    if (isEduEmail) {
+      const eduSetting = await AppSetting.findOne({ where: { key: 'allowEduRegistration' } });
+      if (eduSetting && eduSetting.value === 'false') {
+        return res.status(403).json({
+          error: 'Self-registration is currently closed. Contact an administrator for access.'
+        });
+      }
+    }
+
     if (!isEduEmail) {
       return res.status(403).json({
         error: 'Registration restricted to .edu email addresses. Contact an administrator for access.'
