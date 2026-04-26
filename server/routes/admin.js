@@ -639,8 +639,8 @@ router.patch('/settings', async (req, res) => {
 
     let coercedValue = String(value);
     if (key === 'defaultCardsPerSession') {
-      const num = parseInt(coercedValue, 10);
-      coercedValue = String(Math.min(50, Math.max(5, isNaN(num) ? 20 : num)));
+      const num = Math.round(parseFloat(coercedValue));
+      coercedValue = String(isNaN(num) ? 20 : Math.min(50, Math.max(5, num)));
     }
 
     const [row] = await AppSetting.findOrCreate({
