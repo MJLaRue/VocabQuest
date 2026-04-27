@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, tick } from 'svelte';
   import { push } from 'svelte-spa-router';
   import { X, HelpCircle } from 'lucide-svelte';
 
@@ -7,13 +7,23 @@
 
   const dispatch = createEventDispatcher<{ close: void }>();
 
+  let closeBtn: HTMLButtonElement;
+  let prevFocus: Element | null = null;
+
+  $: if (show) {
+    prevFocus = document.activeElement;
+    tick().then(() => closeBtn?.focus());
+  } else if (!show && prevFocus instanceof HTMLElement) {
+    prevFocus.focus();
+  }
+
   function close() {
     localStorage.setItem('vocabquest-quickstart-seen', '1');
     dispatch('close');
   }
 
   function handleBackdrop(e: MouseEvent) {
-    if ((e.target as HTMLElement).classList.contains('qs-backdrop')) close();
+    if (e.target === e.currentTarget) close();
   }
 
   function handleKeydown(e: KeyboardEvent) {
@@ -30,7 +40,7 @@
   <svelte:window on:keydown={handleKeydown}/>
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div
-    class="qs-backdrop fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto"
+    class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto"
     on:click={handleBackdrop}
   >
     <div
@@ -49,6 +59,7 @@
           <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Here's how to level up your vocabulary</p>
         </div>
         <button
+          bind:this={closeBtn}
           on:click={close}
           class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors flex-shrink-0"
           aria-label="Close"
