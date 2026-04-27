@@ -27,7 +27,7 @@
   }
 
   function handleKeydown(e: KeyboardEvent) {
-    if (e.key === 'Escape') close();
+    if (show && e.key === 'Escape') close();
   }
 
   function goToTest() {
@@ -36,8 +36,9 @@
   }
 </script>
 
+<svelte:window on:keydown={handleKeydown}/>
+
 {#if show}
-  <svelte:window on:keydown={handleKeydown}/>
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div
     class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto"
