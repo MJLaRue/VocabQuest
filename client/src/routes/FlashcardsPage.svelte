@@ -3,6 +3,7 @@
   import { push, location } from "svelte-spa-router";
   import { get } from "svelte/store";
   import { auth, user, gamification } from "$lib/stores/auth";
+  import { publicSettings } from "$lib/stores/settings";
   import {
     vocab,
     currentWord,
@@ -180,7 +181,8 @@
     // Only load words if we don't have any stored (from localStorage)
     const vocabState = get(vocab);
     if (vocabState.words.length === 0) {
-      await vocab.loadRandomWords();
+      const cardsLimit = parseInt(get(publicSettings).defaultCardsPerSession, 10) || 20;
+      await vocab.loadRandomWords(cardsLimit);
     }
 
     // Check for active session and resume or start new based on 30-minute rule
@@ -309,7 +311,8 @@
 
   async function handleNewSet() {
     showNewSetConfirm = false;
-    await vocab.loadRandomWords();
+    const cardsLimit = parseInt(get(publicSettings).defaultCardsPerSession, 10) || 20;
+    await vocab.loadRandomWords(cardsLimit);
   }
 </script>
 
