@@ -185,15 +185,15 @@
 
         <!-- Test Nudge -->
         {#if showTestNudge}
-          <div class="mx-4 mb-4 p-3.5 rounded-xl bg-blue-950 border border-blue-800 flex items-center gap-3">
-            <div class="w-9 h-9 rounded-lg bg-blue-900 flex items-center justify-content-center flex-shrink-0 text-lg">📋</div>
+          <div class="p-3.5 rounded-xl bg-blue-950 border border-blue-800 flex items-center gap-3">
+            <div class="w-9 h-9 rounded-lg bg-blue-900 flex items-center justify-center flex-shrink-0 text-lg">📋</div>
             <div class="flex-1 min-w-0">
               <p class="text-xs font-bold text-blue-300">Ready to prove it?</p>
               <p class="text-xs text-gray-500 mt-0.5">
                 {#if daysSinceTest === null}
                   You haven't taken a test yet. Lock in what you've learned.
                 {:else}
-                  You haven't taken a test in {daysSinceTest} days. Lock in what you've learned.
+                  You haven't taken a test in {daysSinceTest} {daysSinceTest === 1 ? 'day' : 'days'}. Lock in what you've learned.
                 {/if}
               </p>
             </div>
