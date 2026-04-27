@@ -2,7 +2,7 @@
   import { createEventDispatcher } from 'svelte';
   import Toggle from '$lib/components/ui/Toggle.svelte';
   import Input from '$lib/components/ui/Input.svelte';
-  import { Search, Zap } from 'lucide-svelte';
+  import { Search, Zap, HelpCircle } from 'lucide-svelte';
   import type { StudyMode } from '$lib/api/progress';
 
   export let mode: StudyMode = 'practice';
@@ -15,6 +15,7 @@
     toggleAdvanced: void;
     search: { query: string };
     posSelect: { pos: string | null };
+    openHelp: void;
   }>();
 
   const partsOfSpeech = [
@@ -133,6 +134,14 @@
           />
           <span class="text-sm text-gray-600 dark:text-gray-400">Advanced</span>
         </div>
+        <button
+          on:click={() => dispatch('openHelp')}
+          class="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition-colors"
+          title="Show quick start guide"
+          aria-label="Show quick start guide"
+        >
+          <HelpCircle size={18} />
+        </button>
       </div>
     </div>
 
@@ -160,6 +169,14 @@
             onCheckedChange={() => dispatch('toggleAdvanced')}
           />
         </div>
+        <button
+          on:click={() => dispatch('openHelp')}
+          class="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition-colors"
+          title="Show quick start guide"
+          aria-label="Show quick start guide"
+        >
+          <HelpCircle size={18} />
+        </button>
       </div>
 
       <!-- Row 2: Search & POS Filter -->
