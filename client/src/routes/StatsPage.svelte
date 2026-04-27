@@ -13,6 +13,7 @@
   import Leaderboard from "$lib/components/stats/Leaderboard.svelte";
   import TestTrendChart from "$lib/components/stats/TestTrendChart.svelte";
   import { testApi, type TestAttempt } from "$lib/api/test";
+  import { publicSettings } from '$lib/stores/settings';
 
   let stats = {
     totalWords: 0,
@@ -151,7 +152,9 @@
       />
 
       <!-- Leaderboard -->
-      <Leaderboard {leaderboard} />
+      {#if $publicSettings.leaderboardVisible !== 'false'}
+        <Leaderboard {leaderboard} />
+      {/if}
 
       <!-- Achievements -->
       <AchievementGrid {achievements} />
