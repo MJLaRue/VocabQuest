@@ -4,7 +4,7 @@
   import Button from "$lib/components/ui/Button.svelte";
   import Badge from "$lib/components/ui/Badge.svelte";
   import Input from "$lib/components/ui/Input.svelte";
-  import { Search, Shield, Trash2, Edit, Lock } from "lucide-svelte";
+  import { Search, Shield, Trash2, Edit, Lock, RotateCcw } from "lucide-svelte";
 
   export let users: Array<{
     id: number;
@@ -22,6 +22,7 @@
     deleteUser: { userId: number };
     search: { query: string };
     resetPassword: { userId: number; username: string };
+    resetProgress: { userId: number; username: string };
   }>();
 
   let searchQuery = "";
@@ -153,6 +154,19 @@
                     title="Reset Password"
                   >
                     <Lock class="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    on:click={() =>
+                      dispatch("resetProgress", {
+                        userId: user.id,
+                        username: user.username,
+                      })}
+                    class="text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300"
+                    title="Reset Progress"
+                  >
+                    <RotateCcw class="w-4 h-4" />
                   </Button>
                   <Button
                     variant="ghost"

@@ -66,6 +66,11 @@ export const adminApi = {
       body: JSON.stringify({ password }),
     }),
 
+  resetUserProgress: (userId: number) =>
+    apiClient<{ message: string }>(`/admin/users/${userId}/reset-progress`, {
+      method: 'POST',
+    }),
+
   getVocabulary: (params?: {
     search?: string;
     deck?: string;

@@ -21,6 +21,7 @@
   import UserTable from "$lib/components/admin/UserTable.svelte";
   import VocabTable from "$lib/components/admin/VocabTable.svelte";
   import ResetPasswordModal from "$lib/components/admin/ResetPasswordModal.svelte";
+  import ResetProgressModal from "$lib/components/admin/ResetProgressModal.svelte";
   import TestAnalytics from "$lib/components/admin/TestAnalytics.svelte";
   import Settings from "$lib/components/admin/Settings.svelte";
 
@@ -214,6 +215,19 @@
     resetUsername = detail.username;
     showResetModal = true;
   }
+
+  // Progress reset modal state
+  let showResetProgressModal = false;
+  let resetProgressUserId: number | null = null;
+  let resetProgressUsername = "";
+
+  function handleResetProgress({
+    detail,
+  }: CustomEvent<{ userId: number; username: string }>) {
+    resetProgressUserId = detail.userId;
+    resetProgressUsername = detail.username;
+    showResetProgressModal = true;
+  }
 </script>
 
 <div class="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -265,6 +279,7 @@
               on:deleteUser={handleDeleteUser}
               on:search={handleSearchUsers}
               on:resetPassword={handleResetPassword}
+              on:resetProgress={handleResetProgress}
             />
           {/if}
         {:else if currentView === "vocabulary"}
@@ -318,6 +333,21 @@
       showResetModal = false;
       resetUserId = null;
       resetUsername = "";
+    }}
+  />
+
+  <ResetProgressModal
+    bind:show={showResetProgressModal}
+    bind:userId={resetProgressUserId}
+    username={resetProgressUsername}
+    on:close={() => {
+      showResetProgressModal = false;
+      resetProgressUserId = null;
+      resetProgressUsername = "";
+    }}
+    on:reset={async () => {
+      const usersData = await adminApi.getUsers({ limit: 100 });
+      users = usersData.users || [];
     }}
   />
 

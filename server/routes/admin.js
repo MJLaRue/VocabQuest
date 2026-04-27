@@ -154,6 +154,36 @@ router.post('/users/:id/reset-password', async (req, res) => {
   }
 });
 
+// Reset user progress
+router.post('/users/:id/reset-progress', async (req, res) => {
+  try {
+    const user = await User.findByPk(req.params.id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    await UserProgress.destroy({ where: { userId: req.params.id } });
+    await StudySession.destroy({ where: { userId: req.params.id } });
+
+    const gamification = await UserGamification.findOne({ where: { userId: req.params.id } });
+    if (gamification) {
+      await gamification.update({
+        totalXp: 0,
+        level: 1,
+        dailyStreak: 0,
+        lastVisitDate: null,
+        perfectSessions: 0,
+        unlockedAchievements: [],
+      });
+    }
+
+    res.json({ success: true, message: 'Progress reset successfully' });
+  } catch (error) {
+    console.error('Reset progress error:', error);
+    res.status(500).json({ error: 'Failed to reset progress' });
+  }
+});
+
 // Delete user
 router.delete('/users/:id', async (req, res) => {
   try {
