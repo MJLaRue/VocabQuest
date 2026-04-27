@@ -344,14 +344,21 @@ router.get('/gamification', requireAuth, async (req, res) => {
     const streak = gamification.updateStreak();
     await gamification.save();
 
-    const xpToNext = UserGamification.getXPForLevel(gamification.level);
+    // Find the most recent completed test
+    const { TestAttempt } = require('../models');
+    const lastTest = await TestAttempt.findOne({
+      where: { userId: req.user.id, status: 'completed' },
+      order: [['completed_at', 'DESC']],
+      attributes: ['completed_at']
+    });
+    const lastTestDate = lastTest ? lastTest.getDataValue('completed_at') : null;
 
     res.json({
       totalXp: gamification.totalXp,
       level: gamification.level,
-      xpToNext,
       dailyStreak: streak,
-      unlockedAchievements: gamification.unlockedAchievements || []
+      unlockedAchievements: gamification.unlockedAchievements || [],
+      lastTestDate
     });
   } catch (error) {
     console.error('Get gamification error:', error);
