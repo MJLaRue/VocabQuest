@@ -15,6 +15,9 @@
   import TestConfigPage from "./routes/TestConfigPage.svelte";
   import TestPage from "./routes/TestPage.svelte";
   import TestResultsPage from "./routes/TestResultsPage.svelte";
+  import { publicSettings } from "$lib/stores/settings";
+  import AnnouncementBanner from "$lib/components/AnnouncementBanner.svelte";
+  import MaintenancePage from "./routes/MaintenancePage.svelte";
 
   const routes = {
     "/": FlashcardsPage,
@@ -99,10 +102,19 @@
     }
   }
 
+  $: showMaintenance =
+    $publicSettings.maintenanceMode === 'true' &&
+    $auth.user?.role !== 'admin';
+
   onMount(() => {
     theme.init();
     auth.checkSession();
   });
 </script>
 
-<Router {routes} />
+{#if showMaintenance}
+  <MaintenancePage />
+{:else}
+  <AnnouncementBanner text={$publicSettings.announcementText} />
+  <Router {routes} />
+{/if}
