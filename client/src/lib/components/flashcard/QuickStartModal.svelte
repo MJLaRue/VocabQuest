@@ -27,11 +27,11 @@
 </script>
 
 {#if show}
+  <svelte:window on:keydown={handleKeydown}/>
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div
     class="qs-backdrop fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto"
     on:click={handleBackdrop}
-    on:keydown={handleKeydown}
   >
     <div
       class="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 w-full max-w-lg"
@@ -105,7 +105,7 @@
                 <span class="text-xs font-semibold px-1.5 py-0.5 bg-rose-100 dark:bg-rose-900 text-rose-700 dark:text-rose-300 rounded-full">20 XP</span>
                 <span class="ml-auto text-xs font-bold px-2 py-0.5 bg-rose-600 text-white rounded-full uppercase tracking-wide">Hardest</span>
               </div>
-              <p class="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">See the definition — spell the word from memory. Save this for last!</p>
+              <p class="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">See the definition — spell the word from memory. Save this for last.</p>
             </div>
           </div>
         </div>
