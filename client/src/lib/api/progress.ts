@@ -69,6 +69,14 @@ export interface UserStats {
   };
 }
 
+export interface GamificationData {
+  totalXp: number;
+  level: number;
+  dailyStreak: number;
+  unlockedAchievements: string[];
+  lastTestDate: string | null;
+}
+
 export const progressApi = {
   updateProgress: (vocabId: number, isKnown: boolean, mode: StudyMode = 'practice', xpEarned: number = 0, advanced: boolean = false) =>
     apiClient<{
@@ -153,4 +161,7 @@ export const progressApi = {
     apiClient<{
       leaderboard: LeaderboardEntry[];
     }>('/progress/leaderboard'),
+
+  getGamification: () =>
+    apiClient<GamificationData>('/progress/gamification'),
 };
