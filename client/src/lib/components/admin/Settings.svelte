@@ -67,12 +67,14 @@
   }
 
   async function handleCardsChange() {
-    const clamped = Math.min(50, Math.max(5, defaultCardsPerSession));
+    const prev = defaultCardsPerSession;
+    const clamped = Math.min(50, Math.max(5, defaultCardsPerSession || 20));
     defaultCardsPerSession = clamped;
     error = '';
     try {
       await adminApi.updateSetting('defaultCardsPerSession', String(clamped));
     } catch {
+      defaultCardsPerSession = prev;
       error = 'Failed to save setting. Please try again.';
     }
   }
