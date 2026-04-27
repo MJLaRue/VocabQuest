@@ -15,11 +15,17 @@
   export let completedSets = 0;
   export let levelUp = false;
   export let newLevel = 1;
+  export let lastTestDate: string | null = null;
 
   const dispatch = createEventDispatcher<{
     close: void;
     continue: void;
   }>();
+
+  $: daysSinceTest = lastTestDate
+    ? Math.floor((Date.now() - new Date(lastTestDate).getTime()) / 86_400_000)
+    : null;
+  $: showTestNudge = daysSinceTest === null || daysSinceTest >= 3;
 
   $: accuracy =
     cardsReviewed > 0 ? Math.round((correctAnswers / cardsReviewed) * 100) : 0;
@@ -46,6 +52,11 @@
     if (event.key === "Escape") {
       handleClose();
     }
+  }
+
+  function goToTest() {
+    dispatch("close");
+    push("/test");
   }
 
   // Trigger confetti on level up
@@ -171,6 +182,29 @@
             {/if}
           </p>
         </div>
+
+        <!-- Test Nudge -->
+        {#if showTestNudge}
+          <div class="mx-4 mb-4 p-3.5 rounded-xl bg-blue-950 border border-blue-800 flex items-center gap-3">
+            <div class="w-9 h-9 rounded-lg bg-blue-900 flex items-center justify-content-center flex-shrink-0 text-lg">📋</div>
+            <div class="flex-1 min-w-0">
+              <p class="text-xs font-bold text-blue-300">Ready to prove it?</p>
+              <p class="text-xs text-gray-500 mt-0.5">
+                {#if daysSinceTest === null}
+                  You haven't taken a test yet. Lock in what you've learned.
+                {:else}
+                  You haven't taken a test in {daysSinceTest} days. Lock in what you've learned.
+                {/if}
+              </p>
+            </div>
+            <button
+              on:click={goToTest}
+              class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-colors whitespace-nowrap"
+            >
+              Take Test →
+            </button>
+          </div>
+        {/if}
 
         <!-- Actions -->
         <div class="flex gap-3">
