@@ -642,6 +642,9 @@ router.patch('/settings', async (req, res) => {
       const num = Math.round(parseFloat(coercedValue));
       coercedValue = String(isNaN(num) ? 20 : Math.min(50, Math.max(5, num)));
     }
+    if (key === 'announcementText' && coercedValue.length > 500) {
+      return res.status(400).json({ error: 'announcementText must be 500 characters or fewer' });
+    }
 
     const [row] = await AppSetting.findOrCreate({
       where: { key },

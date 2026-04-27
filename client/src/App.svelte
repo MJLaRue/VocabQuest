@@ -105,7 +105,8 @@
   $: showMaintenance =
     $publicSettings.maintenanceMode === 'true' &&
     !$auth.isLoading &&
-    $auth.user?.role !== 'admin';
+    $auth.user?.role !== 'admin' &&
+    $location !== '/login';
 
   onMount(() => {
     theme.init();
