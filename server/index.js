@@ -172,9 +172,13 @@ async function startServer() {
     await sequelize.authenticate();
     console.log('✓ Database connection established');
 
-    if (process.env.NODE_ENV === 'development') {
-      await sequelize.sync({ alter: true });
+    // Only alter schema in development AND when using a local DB (not a remote/prod URL)
+    const isLocalDb = !process.env.DATABASE_URL;
+    if (process.env.NODE_ENV === 'development' && isLocalDb) {
+      await sequelize.sync({ alter: { drop: false } });
       console.log('✓ Database models synchronized');
+    } else {
+      console.log('✓ Skipping schema sync (remote or production database)');
     }
 
     app.listen(PORT, () => {

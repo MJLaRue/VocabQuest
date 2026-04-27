@@ -87,6 +87,7 @@ export const progressApi = {
       streak: number;
       totalXp: number;
       xpEarned: number;
+      newSessionId: number | null;
     }>(
       '/progress/answer',
       {

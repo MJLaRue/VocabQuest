@@ -179,6 +179,10 @@ function createProgressStore() {
             ...state,
             currentSession: {
               ...state.currentSession,
+              // Update session ID if the server rotated to a new session due to idle timeout
+              id: result.newSessionId ?? state.currentSession.id,
+              // Reset startTime on rotation so duration is measured from now
+              startTime: result.newSessionId ? Date.now() : state.currentSession.startTime,
               cardsReviewed: state.currentSession.cardsReviewed + 1,
               correctAnswers: isKnown
                 ? state.currentSession.correctAnswers + 1
@@ -232,7 +236,7 @@ function createProgressStore() {
           currentSession: {
             id: session.id,
             mode: session.mode,
-            startTime: new Date(session.startedAt).getTime(),
+            startTime: Date.now(), // measure from resume time, not original session start
             cardsReviewed: session.cardsReviewed,
             correctAnswers: session.correctAnswers,
             correctStreakBonus: 0, // Reset streak bonus on resume

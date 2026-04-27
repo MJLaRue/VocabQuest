@@ -7,6 +7,7 @@ const { calculateNextReview, correctnessToQuality } = require('../utils/spacedRe
 const { checkAchievements, getAllAchievementsStatus } = require('../utils/achievements');
 
 const VALID_MODES = ['practice', 'quiz', 'typing', 'context', 'relate'];
+const IDLE_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 
 /**
  * Helper to clean up stale sessions for a user.
@@ -104,19 +105,38 @@ router.post('/answer', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'Invalid request data' });
     }
 
-    // Update active session if exists
-    const activeSession = await StudySession.findOne({
+    // Update active session — rotate if idle for more than 30 minutes
+    let activeSession = await StudySession.findOne({
       where: { userId: req.user.id, endedAt: null },
       order: [['startedAt', 'DESC']]
     });
 
+    let newSessionId = null;
+
     if (activeSession) {
+      const now = new Date();
+      const lastInteraction = new Date(activeSession.updatedAt);
+      const idleMs = now - lastInteraction;
+
+      if (idleMs >= IDLE_TIMEOUT_MS) {
+        // Close the idle session at the last real interaction time (not now)
+        activeSession.endedAt = lastInteraction;
+        await activeSession.save();
+
+        // Open a fresh session
+        activeSession = await StudySession.create({
+          userId: req.user.id,
+          mode,
+          startedAt: now
+        });
+        newSessionId = activeSession.id;
+      }
+
       activeSession.cardsReviewed = (activeSession.cardsReviewed || 0) + 1;
       if (correct) {
         activeSession.correctAnswers = (activeSession.correctAnswers || 0) + 1;
       }
       activeSession.xpEarned = (activeSession.xpEarned || 0) + (xpEarned || 0);
-      // updatedAt is automatically updated by Sequelize
       await activeSession.save();
     }
 
@@ -280,7 +300,8 @@ router.post('/answer', requireAuth, async (req, res) => {
       newAchievements,
       streak,
       totalXp: gamification.totalXp,
-      xpEarned: calculatedXP
+      xpEarned: calculatedXP,
+      newSessionId
     });
 
   } catch (error) {
@@ -467,6 +488,11 @@ router.post('/session/:id/end', requireAuth, async (req, res) => {
 
     if (!session) {
       return res.status(404).json({ error: 'Session not found' });
+    }
+
+    // Session was already closed (e.g. rotated due to idle timeout) — return gracefully
+    if (session.endedAt) {
+      return res.json({ xpEarned: session.xpEarned || 0, levelUp: false, newAchievements: [] });
     }
 
     session.endedAt = new Date();
