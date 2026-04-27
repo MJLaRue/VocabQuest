@@ -164,6 +164,7 @@ router.post('/users/:id/reset-progress', async (req, res) => {
 
     await UserProgress.destroy({ where: { userId: req.params.id } });
     await StudySession.destroy({ where: { userId: req.params.id } });
+    await TestAttempt.destroy({ where: { userId: req.params.id } });
 
     const gamification = await UserGamification.findOne({ where: { userId: req.params.id } });
     if (gamification) {
