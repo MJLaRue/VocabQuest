@@ -104,6 +104,7 @@
 
   $: showMaintenance =
     $publicSettings.maintenanceMode === 'true' &&
+    !$auth.isLoading &&
     $auth.user?.role !== 'admin';
 
   onMount(() => {
