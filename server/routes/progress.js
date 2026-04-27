@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { sequelize } = require('../config/db');
-const { UserProgress, UserGamification, StudySession, Vocabulary } = require('../models');
+const { UserProgress, UserGamification, StudySession, Vocabulary, TestAttempt } = require('../models');
 const { requireAuth } = require('../middleware/auth');
 const { calculateNextReview, correctnessToQuality } = require('../utils/spacedRepetition');
 const { checkAchievements, getAllAchievementsStatus } = require('../utils/achievements');
@@ -345,7 +345,6 @@ router.get('/gamification', requireAuth, async (req, res) => {
     await gamification.save();
 
     // Find the most recent completed test
-    const { TestAttempt } = require('../models');
     const lastTest = await TestAttempt.findOne({
       where: { userId: req.user.id, status: 'completed' },
       order: [['completed_at', 'DESC']],
