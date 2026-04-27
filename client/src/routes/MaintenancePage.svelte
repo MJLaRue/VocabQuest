@@ -11,7 +11,7 @@
         VocabQuest Dictionary · Live Entry
       </p>
 
-      <h1 class="text-4xl font-bold mb-1 font-serif">main·te·nance</h1>
+      <h1 class="text-4xl font-bold mb-1 font-cinzel">main·te·nance</h1>
       <p class="text-teal-200 italic text-sm mb-4">noun &nbsp;|&nbsp; /ˈmeɪn.tɪ.nəns/</p>
 
       <ol class="list-decimal list-inside space-y-2 text-base leading-relaxed">

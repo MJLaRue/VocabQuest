@@ -16,7 +16,12 @@ const defaults: PublicSettings = {
 
 export const publicSettings = readable<PublicSettings>(defaults, (set) => {
   fetch('/api/settings/public')
-    .then((r) => r.json())
-    .then(({ settings }) => set({ ...defaults, ...settings }))
+    .then((r) => {
+      if (!r.ok) return;
+      return r.json();
+    })
+    .then((data) => {
+      if (data?.settings) set({ ...defaults, ...data.settings });
+    })
     .catch(() => {}); // fail open — defaults remain
 });
