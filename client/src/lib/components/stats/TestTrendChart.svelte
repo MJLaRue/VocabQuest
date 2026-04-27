@@ -72,6 +72,12 @@
     }));
   })();
 
+  $: lastCompletedAt = chartData.length > 0 ? chartData[chartData.length - 1].completedAt : null;
+  $: daysSinceTest = lastCompletedAt
+    ? Math.floor((Date.now() - new Date(lastCompletedAt).getTime()) / 86_400_000)
+    : null;
+  $: showInlineNudge = daysSinceTest !== null && daysSinceTest >= 3;
+
   // Tooltip state
   interface TooltipData {
     attempt: TestAttempt;
@@ -153,17 +159,39 @@
 
     {#if chartData.length === 0}
       <!-- Empty state: no completed tests -->
-      <div class="flex flex-col items-center justify-center py-10 text-gray-400 dark:text-gray-500">
-        <TrendingUp class="w-10 h-10 mb-3 opacity-40" />
-        <p class="text-sm font-medium">No test data yet</p>
-        <p class="text-xs mt-1">Complete at least 2 tests to see your trend</p>
+      <div class="flex flex-col items-center justify-center py-10 text-center space-y-3">
+        <span class="text-4xl" aria-hidden="true">🎯</span>
+        <div>
+          <p class="text-sm font-semibold text-gray-700 dark:text-gray-200">No tests yet</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-xs mx-auto">
+            Tests lock in your learning and show where to focus. They also earn bonus XP!
+          </p>
+        </div>
+        <button
+          type="button"
+          on:click={() => push('/test')}
+          class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-colors"
+        >
+          Take a Test Now →
+        </button>
       </div>
     {:else if chartData.length === 1}
       <!-- Not enough data for a line yet -->
-      <div class="flex flex-col items-center justify-center py-10 text-gray-400 dark:text-gray-500">
-        <TrendingUp class="w-10 h-10 mb-3 opacity-40" />
-        <p class="text-sm font-medium">Only 1 test completed</p>
-        <p class="text-xs mt-1">Complete one more test to see your trend</p>
+      <div class="flex flex-col items-center justify-center py-10 text-center space-y-3">
+        <TrendingUp class="w-10 h-10 opacity-40 text-gray-400 dark:text-gray-500" />
+        <div>
+          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Only 1 test completed</p>
+          <p class="text-xs mt-1 text-gray-400 dark:text-gray-500">Complete one more test to see your trend</p>
+        </div>
+        {#if showInlineNudge}
+          <button
+            type="button"
+            on:click={() => push('/test')}
+            class="text-sm font-semibold text-blue-500 hover:text-blue-400 transition-colors"
+          >
+            Take a Test →
+          </button>
+        {/if}
       </div>
     {:else}
       <!-- SVG Chart -->
@@ -340,6 +368,18 @@
           </div>
         {/if}
       </div>
+      {#if showInlineNudge}
+        <p class="text-xs text-gray-500 dark:text-gray-400 flex items-center justify-between gap-2">
+          <span>Keep your trend going — last test was {daysSinceTest} {daysSinceTest === 1 ? 'day' : 'days'} ago.</span>
+          <button
+            type="button"
+            on:click={() => push('/test')}
+            class="font-semibold text-blue-500 hover:text-blue-400 transition-colors whitespace-nowrap flex-shrink-0"
+          >
+            Take a Test →
+          </button>
+        </p>
+      {/if}
     {/if}
   </div>
 </Card>
