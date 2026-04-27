@@ -26,6 +26,10 @@
   import CelebrationOverlay from "$lib/components/flashcard/CelebrationOverlay.svelte";
   import { confetti, confettiPresets } from "$lib/utils/confetti";
   import { RefreshCw } from "lucide-svelte";
+  import QuickStartModal from "$lib/components/flashcard/QuickStartModal.svelte";
+  import TestNudgeBanner from "$lib/components/flashcard/TestNudgeBanner.svelte";
+  import SessionSummaryModal from "$lib/components/flashcard/SessionSummaryModal.svelte";
+  import { progressApi } from "$lib/api/progress";
 
   // Determine mode from URL path
   function getModeFromPath(path: string): StudyMode {
@@ -55,6 +59,10 @@
   };
   let celebrationQueue: Celebration[] = [];
   let currentCelebration: Celebration | null = null;
+
+  let showQuickStart = false;
+  let showSummary = false;
+  let lastTestDate: string | null = null;
 
   // Achievement helpers
   function getAchievementInfo(id: string) {
@@ -159,8 +167,21 @@
     celebrationQueue = celebrationQueue.slice(1);
   }
 
+  function handleOpenHelp() {
+    showQuickStart = true;
+  }
+
   function handleCloseCelebration() {
+    const closedType = currentCelebration?.type;
     showNextCelebration();
+    if (closedType === 'setComplete' && currentCelebration === null) {
+      triggerSessionEnd();
+    }
+  }
+
+  async function triggerSessionEnd() {
+    try { await progress.endSession(); } catch { }
+    showSummary = true;
   }
 
   // Update mode when location changes
@@ -183,6 +204,17 @@
     if (vocabState.words.length === 0) {
       const cardsLimit = parseInt(get(publicSettings).defaultCardsPerSession, 10) || 20;
       await vocab.loadRandomWords(cardsLimit);
+    }
+
+    // Fetch lastTestDate for nudges
+    try {
+      const gam = await progressApi.getGamification();
+      lastTestDate = gam.lastTestDate;
+    } catch { }
+
+    // Show quick start modal on first visit
+    if (!localStorage.getItem('vocabquest-quickstart-seen')) {
+      showQuickStart = true;
     }
 
     // Check for active session and resume or start new based on 30-minute rule
@@ -334,7 +366,10 @@
       on:toggleAdvanced={handleToggleAdvanced}
       on:search={handleSearch}
       on:posSelect={handlePOSSelect}
+      on:openHelp={handleOpenHelp}
     />
+
+    <TestNudgeBanner {lastTestDate} />
 
     <Container>
       <div class="py-8 space-y-6">
@@ -444,4 +479,22 @@
   {/if}
 
   <Footer />
+
+  <QuickStartModal bind:show={showQuickStart} on:close={() => (showQuickStart = false)} />
+
+  {#if showSummary && $progress.lastSessionSummary}
+    <SessionSummaryModal
+      show={showSummary}
+      cardsReviewed={$progress.lastSessionSummary.cardsReviewed}
+      correctAnswers={$progress.lastSessionSummary.correctAnswers}
+      xpEarned={$progress.lastSessionSummary.xpEarned}
+      duration={$progress.lastSessionSummary.duration}
+      completedSets={$progress.lastSessionSummary.completedSets}
+      levelUp={$progress.lastSessionSummary.levelUp}
+      newLevel={$gamification?.level || 1}
+      {lastTestDate}
+      on:close={() => (showSummary = false)}
+      on:continue={() => (showSummary = false)}
+    />
+  {/if}
 </div>
