@@ -414,7 +414,7 @@ router.get('/top-students', async (req, res) => {
         where: { userId: gamif.userId }
       });
 
-      const wordsLearned = progress.filter(p => p.correctCount >= 3).length;
+      const wordsLearned = progress.filter(p => p.isKnown).length;
       const totalAttempts = progress.reduce((sum, p) => sum + p.correctCount + p.incorrectCount, 0);
       const correctAttempts = progress.reduce((sum, p) => sum + p.correctCount, 0);
       const accuracy = totalAttempts > 0 ? Math.round((correctAttempts / totalAttempts) * 100) : 0;
