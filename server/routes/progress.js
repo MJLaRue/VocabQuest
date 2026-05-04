@@ -480,7 +480,7 @@ router.post('/session/start', requireAuth, async (req, res) => {
 router.post('/session/:id/end', requireAuth, async (req, res) => {
   try {
     const sessionId = req.params.id;
-    const { xpEarned, cardsReviewed, correctAnswers } = req.body;
+    const { xp_earned: xpEarned, cards_reviewed: cardsReviewed, correct_answers: correctAnswers } = req.body;
 
     const session = await StudySession.findOne({
       where: { id: sessionId, userId: req.user.id }
@@ -494,6 +494,10 @@ router.post('/session/:id/end', requireAuth, async (req, res) => {
     if (session.endedAt) {
       return res.json({ xpEarned: session.xpEarned || 0, levelUp: false, newAchievements: [] });
     }
+
+    // Capture server-tracked counts before overwriting (used for achievement check below)
+    const serverCardsReviewed = session.cardsReviewed || 0;
+    const serverCorrectAnswers = session.correctAnswers || 0;
 
     session.endedAt = new Date();
     session.xpEarned = xpEarned || 0;
@@ -509,22 +513,9 @@ router.post('/session/:id/end', requireAuth, async (req, res) => {
     let levelUp = false;
     const newAchievements = [];
 
-    if (gamification && xpEarned > 0) {
-      const oldLevel = gamification.level;
-      gamification.totalXp += xpEarned;
-
-      // Simple level calculation: level = floor(sqrt(totalXp / 100))
-      const newLevel = Math.floor(Math.sqrt(gamification.totalXp / 100)) + 1;
-      if (newLevel > oldLevel) {
-        gamification.level = newLevel;
-        levelUp = true;
-      }
-
-      await gamification.save();
-    }
-
     // Check for perfect session achievement (100% accuracy with at least 10 cards)
-    if (gamification && cardsReviewed >= 10 && correctAnswers === cardsReviewed) {
+    // Use server-tracked counts (incremented per-card) as the authoritative source
+    if (gamification && serverCardsReviewed >= 10 && serverCorrectAnswers === serverCardsReviewed) {
       gamification.perfectSessions = (gamification.perfectSessions || 0) + 1;
       await gamification.save();
 
@@ -601,7 +592,7 @@ router.get('/stats', requireAuth, async (req, res) => {
     const totalIncorrect = allProgress.reduce((sum, p) => sum + p.incorrectCount, 0);
     const wordsLearned = allProgress.filter(p => p.isKnown).length;
     const inProgressWords = allProgress.filter(p => !p.isKnown && p.reviewCount > 0).length;
-    const accuracy = totalReviews > 0 ? Math.round((totalCorrect / (totalCorrect + totalIncorrect)) * 100) : 0;
+    const accuracy = (totalCorrect + totalIncorrect) > 0 ? Math.round((totalCorrect / (totalCorrect + totalIncorrect)) * 100) : 0;
     const lastStudy = allProgress.reduce((max, p) => {
       if (!p.lastReviewed) return max;
       const d = new Date(p.lastReviewed);
