@@ -22,6 +22,7 @@
   import VocabTable from "$lib/components/admin/VocabTable.svelte";
   import ResetPasswordModal from "$lib/components/admin/ResetPasswordModal.svelte";
   import ResetProgressModal from "$lib/components/admin/ResetProgressModal.svelte";
+  import UserStatsModal from "$lib/components/admin/UserStatsModal.svelte";
   import TestAnalytics from "$lib/components/admin/TestAnalytics.svelte";
   import Settings from "$lib/components/admin/Settings.svelte";
 
@@ -228,6 +229,23 @@
     resetProgressUsername = detail.username;
     showResetProgressModal = true;
   }
+
+  // User stats modal state
+  let showStatsModal = false;
+  let statsModalUser: { id: number; username: string; email: string; role: "student" | "admin"; level: number } | null = null;
+
+  function handleViewStats({
+    detail,
+  }: CustomEvent<{ userId: number; username: string; email: string; role: "student" | "admin"; level: number }>) {
+    statsModalUser = {
+      id: detail.userId,
+      username: detail.username,
+      email: detail.email,
+      role: detail.role,
+      level: detail.level,
+    };
+    showStatsModal = true;
+  }
 </script>
 
 <div class="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -280,6 +298,7 @@
               on:search={handleSearchUsers}
               on:resetPassword={handleResetPassword}
               on:resetProgress={handleResetProgress}
+              on:viewStats={handleViewStats}
             />
           {/if}
         {:else if currentView === "vocabulary"}
@@ -349,6 +368,11 @@
       const usersData = await adminApi.getUsers({ limit: 100 });
       users = usersData.users || [];
     }}
+  />
+
+  <UserStatsModal
+    bind:show={showStatsModal}
+    user={statsModalUser}
   />
 
   <Footer />

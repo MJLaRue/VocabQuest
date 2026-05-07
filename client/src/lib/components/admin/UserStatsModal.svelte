@@ -22,6 +22,8 @@
   let loading = false;
   let errorMsg = '';
   let activeTab: Tab = 'overview';
+  let activeRequestId = 0;
+  const tabs: Tab[] = ['overview', 'tests', 'vocabulary'];
 
   // Load data whenever the modal opens for a user
   $: if (show && user) loadStats(user.id);
@@ -31,17 +33,19 @@
     errorMsg = '';
     stats = null;
     leaderboard = [];
+    const reqId = ++activeRequestId;
     try {
       const [statsData, lbData] = await Promise.all([
         adminApi.getUserStats(userId),
         apiClient<{ leaderboard: typeof leaderboard }>('/progress/leaderboard'),
       ]);
+      if (reqId !== activeRequestId) return;
       stats = statsData;
       leaderboard = lbData.leaderboard ?? [];
     } catch {
-      errorMsg = 'Failed to load stats. Please try again.';
+      if (reqId === activeRequestId) errorMsg = 'Failed to load stats. Please try again.';
     } finally {
-      loading = false;
+      if (reqId === activeRequestId) loading = false;
     }
   }
 
@@ -86,7 +90,7 @@
 
       <!-- Tabs -->
       <div class="flex border-b border-gray-200 dark:border-gray-700 px-6 shrink-0 bg-white dark:bg-gray-900">
-        {#each (['overview', 'tests', 'vocabulary'] as const) as tab}
+        {#each tabs as tab}
           <button
             class="px-4 py-3 text-sm font-medium border-b-2 transition-colors capitalize
               {activeTab === tab
