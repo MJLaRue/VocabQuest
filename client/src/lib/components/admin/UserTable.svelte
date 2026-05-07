@@ -4,7 +4,7 @@
   import Button from "$lib/components/ui/Button.svelte";
   import Badge from "$lib/components/ui/Badge.svelte";
   import Input from "$lib/components/ui/Input.svelte";
-  import { Search, Shield, Trash2, Edit, Lock, RotateCcw } from "lucide-svelte";
+  import { Search, Shield, Trash2, Edit, Lock, RotateCcw, BarChart2 } from "lucide-svelte";
 
   export let users: Array<{
     id: number;
@@ -23,6 +23,7 @@
     search: { query: string };
     resetPassword: { userId: number; username: string };
     resetProgress: { userId: number; username: string };
+    viewStats: { userId: number; username: string; email: string; role: "student" | "admin"; level: number };
   }>();
 
   let searchQuery = "";
@@ -130,6 +131,22 @@
               </td>
               <td class="py-3 px-3">
                 <div class="flex items-center justify-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    on:click={() =>
+                      dispatch("viewStats", {
+                        userId: user.id,
+                        username: user.username,
+                        email: user.email,
+                        role: user.role,
+                        level: user.level,
+                      })}
+                    class="text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300"
+                    title="View Stats"
+                  >
+                    <BarChart2 class="w-4 h-4" />
+                  </Button>
                   <Button
                     variant="ghost"
                     size="sm"
