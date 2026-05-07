@@ -7,6 +7,7 @@ const { User, Vocabulary, UserProgress, StudySession, UserGamification, TestAtte
 const { requireAuth } = require('../middleware/auth');
 const { requireAdmin } = require('../middleware/admin');
 const { Op } = require('sequelize');
+const { getAllAchievementsStatus } = require('../utils/achievements');
 
 // Apply auth and admin middleware to all routes
 router.use(requireAuth);
@@ -697,6 +698,110 @@ router.patch('/settings', async (req, res) => {
   } catch (error) {
     console.error('Update setting error:', error);
     res.status(500).json({ error: 'Failed to update setting' });
+  }
+});
+
+// GET /admin/users/:id/stats — full stats for a single user (admin only)
+router.get('/users/:id/stats', async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id, 10);
+    if (!userId || isNaN(userId)) {
+      return res.status(400).json({ error: 'Invalid user id' });
+    }
+
+    // Verify user exists
+    const user = await User.findByPk(userId);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    // Parallel queries
+    const [gamification, allProgress, sessions, testAttempts] = await Promise.all([
+      UserGamification.findOne({ where: { userId } }),
+      UserProgress.findAll({ where: { userId } }),
+      StudySession.findAll({
+        where: { userId },
+        order: [['started_at', 'DESC']],
+      }),
+      TestAttempt.findAll({
+        where: { userId },
+        order: [['startedAt', 'DESC']],
+        limit: 50,
+      }),
+    ]);
+
+    const gam = gamification || { totalXp: 0, level: 1, dailyStreak: 0, unlockedAchievements: [], perfectSessions: 0 };
+
+    // Progress stats
+    const totalCorrect   = allProgress.reduce((sum, p) => sum + p.correctCount,   0);
+    const totalIncorrect = allProgress.reduce((sum, p) => sum + p.incorrectCount, 0);
+    const wordsLearned   = allProgress.filter(p => p.isKnown).length;
+    const inProgressWords = allProgress.filter(p => !p.isKnown && p.reviewCount > 0).length;
+    const accuracy = (totalCorrect + totalIncorrect) > 0
+      ? Math.round((totalCorrect / (totalCorrect + totalIncorrect)) * 100)
+      : 0;
+    const totalWords = await Vocabulary.count();
+    const lastStudy = allProgress.reduce((max, p) => {
+      if (!p.lastReviewed) return max;
+      const d = new Date(p.lastReviewed);
+      return !max || d > max ? d : max;
+    }, null);
+
+    // Activity stats
+    const totalSessions = sessions.length;
+    const totalStudyTimeMs = sessions.reduce((sum, s) => {
+      if (s.endedAt && s.startedAt)
+        return sum + (new Date(s.endedAt) - new Date(s.startedAt));
+      return sum;
+    }, 0);
+    const avgSessionTimeMs = totalSessions > 0 ? totalStudyTimeMs / totalSessions : 0;
+
+    // Achievements
+    const learnedCount = wordsLearned;
+    const testsCompleted = testAttempts.filter(t => t.status === 'completed').length;
+    const highScoreTests = testAttempts.filter(
+      t => t.status === 'completed' && (t.results?.accuracy ?? 0) >= 90
+    ).length;
+    const achievementData = {
+      learnedCount,
+      streak: gam.dailyStreak,
+      perfectSessions: gam.perfectSessions || 0,
+      totalXp: gam.totalXp,
+      testsCompleted,
+      highScoreTests,
+    };
+    const achievements = getAllAchievementsStatus(gam.unlockedAchievements || [], achievementData);
+
+    res.json({
+      gamification: {
+        level: gam.level,
+        totalXp: gam.totalXp,
+        dailyStreak: gam.dailyStreak,
+      },
+      progress: {
+        wordsLearned,
+        totalWords,
+        inProgressWords,
+        accuracy,
+      },
+      activity: {
+        totalSessions,
+        totalStudyTime: Math.round(totalStudyTimeMs / 60000),
+        avgSessionTime: Math.round(avgSessionTimeMs / 60000),
+        lastStudy,
+      },
+      testHistory: testAttempts.map(t => ({
+        id: t.id,
+        startedAt: t.startedAt,
+        completedAt: t.completedAt,
+        config: t.config,
+        results: t.results,
+        xpEarned: t.xpEarned,
+        status: t.status,
+      })),
+      achievements,
+    });
+  } catch (error) {
+    console.error('Get user stats error:', error);
+    res.status(500).json({ error: 'Failed to get user stats' });
   }
 });
 
