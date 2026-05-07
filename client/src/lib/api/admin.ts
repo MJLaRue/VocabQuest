@@ -1,4 +1,5 @@
 import { apiClient } from './client';
+import type { TestAttempt } from './test';
 
 export interface AdminStats {
   totalUsers: number;
@@ -30,6 +31,40 @@ export interface UserManagement {
 export interface AppSettings {
   registrationOpen: string;
   [key: string]: string;
+}
+
+export interface UserStatsResponse {
+  gamification: {
+    level: number;
+    totalXp: number;
+    dailyStreak: number;
+  };
+  progress: {
+    wordsLearned: number;
+    totalWords: number;
+    inProgressWords: number;
+    accuracy: number;
+  };
+  activity: {
+    totalSessions: number;
+    totalStudyTime: number;   // minutes
+    avgSessionTime: number;   // minutes
+    lastStudy: string | null;
+  };
+  testHistory: TestAttempt[];
+  achievements: Array<{
+    id: string;
+    name: string;
+    description: string;
+    icon: string;
+    unlocked: boolean;
+    type: 'vocab_builder' | 'streak_warrior' | 'perfectionist' | 'xp_enthusiast' | 'test_taker' | 'test_ace' | 'one_off';
+    level?: number;
+    totalTiers?: number;
+    currentValue?: number;
+    nextThreshold?: number;
+    currentThreshold?: number;
+  }>;
 }
 
 export const adminApi = {
@@ -157,4 +192,7 @@ export const adminApi = {
       method: 'PATCH',
       body: JSON.stringify({ key, value }),
     }),
+
+  getUserStats: (userId: number) =>
+    apiClient<UserStatsResponse>(`/admin/users/${userId}/stats`),
 };
