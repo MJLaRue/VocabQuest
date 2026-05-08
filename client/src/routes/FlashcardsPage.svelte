@@ -414,16 +414,27 @@
         {/if}
 
         <!-- Session Stats -->
-        <div
-          class="flex justify-center gap-8 text-sm text-gray-600 dark:text-gray-400"
-        >
-          <div>
-            <span class="font-medium">Cards:</span>
-            {$sessionStats.cardsReviewed}
-          </div>
-          <div>
-            <span class="font-medium">Accuracy:</span>
-            {$sessionStats.accuracy}%
+        <div class="text-center">
+          <p class="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-600 mb-2">
+            Session Stats
+          </p>
+          <div class="flex justify-center gap-3">
+            <div class="flex flex-col items-center px-5 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm">
+              <span class="text-xl font-bold text-gray-900 dark:text-gray-50 leading-tight">
+                {$sessionStats.cardsReviewed}
+              </span>
+              <span class="text-[0.65rem] uppercase tracking-wide text-gray-400 dark:text-gray-600 mt-0.5">
+                Cards
+              </span>
+            </div>
+            <div class="flex flex-col items-center px-5 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm">
+              <span class="text-xl font-bold text-gray-900 dark:text-gray-50 leading-tight">
+                {$sessionStats.accuracy}%
+              </span>
+              <span class="text-[0.65rem] uppercase tracking-wide text-gray-400 dark:text-gray-600 mt-0.5">
+                Accuracy
+              </span>
+            </div>
           </div>
         </div>
 
