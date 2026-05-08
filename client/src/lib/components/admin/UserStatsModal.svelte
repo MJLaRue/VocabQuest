@@ -139,7 +139,7 @@
                 totalWords={stats.progress.totalWords}
                 learnedWords={stats.progress.wordsLearned}
                 inProgressWords={stats.progress.inProgressWords}
-                notStartedWords={stats.progress.totalWords - stats.progress.wordsLearned - stats.progress.inProgressWords}
+                notStartedWords={Math.max(0, stats.progress.totalWords - stats.progress.wordsLearned - stats.progress.inProgressWords)}
               />
               <Leaderboard {leaderboard} />
               <AchievementGrid achievements={stats.achievements} />
