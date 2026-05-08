@@ -415,7 +415,7 @@
 
         <!-- Session Stats -->
         <div class="text-center">
-          <p class="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-600 mb-2">
+          <p class="text-xs font-semibold uppercase tracking-widest text-gray-500 dark:text-gray-500 mb-2">
             Session Stats
           </p>
           <div class="flex justify-center gap-3">
@@ -423,7 +423,7 @@
               <span class="text-xl font-bold text-gray-900 dark:text-gray-50 leading-tight">
                 {$sessionStats.cardsReviewed}
               </span>
-              <span class="text-[0.65rem] uppercase tracking-wide text-gray-400 dark:text-gray-600 mt-0.5">
+              <span class="text-[0.65rem] uppercase tracking-wide text-gray-500 dark:text-gray-500 mt-0.5">
                 Cards
               </span>
             </div>
@@ -431,7 +431,7 @@
               <span class="text-xl font-bold text-gray-900 dark:text-gray-50 leading-tight">
                 {$sessionStats.accuracy}%
               </span>
-              <span class="text-[0.65rem] uppercase tracking-wide text-gray-400 dark:text-gray-600 mt-0.5">
+              <span class="text-[0.65rem] uppercase tracking-wide text-gray-500 dark:text-gray-500 mt-0.5">
                 Accuracy
               </span>
             </div>
