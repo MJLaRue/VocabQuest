@@ -121,11 +121,10 @@
 
       <!-- Advanced Toggle (Right) -->
       <div class="flex items-center gap-3 justify-end">
+        {#if advancedApplies}
         <div
-          class="flex items-center gap-2 transition-opacity {advancedApplies ? '' : 'opacity-40'}"
-          title={advancedApplies
-            ? 'Type the answer instead of selecting from options'
-            : 'Advanced mode applies to Context and Relate modes'}
+          class="flex items-center gap-2"
+          title="Type the answer instead of selecting from options"
         >
           <Zap class="w-4 h-4 text-amber-500" />
           <Toggle
@@ -134,6 +133,7 @@
           />
           <span class="text-sm text-gray-600 dark:text-gray-400">Advanced</span>
         </div>
+        {/if}
         <button
           on:click={() => dispatch('openHelp')}
           class="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition-colors"
@@ -159,8 +159,9 @@
           {/each}
         </select>
 
+        {#if advancedApplies}
         <div
-          class="flex items-center gap-1.5 transition-opacity {advancedApplies ? '' : 'opacity-40'}"
+          class="flex items-center gap-1.5"
           title="Advanced (typing instead of multiple choice)"
         >
           <Zap class="w-4 h-4 text-amber-500" />
@@ -169,6 +170,7 @@
             onCheckedChange={() => dispatch('toggleAdvanced')}
           />
         </div>
+        {/if}
         <button
           on:click={() => dispatch('openHelp')}
           class="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition-colors"
